@@ -10,9 +10,13 @@
     "package": "plasmo package"
   },
   "dependencies": {
-    "plasmo": "0.86.3",
+    "@mozilla/readability": "^0.5.0",
+    "marked": "^15.0.4",
+    "openai": "^4.76.3",
+    "plasmo": "0.89.4",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "use-trace-update": "^1.3.3"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "4.1.1",
@@ -25,7 +29,8 @@
   },
   "manifest": {
     "host_permissions": [
-      "https://*/*"
+      "https://*/*",
+      "http://*/*"
     ]
   }
 }
