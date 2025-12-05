@@ -258,14 +258,21 @@ function IndexSidePanel() {
 
             setHighlightMap(newHighlightMap)
 
-            const newMessages: Message[] = [
+            const userMessageContent = "请总结当前页面"
+            const newMessagesForUI: Message[] = [
               ...messages,
-              { role: "user", content: "请总结当前页面" },
+              { role: "user", content: userMessageContent },
               { role: "assistant", content: "" }
             ]
-            setMessages(newMessages)
+            setMessages(newMessagesForUI)
+
+            const messagesForAI: Message[] = [
+              ...messages,
+              { role: "user", content: `${userMessageContent}:\n${aiInputText}` }
+            ]
+
             const port = browser.runtime.connect({ name: "summarize" })
-            port.postMessage({ input: aiInputText })
+            port.postMessage({ messages: messagesForAI })
             port.onMessage.addListener((chunk: Chunk) => {
               if (chunk.error) {
                 setMessages((prevMessages) => {
@@ -342,7 +349,7 @@ function IndexSidePanel() {
 
     try {
       const port = browser.runtime.connect({ name: "summarize" })
-      port.postMessage({ input: input })
+      port.postMessage({ messages: newMessages })
       port.onMessage.addListener((chunk: Chunk) => {
         if (chunk.error) {
           setMessages((prevMessages) => {
