@@ -1,41 +1,12 @@
-import { sendToBackground } from "@plasmohq/messaging"
 import * as browser from "webextension-polyfill"
 import { useEffect, useState } from "react"
 import { marked } from "marked"
 import { getMainContent } from "./get-main-content"
-
-const escapeReplacements: { [index: string]: string } = {
-  "&": "&amp;",
-  "<": "&lt;",
-  ">": "&gt;",
-  '"': "&quot;",
-  "'": "&#39;"
-}
-const getEscapeReplacement = (ch: string) => escapeReplacements[ch]
-
-export function escape(html: string, encode?: boolean): string {
-  if (encode) {
-    // 编码模式：转义所有特殊字符
-    if (/[&<>"']/.test(html)) {
-      return html.replace(/[&<>"']/g, getEscapeReplacement)
-    }
-  } else {
-    // 非编码模式：保留已编码的 HTML 实体
-    if (/[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/.test(html)) {
-      return html.replace(
-        /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/g,
-        getEscapeReplacement
-      )
-    }
-  }
-
-  return html
-}
+import { escape } from "./escape"
 
 marked.use({
   renderer: {
     codespan: function ({ text }) {
-      // 完全自定义的实现, 重新添加 escape 以防止XSS
       return `<code class="custom-codespan">${escape(text, true)}</code>`
     }
   }
@@ -45,11 +16,11 @@ interface Message {
   content: string
 }
 
-interface ChatCompletionResponse {
+interface Chunk {
   error?: string
   choices?: {
-    message: {
-      content: string
+    delta?: {
+      content?: string
     }
   }[]
 }
@@ -76,7 +47,6 @@ function IndexSidePanel() {
     }
     fetchSettings()
 
-    // Cleanup function to remove markers when the panel is closed
     return () => {
       browser.tabs
         .query({ active: true, currentWindow: true })
@@ -216,54 +186,57 @@ function IndexSidePanel() {
               })
               .filter((el): el is { tagName: string; text: string } => el !== null)
 
-              console.log('activeTab', activeTab);
             const markedElementsResults = await browser.scripting.executeScript(
               {
                 target: { tabId: activeTab.id },
                 func: (elements: { tagName: string; text: string }[]) => {
-                  console.log('elements', elements)
-                  const markedTexts: {text: string, index: string}[] = []
+                  const markedTexts: { text: string; index: string }[] = []
                   let elementCounter = 0
                   if (elements) {
                     for (const elInfo of elements) {
                       const candidates = document.querySelectorAll(
                         elInfo.tagName
                       )
-                      console.log('candidates', candidates)
                       for (const candidate of Array.from(candidates)) {
                         if (
                           (candidate as HTMLElement).innerText?.trim() ===
-                            elInfo.text
+                          elInfo.text
                         ) {
-                          let elementIndex: string;
+                          let elementIndex: string
                           if (!candidate.hasAttribute("data-summary-ref-id")) {
                             candidate.setAttribute(
                               "data-summary-ref-id",
                               `${elementCounter}`
                             )
-                            elementIndex = elementCounter.toString();
+                            elementIndex = elementCounter.toString()
                             elementCounter++
                           } else {
-                            elementIndex = candidate.getAttribute( "data-summary-ref-id")
+                            elementIndex = candidate.getAttribute(
+                              "data-summary-ref-id"
+                            )
                           }
-                          markedTexts.push({text: elInfo.text, index: elementIndex})
-                          
-                          break // Mark only the first match
+                          markedTexts.push({
+                            text: elInfo.text,
+                            index: elementIndex
+                          })
+
+                          break
                         }
                       }
                     }
                   }
-                  console.log('markedTexts', markedTexts)
                   return markedTexts
                 },
                 args: [elementsToMark]
               }
             )
-            console.log('markedElementsResults', markedElementsResults)
 
             const markedTexts =
               markedElementsResults && markedElementsResults[0]
-                ? (markedElementsResults[0].result as {text: string, index: string}[])
+                ? (markedElementsResults[0].result as {
+                    text: string
+                    index: string
+                  }[])
                 : []
 
             if (!markedTexts || markedTexts.length === 0) {
@@ -277,8 +250,8 @@ function IndexSidePanel() {
 
             let aiInputText = ""
             const newHighlightMap: Record<string, string> = {}
-            markedTexts.forEach((marked, index) => {
-              const refId = marked.index;
+            markedTexts.forEach((marked) => {
+              const refId = marked.index
               aiInputText += `[REF${refId}] ${marked.text}\n`
               newHighlightMap[refId] = marked.text
             })
@@ -287,24 +260,58 @@ function IndexSidePanel() {
 
             const newMessages: Message[] = [
               ...messages,
-              { role: "user", content: "请总结当前页面" }
+              { role: "user", content: "请总结当前页面" },
+              { role: "assistant", content: "" }
             ]
             setMessages(newMessages)
-            const response = (await sendToBackground({
-              name: "summarize",
-              body: {
-                input: aiInputText
+            const port = browser.runtime.connect({ name: "summarize" })
+            port.postMessage({ input: aiInputText })
+            port.onMessage.addListener((chunk: Chunk) => {
+              if (chunk.error) {
+                setMessages((prevMessages) => {
+                  const lastMessage = prevMessages[prevMessages.length - 1]
+                  return [
+                    ...prevMessages.slice(0, -1),
+                    {
+                      ...lastMessage,
+                      content: lastMessage.content + chunk.error
+                    }
+                  ]
+                })
+                return
               }
-            })) as ChatCompletionResponse
-            if (response.error) {
-              setMessages([
-                ...newMessages,
-                { role: "assistant", content: response.error }
-              ])
-            } else {
-              const rawContent = response.choices[0].message.content
-              _sendMarkedMessage(newMessages, rawContent)
-            }
+
+              const delta = chunk.choices[0]?.delta?.content || ""
+              if (delta) {
+                setMessages((prevMessages) => {
+                  const lastMessage = prevMessages[prevMessages.length - 1]
+                  const newContent = lastMessage.content + delta
+                  return [
+                    ...prevMessages.slice(0, -1),
+                    {
+                      ...lastMessage,
+                      content: newContent
+                    }
+                  ]
+                })
+              }
+            })
+            port.onDisconnect.addListener(() => {
+              setLoading(false)
+              setMessages((prevMessages) => {
+                const lastMessage = prevMessages[prevMessages.length - 1]
+                if (lastMessage.role === "assistant") {
+                  const processedContent = processAIOutput(
+                    lastMessage.content
+                  )
+                  return [
+                    ...prevMessages.slice(0, -1),
+                    { ...lastMessage, content: processedContent }
+                  ]
+                }
+                return prevMessages
+              })
+            })
           } else {
             setMessages([
               ...messages,
@@ -316,7 +323,6 @@ function IndexSidePanel() {
     } catch (error) {
       console.error("Error summarizing page:", error)
       setMessages([...messages, { role: "assistant", content: "无法总结页面" }])
-    } finally {
       setLoading(false)
     }
   }
@@ -327,48 +333,67 @@ function IndexSidePanel() {
     }
     const newMessages: Message[] = [
       ...messages,
-      { role: "user", content: input }
+      { role: "user", content: input },
+      { role: "assistant", content: "" }
     ]
     setMessages(newMessages)
     setInput("")
     setLoading(true)
-    try {
-      const response = (await sendToBackground({
-        name: "summarize",
-        body: {
-          input: input
-        }
-      })) as ChatCompletionResponse
 
-      if (response.error) {
-        setMessages([
-          ...newMessages,
-          { role: "assistant", content: response.error }
-        ])
-      } else {
-        const rawContent = response.choices[0].message.content
-        _sendMarkedMessage(newMessages, rawContent)
-      }
+    try {
+      const port = browser.runtime.connect({ name: "summarize" })
+      port.postMessage({ input: input })
+      port.onMessage.addListener((chunk: Chunk) => {
+        if (chunk.error) {
+          setMessages((prevMessages) => {
+            const lastMessage = prevMessages[prevMessages.length - 1]
+            return [
+              ...prevMessages.slice(0, -1),
+              {
+                ...lastMessage,
+                content: lastMessage.content + chunk.error
+              }
+            ]
+          })
+          return
+        }
+
+        const delta = chunk.choices[0]?.delta?.content || ""
+        if (delta) {
+          setMessages((prevMessages) => {
+            const lastMessage = prevMessages[prevMessages.length - 1]
+            return [
+              ...prevMessages.slice(0, -1),
+              {
+                ...lastMessage,
+                content: lastMessage.content + delta
+              }
+            ]
+          })
+        }
+      })
+      port.onDisconnect.addListener(() => {
+        setLoading(false)
+        setMessages((prevMessages) => {
+          const lastMessage = prevMessages[prevMessages.length - 1]
+          if (lastMessage.role === "assistant") {
+            const processedContent = processAIOutput(lastMessage.content)
+            return [
+              ...prevMessages.slice(0, -1),
+              { ...lastMessage, content: processedContent }
+            ]
+          }
+          return prevMessages
+        })
+      })
     } catch (error) {
       console.error("Error sending message to background script:", error)
       setMessages([
-        ...newMessages,
+        ...messages,
         { role: "assistant", content: "Error sending message" }
       ])
-    } finally {
       setLoading(false)
     }
-  }
-
-  const _sendMarkedMessage = (
-    newMessages: Message[],
-    rawContent: string
-  ) => {
-    const processedContent = processAIOutput(rawContent)
-    setMessages([
-      ...newMessages,
-      { role: "assistant", content: processedContent }
-    ])
   }
 
   if (!apiKey) {
