@@ -1,8 +1,8 @@
 import * as browser from "webextension-polyfill"
 import { useEffect, useState } from "react"
 import { marked } from "marked"
-import { getMainContent } from "./get-main-content"
 import { escape } from "./escape"
+import { ReadabilityParser } from './ReadabilityParser';
 
 marked.use({
   renderer: {
@@ -134,7 +134,7 @@ function IndexSidePanel() {
     const refIdToNumber: Record<string, number> = {}
 
     const processedContent = rawContent.replace(
-      /\[REF(\w+)\]/g,
+      /`?\[REF(\w+)\]`?/g,
       (match, refId) => {
         if (refIdToNumber[refId] === undefined) {
           refIdToNumber[refId] = refCounter++
@@ -164,7 +164,8 @@ function IndexSidePanel() {
         if (results && results.length > 0) {
           const pageHtml = results[0].result as string
           const doc = new DOMParser().parseFromString(pageHtml, "text/html")
-          const articleBody = getMainContent(doc)
+          const readability = new ReadabilityParser(doc, { debug: true }); // true for debug logs
+          const articleBody = readability.parse().node;
 
           if (articleBody) {
             const keyElements = Array.from(
@@ -172,6 +173,8 @@ function IndexSidePanel() {
                 "p, h1, h2, h3, h4, h5, h6, li, blockquote, pre"
               )
             )
+
+            console.log('articleBody', articleBody)
 
             const elementsToMark = keyElements
               .map((el) => {
@@ -230,6 +233,7 @@ function IndexSidePanel() {
                 args: [elementsToMark]
               }
             )
+            
 
             const markedTexts =
               markedElementsResults && markedElementsResults[0]
