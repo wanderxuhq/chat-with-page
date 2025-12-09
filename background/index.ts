@@ -8,6 +8,7 @@ interface Message {
 
 interface PortMessage {
   messages: Message[]
+  model: string
 }
 
 browser.runtime.onConnect.addListener((port) => {
@@ -27,7 +28,7 @@ browser.runtime.onConnect.addListener((port) => {
         })
 
         const stream = await openai.chat.completions.create({
-          model: "gemini-2.5-flash",
+          model: msg.model,
           stream: true,
           messages: [
             {

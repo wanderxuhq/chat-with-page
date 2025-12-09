@@ -1,5 +1,5 @@
 import * as browser from "webextension-polyfill"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { marked } from "marked"
 import { escape } from "./escape"
 import { ReadabilityParser } from './ReadabilityParser';
@@ -26,27 +26,124 @@ interface Chunk {
 }
 
 function IndexSidePanel() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [apiKey, setApiKey] = useState("")
-  const [apiEndpoint, setApiEndpoint] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [apiKeyInput, setApiKeyInput] = useState("")
-  const [apiEndpointInput, setApiEndpointInput] = useState("")
-  const [highlightMap, setHighlightMap] = useState<Record<string, string>>({})
+  const [messages, setMessages] = useState<Message[]>([])  
+  const [input, setInput] = useState("")  
+  const [apiKey, setApiKey] = useState("")  
+  const [apiEndpoint, setApiEndpoint] = useState("")  
+  const [loading, setLoading] = useState(false)  
+  const [apiKeyInput, setApiKeyInput] = useState("")  
+  const [apiEndpointInput, setApiEndpointInput] = useState("")  
+  const [highlightMap, setHighlightMap] = useState<Record<string, string>>({})  
+  const [showSettings, setShowSettings] = useState(false)  
+  const [selectedProvider, setSelectedProvider] = useState<string>("openai")
+  // 模型选择相关状态
+  const [models, setModels] = useState<string[]>([])
+  const [selectedModel, setSelectedModel] = useState<string>("")
+  const [fetchingModels, setFetchingModels] = useState(false)
+  // 搜索模型
+  const [modelSearchTerm, setModelSearchTerm] = useState<string>(selectedModel);
+  // 控制下拉列表的显示和隐藏
+  const [showModelList, setShowModelList] = useState<boolean>(false);
+  // 模型选择容器的引用
+  const modelSelectRef = useRef<HTMLDivElement>(null);
 
+  // 主流AI提供商预置配置
+  const aiProviders = [
+    { id: "openai", name: "OpenAI", baseUrl: "https://api.openai.com/v1" },
+    { id: "anthropic", name: "Anthropic", baseUrl: "https://api.anthropic.com/v1" },
+    { id: "google", name: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
+    { id: "openrouter", name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1" },
+    { id: "custom", name: "自定义", baseUrl: "" }
+  ]
+
+  // 获取模型列表的函数
+  const fetchModels = async () => {
+    if (!apiKey || !apiEndpoint) return
+    
+    setFetchingModels(true)
+    try {
+      // 尝试从缓存获取模型列表
+      const cachedModels = localStorage.getItem(`models_${apiEndpoint}`)
+      if (cachedModels) {
+        const parsedModels = JSON.parse(cachedModels)
+        setModels(parsedModels.models)
+        if (parsedModels.selectedModel) {
+          setSelectedModel(parsedModels.selectedModel)
+        } else {
+          // 不设置默认模型，保持为空
+          setSelectedModel("")
+        }
+        setFetchingModels(false)
+        return
+      }
+      
+      // 从API获取模型列表
+      const response = await fetch(`${apiEndpoint}/models`, {
+        headers: {
+          "Authorization": `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        const modelNames = data.data.map((model: any) => model.id)
+        
+        // 不设置默认模型，保持为空
+        setModels(modelNames)
+        setSelectedModel("")
+        
+        // 缓存模型列表到localStorage，但不保存selectedModel
+        localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
+          models: modelNames,
+          timestamp: Date.now()
+        }))
+      } else {
+        // API获取失败时，不设置默认模型
+        setSelectedModel("")
+      }
+    } catch (error) {
+      console.error("获取模型列表失败:", error)
+      // 出错时，不设置默认模型
+      setSelectedModel("")
+    } finally {
+      setFetchingModels(false)
+    }
+  }
+  
   useEffect(() => {
     const fetchSettings = async () => {
-      const data = await browser.storage.local.get(["apiKey", "apiEndpoint"])
+      const data = await browser.storage.local.get(["apiKey", "apiEndpoint", "selectedProvider"])
       if (data.apiKey) {
         setApiKey(data.apiKey as string)
+        setApiKeyInput(data.apiKey as string)
       }
       if (data.apiEndpoint) {
         setApiEndpoint(data.apiEndpoint as string)
+        setApiEndpointInput(data.apiEndpoint as string)
+      }
+      if (data.selectedProvider) {
+        setSelectedProvider(data.selectedProvider as string)
+      } else {
+        // 默认选择OpenAI
+        const defaultProvider = aiProviders[0]
+        setSelectedProvider(defaultProvider.id)
+        if (!data.apiEndpoint) {
+          setApiEndpointInput(defaultProvider.baseUrl)
+        }
       }
     }
     fetchSettings()
+  }, [])
 
+  // 当apiKey、apiEndpoint或selectedProvider变化时获取模型列表
+  useEffect(() => {
+    if (apiKey && apiEndpoint) {
+      fetchModels()
+    }
+  }, [apiKey, apiEndpoint, selectedProvider])
+
+  useEffect(() => {
     return () => {
       browser.tabs
         .query({ active: true, currentWindow: true })
@@ -68,15 +165,59 @@ function IndexSidePanel() {
     }
   }, [])
 
+  // 处理提供商选择变化
+  const handleProviderChange = (providerId: string) => {
+    setSelectedProvider(providerId)
+    const provider = aiProviders.find(p => p.id === providerId)
+    if (provider && provider.id !== "custom") {
+      setApiEndpointInput(provider.baseUrl)
+    }
+  }
+
   const saveSettings = async () => {
     await browser.storage.local.set({
       apiKey: apiKeyInput,
-      apiEndpoint: apiEndpointInput
+      apiEndpoint: apiEndpointInput,
+      selectedProvider: selectedProvider
     })
     setApiKey(apiKeyInput)
     setApiEndpoint(apiEndpointInput)
+    setShowSettings(false)
     console.log("Settings saved")
   }
+  
+  // 保存选择的模型到localStorage
+  const saveSelectedModel = (modelId: string) => {
+    setSelectedModel(modelId)
+    localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
+      models: models,
+      selectedModel: modelId,
+      timestamp: Date.now()
+    }))
+    setShowModelList(false); // 选择后隐藏列表
+  };
+
+  // 处理输入框焦点
+  const handleInputFocus = () => {
+    setShowModelList(true);
+  };
+
+  // 点击外部隐藏列表
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (modelSelectRef.current && !modelSelectRef.current.contains(event.target as Node)) {
+        setShowModelList(false);
+      }
+    };
+
+    // 添加事件监听器
+    document.addEventListener("mousedown", handleClickOutside);
+    
+    // 清理事件监听器
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const scrollToOriginalText = async (refId: string) => {
     try {
@@ -233,14 +374,14 @@ function IndexSidePanel() {
                 args: [elementsToMark]
               }
             )
-            
+
 
             const markedTexts =
               markedElementsResults && markedElementsResults[0]
                 ? (markedElementsResults[0].result as {
-                    text: string
-                    index: string
-                  }[])
+                  text: string
+                  index: string
+                }[])
                 : []
 
             if (!markedTexts || markedTexts.length === 0) {
@@ -248,6 +389,11 @@ function IndexSidePanel() {
                 ...messages,
                 { role: "assistant", content: "无法提取页面关键内容" }
               ])
+              setLoading(false)
+              return
+            }
+      if (!selectedModel) {
+              alert("请先选择一个模型")
               setLoading(false)
               return
             }
@@ -276,7 +422,7 @@ function IndexSidePanel() {
             ]
 
             const port = browser.runtime.connect({ name: "summarize" })
-            port.postMessage({ messages: messagesForAI })
+            port.postMessage({ messages: messagesForAI, model: selectedModel })
             port.onMessage.addListener((chunk: Chunk) => {
               if (chunk.error) {
                 setMessages((prevMessages) => {
@@ -342,6 +488,10 @@ function IndexSidePanel() {
     if (!input.trim()) {
       return
     }
+    if (!selectedModel) {
+      alert("请先选择一个模型")
+      return
+    }
     const newMessages: Message[] = [
       ...messages,
       { role: "user", content: input },
@@ -353,7 +503,7 @@ function IndexSidePanel() {
 
     try {
       const port = browser.runtime.connect({ name: "summarize" })
-      port.postMessage({ messages: newMessages })
+      port.postMessage({ messages: newMessages, model: selectedModel })
       port.onMessage.addListener((chunk: Chunk) => {
         if (chunk.error) {
           setMessages((prevMessages) => {
@@ -407,44 +557,127 @@ function IndexSidePanel() {
     }
   }
 
-  if (!apiKey) {
-    return (
-      <div style={{ padding: 16 }}>
-        <h2>设置</h2>
-        <input
-          type="text"
-          onChange={(e) => setApiKeyInput(e.target.value)}
-          value={apiKeyInput}
-          placeholder="输入您的 OpenAI API 密钥"
+  // 使用useEffect添加全局样式
+  useEffect(() => {
+    // 创建style元素
+    const style = document.createElement('style');
+    style.textContent = `
+      /* 隐藏侧边栏全局滚动条 */
+      body {
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      /* 自定义对话记录区域滚动条 */
+      div::-webkit-scrollbar {
+        width: 6px;
+      }
+      div::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+      }
+      div::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+      }
+      div::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+    `;
+    // 添加到head
+    document.head.appendChild(style);
+
+    // 直接设置body样式
+    document.body.style.overflow = "hidden";
+    document.body.style.margin = "0";
+    document.body.style.padding = "0";
+
+    // 清理函数
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+
+  const renderSettings = () => (
+    <div style={{ padding: 16 }}>
+      <h2>设置</h2>
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>AI提供商</label>
+        <select
+          value={selectedProvider}
+          onChange={(e) => handleProviderChange(e.target.value)}
           style={{
             width: "100%",
             padding: 8,
             boxSizing: "border-box",
-            marginBottom: 8
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "14px"
           }}
-        />
+        >
+          {aiProviders.map(provider => (
+            <option key={provider.id} value={provider.id}>
+              {provider.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>Base URL</label>
         <input
           type="text"
           onChange={(e) => setApiEndpointInput(e.target.value)}
           value={apiEndpointInput}
-          placeholder="输入您的 API 端点"
+          placeholder={selectedProvider === "custom" ? "输入自定义 Base URL" : `自动填充 (${aiProviders.find(p => p.id === selectedProvider)?.baseUrl})`}
           style={{
             width: "100%",
             padding: 8,
-            boxSizing: "border-box"
+            boxSizing: "border-box",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "14px"
           }}
         />
-        <button
-          onClick={saveSettings}
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>API Token</label>
+        <input
+          type="text"
+          onChange={(e) => setApiKeyInput(e.target.value)}
+          value={apiKeyInput}
+          placeholder="输入您的 API Token"
           style={{
             width: "100%",
             padding: 8,
-            marginTop: 8
-          }}>
-          保存
-        </button>
+            boxSizing: "border-box",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "14px"
+          }}
+        />
       </div>
-    )
+
+      <button
+        onClick={saveSettings}
+        style={{
+          width: "100%",
+          padding: 10,
+          backgroundColor: "#4CAF50",
+          color: "white",
+          border: "none",
+          borderRadius: "4px",
+          cursor: "pointer",
+          fontSize: "14px"
+        }}>
+        保存
+      </button>
+    </div>
+  )
+
+  if (!apiKey && !showSettings) {
+    return renderSettings()
   }
 
   return (
@@ -453,47 +686,213 @@ function IndexSidePanel() {
         display: "flex",
         flexDirection: "column",
         height: "100vh",
-        padding: 16
-      }}>
-      <div style={{ flex: 1, overflowY: "auto" }}>
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            style={{
-              marginBottom: 8,
-              textAlign: msg.role === "user" ? "right" : "left"
-            }}>
-            <div
+        width: "100%",
+        padding: 16,
+        overflow: "hidden",
+        boxSizing: "border-box",
+        margin: 0
+      }}
+    >
+      {/* 设置按钮 */}
+      {showSettings ? (
+        renderSettings()
+      ) : (
+        <>
+          <div style={{ marginBottom: 16, display: "flex", justifyContent: "flex-end" }}>
+            <button
+              onClick={() => setShowSettings(true)}
               style={{
-                display: "inline-block",
-                padding: 8,
-                borderRadius: 4,
-                backgroundColor: msg.role === "user" ? "#dcf8c6" : "#f1f0f0"
+                padding: "4px 8px",
+                backgroundColor: "#f0f0f0",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px"
               }}
-              dangerouslySetInnerHTML={{
-                __html: marked.parse(msg.content)
-              }}></div>
+            >
+              设置
+            </button>
           </div>
-        ))}
-        {loading && <div>加载中...</div>}
-      </div>
-      <div style={{ display: "flex", marginTop: 8 }}>
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-          style={{ flex: 1, padding: 8 }}
-        />
-        <button onClick={sendMessage} style={{ padding: 8, marginLeft: 8 }}>
-          发送
-        </button>
-        <button onClick={summarizePage} style={{ padding: 8, marginLeft: 8 }}>
-          总结页面
-        </button>
-      </div>
+          <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, paddingRight: 8 }}>
+            {messages.map((msg, index) => (
+              <div
+                key={index}
+                style={{
+                  marginBottom: 8,
+                  textAlign: msg.role === "user" ? "right" : "left"
+                }}
+              >
+                <div
+                  style={{
+                    display: "inline-block",
+                    padding: 8,
+                    borderRadius: 4,
+                    backgroundColor: msg.role === "user" ? "#dcf8c6" : "#f1f0f0"
+                  }}
+                  dangerouslySetInnerHTML={{
+                    __html: marked.parse(msg.content)
+                  }}
+                ></div>
+              </div>
+            ))}
+            {loading && <div>加载中...</div>}
+          </div>
+          <div style={{ marginBottom: "8px", fontSize: "14px", color: "#333" }}>发送消息：</div>
+          {/* 模型选择 */}
+          <div style={{ marginBottom: "8px" }}>
+            <div style={{ marginBottom: "4px", fontSize: "12px", color: "#666" }}>选择模型:</div>
+            <div ref={modelSelectRef} style={{ position: "relative" }}>
+              <div
+                style={{
+                  position: "relative",
+                  border: "1px solid #ccc",
+                  borderRadius: "4px",
+                  fontSize: "12px",
+                  width: "100%",
+                  boxSizing: "border-box"
+                }}
+              >
+                <input
+                  type="text"
+                  placeholder="模型"
+                  value={modelSearchTerm}
+                  onChange={(e) => {
+                    setModelSearchTerm(e.target.value);
+                    setShowModelList(true);
+                  }}
+                  onFocus={handleInputFocus}
+                  onBlur={() => {
+                    // 延迟隐藏，以便点击列表项时能触发点击事件
+                    setTimeout(() => setShowModelList(false), 200);
+                  }}
+                  style={{
+                    padding: "4px 8px",
+                    border: "none",
+                    borderRadius: "4px",
+                    fontSize: "12px",
+                    width: "100%",
+                    boxSizing: "border-box",
+                    outline: "none"
+                  }}
+                />
+              </div>
+              {showModelList && (
+                <div
+                  style={{
+                    position: "absolute",
+                    bottom: "100%",
+                    left: 0,
+                    right: 0,
+                    border: "1px solid #ccc",
+                    borderBottom: "none",
+                    borderRadius: "4px 4px 0 0",
+                    maxHeight: "200px",
+                    overflowY: "auto",
+                    backgroundColor: "white",
+                    zIndex: 1000,
+                    boxShadow: "0 -2px 5px rgba(0,0,0,0.1)"
+                  }}
+                >
+                  {fetchingModels ? (
+                    <div style={{ padding: "4px 8px", fontSize: "12px", color: "#666" }}>加载模型中...</div>
+                  ) : (
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                      {(() => {
+                        const filteredModels = models.filter(model => {
+                          if (!modelSearchTerm.trim()) return true;
+                          const searchTerm = modelSearchTerm.trim().toLowerCase();
+                          const modelName = model.toLowerCase();
+                          
+                          // 实现模糊匹配，支持*f*r*e*e*格式
+                          if (searchTerm.includes('*')) {
+                            const regexPattern = searchTerm
+                              .replace(/\*/g, '.*')
+                              .replace(/\s+/g, '.*');
+                            const regex = new RegExp(regexPattern);
+                            return regex.test(modelName);
+                          }
+                          
+                          // 简单的包含匹配
+                          return modelName.includes(searchTerm);
+                        });
+                        
+                        return (
+                          <>
+                            {filteredModels.length > 0 ? (
+                              filteredModels.map(model => (
+                                <li
+                                  key={model}
+                                  onClick={() => {
+                                    saveSelectedModel(model);
+                                    setModelSearchTerm(model);
+                                  }}
+                                  style={{
+                                    padding: "4px 8px",
+                                    cursor: "pointer",
+                                    fontSize: "12px",
+                                    backgroundColor: selectedModel === model ? "#e6f7ff" : "white",
+                                    borderBottom: "1px solid #f0f0f0"
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = "#f5f5f5"}
+                                  onMouseLeave={(e) => {
+                                    if (selectedModel !== model) {
+                                      e.currentTarget.style.backgroundColor = "white";
+                                    } else {
+                                      e.currentTarget.style.backgroundColor = "#e6f7ff";
+                                    }
+                                  }}
+                                >
+                                  {model}
+                                </li>
+                              ))
+                            ) : (
+                              <li style={{ padding: "4px 8px", fontSize: "12px", color: "#999" }}>
+                                未找到匹配的模型
+                              </li>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </ul>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+          <div style={{ display: "flex", minHeight: "40px", zIndex: 10 }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  // 如果输入了自定义模型，保存它
+                  if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
+                    saveSelectedModel(modelSearchTerm.trim());
+                  }
+                  sendMessage();
+                }
+              }}
+              style={{ flex: 1, padding: 8, border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "white" }}
+              placeholder="请输入您的消息..."
+            />
+            <button onClick={() => {
+              // 如果输入了自定义模型，保存它
+              if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
+                saveSelectedModel(modelSearchTerm.trim());
+              }
+              sendMessage();
+            }} style={{ padding: 8, marginLeft: 8, backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", minWidth: "60px" }}>
+              发送
+            </button>
+            <button onClick={summarizePage} style={{ padding: 8, marginLeft: 8, backgroundColor: "#2196F3", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", minWidth: "100px" }}>
+              总结页面
+            </button>
+          </div>
+        </>
+      )}
     </div>
-  )
+  );
 }
 
 export default IndexSidePanel
