@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "apiToken": "Токен API",
+    "model": "Модель",
+    "language": "Язык",
+    "save": "Сохранить"
+  },
+  "messages": {
+    "enterApiToken": "Пожалуйста, введите токен API",
+    "selectModelFirst": "Пожалуйста, сначала выберите модель",
+    "apiKeyNotFound": "Ключ API не найден"
+  },
+  "buttons": {
+    "chatWithPage": "Чат с страницей",
+    "clearContext": "Очистить контекст",
+    "copy": "Копировать",
+    "expand": "Развернуть",
+    "collapse": "Свернуть"
+  },
+  "labels": {
+    "chat": "Чат",
+    "context": "Контекст",
+    "model": "Модель",
+    "language": "Язык",
+    "prompt": "Запрос"
+  },
+  "placeholders": {
+    "enterMessage": "Введите сообщение..."
+  }
+}

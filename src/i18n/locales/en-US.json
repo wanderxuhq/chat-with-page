@@ -1,0 +1,36 @@
+{
+  "settings": "Settings",
+  "settings_section": {
+    "aiProvider": "AI Provider",
+    "apiToken": "API Token",
+    "model": "Model",
+    "language": "Language",
+    "save": "Save"
+  },
+  "messages": {
+    "enterApiToken": "Please enter API Token",
+    "selectModelFirst": "Please select a model first",
+    "apiKeyNotFound": "API Key not found",
+    "loadingModels": "Loading models...",
+    "noMatchingModels": "No matching models found"
+  },
+  "buttons": {
+    "chatWithPage": "Summarize Page",
+    "clearContext": "Clear Context",
+    "copy": "Copy",
+    "expand": "Expand",
+    "collapse": "Collapse"
+  },
+  "labels": {
+    "chat": "Chat",
+    "context": "Context",
+    "model": "Model",
+    "language": "Language",
+    "prompt": "Prompt"
+  },
+  "placeholders": {
+    "enterMessage": "Please enter your message...",
+    "enterCustomBaseUrl": "Enter custom Base URL"
+  },
+  "send": "Send"
+}

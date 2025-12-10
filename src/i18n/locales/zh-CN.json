@@ -1,0 +1,36 @@
+{
+  "settings": "设置",
+  "settings_section": {
+    "aiProvider": "AI提供商",
+    "apiToken": "API Token",
+    "model": "模型",
+    "language": "语言",
+    "save": "保存"
+  },
+  "messages": {
+    "enterApiToken": "请输入API Token",
+    "selectModelFirst": "请先选择一个模型",
+    "apiKeyNotFound": "未找到API Key",
+    "loadingModels": "加载模型中...",
+    "noMatchingModels": "未找到匹配的模型"
+  },
+  "buttons": {
+    "chatWithPage": "总结页面",
+    "clearContext": "清空上下文",
+    "copy": "复制",
+    "expand": "展开",
+    "collapse": "收起"
+  },
+  "labels": {
+    "chat": "聊天",
+    "context": "上下文",
+    "model": "模型",
+    "language": "语言",
+    "prompt": "提示词"
+  },
+  "placeholders": {
+    "enterMessage": "请输入您的消息...",
+    "enterCustomBaseUrl": "输入自定义 Base URL"
+  },
+  "send": "发送"
+}

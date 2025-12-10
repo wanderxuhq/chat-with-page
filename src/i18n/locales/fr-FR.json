@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "apiToken": "Jeton API",
+    "model": "Modèle",
+    "language": "Langue",
+    "save": "Enregistrer"
+  },
+  "messages": {
+    "enterApiToken": "Veuillez entrer votre jeton API",
+    "selectModelFirst": "Veuillez d'abord sélectionner un modèle",
+    "apiKeyNotFound": "Clé API non trouvée"
+  },
+  "buttons": {
+    "chatWithPage": "Chatter avec la page",
+    "clearContext": "Effacer le contexte",
+    "copy": "Copier",
+    "expand": "Développer",
+    "collapse": "Réduire"
+  },
+  "labels": {
+    "chat": "Chat",
+    "context": "Contexte",
+    "model": "Modèle",
+    "language": "Langue",
+    "prompt": "Invite"
+  },
+  "placeholders": {
+    "enterMessage": "Entrez un message..."
+  }
+}

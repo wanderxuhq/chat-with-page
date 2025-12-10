@@ -3,6 +3,8 @@ import { useEffect, useState, useRef } from "react"
 import { marked } from "marked"
 import { escape } from "./escape"
 import { ReadabilityParser } from './ReadabilityParser';
+import { useTranslation } from 'react-i18next';
+import './src/i18n/i18n'; // 导入i18n配置
 
 marked.use({
   renderer: {
@@ -26,16 +28,30 @@ interface Chunk {
 }
 
 function IndexSidePanel() {
-  const [messages, setMessages] = useState<Message[]>([])  
-  const [input, setInput] = useState("")  
-  const [apiKey, setApiKey] = useState("")  
-  const [apiEndpoint, setApiEndpoint] = useState("")  
-  const [loading, setLoading] = useState(false)  
-  const [apiKeyInput, setApiKeyInput] = useState("")  
-  const [apiEndpointInput, setApiEndpointInput] = useState("")  
-  const [highlightMap, setHighlightMap] = useState<Record<string, string>>({})  
-  const [showSettings, setShowSettings] = useState(false)  
+  const { t, i18n } = useTranslation();
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+  const [apiKey, setApiKey] = useState("")
+  const [apiEndpoint, setApiEndpoint] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [apiKeyInput, setApiKeyInput] = useState("")
+  const [apiEndpointInput, setApiEndpointInput] = useState("")
+  const [highlightMap, setHighlightMap] = useState<Record<string, string>>({})
+  const [showSettings, setShowSettings] = useState(false)
   const [selectedProvider, setSelectedProvider] = useState<string>("openai")
+  // 语言选择相关状态
+  const [selectedLanguage, setSelectedLanguage] = useState<string>("zh-CN")
+  // 支持的语言列表
+  const languages = [
+    { code: "en-US", name: "English" },
+    { code: "zh-CN", name: "中文" },
+    { code: "ja-JP", name: "日本語" },
+    { code: "ko-KR", name: "한국어" },
+    { code: "fr-FR", name: "Français" },
+    { code: "de-DE", name: "Deutsch" },
+    { code: "es-ES", name: "Español" },
+    { code: "ru-RU", name: "Русский" }
+  ]
   // 模型选择相关状态
   const [models, setModels] = useState<string[]>([])
   const [selectedModel, setSelectedModel] = useState<string>("")
@@ -113,7 +129,7 @@ function IndexSidePanel() {
   
   useEffect(() => {
     const fetchSettings = async () => {
-      const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
+      const data = await browser.storage.local.get(["providerConfigs", "selectedProvider", "selectedLanguage"])
       
       // 初始化provider配置结构（如果不存在）
       const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
@@ -126,6 +142,16 @@ function IndexSidePanel() {
         // 默认选择OpenAI
         const defaultProvider = aiProviders[0]
         setSelectedProvider(defaultProvider.id)
+      }
+      
+      // 加载语言设置
+      if (data.selectedLanguage) {
+        setSelectedLanguage(data.selectedLanguage as string)
+        i18n.changeLanguage(data.selectedLanguage as string)
+      } else {
+        // 默认选择中文
+        setSelectedLanguage("zh-CN")
+        i18n.changeLanguage("zh-CN")
       }
       
       // 加载当前选中provider的配置
@@ -241,8 +267,12 @@ function IndexSidePanel() {
           apiEndpoint: apiEndpointInput
         }
       },
-      selectedProvider: selectedProvider
+      selectedProvider: selectedProvider,
+      selectedLanguage: selectedLanguage
     })
+    
+    // 更新i18n语言
+    i18n.changeLanguage(selectedLanguage)
     
     setApiKey(apiKeyInput)
     setApiEndpoint(apiEndpointInput)
@@ -551,6 +581,16 @@ function IndexSidePanel() {
             setHighlightMap(newHighlightMap)
 
             const userMessageContent = "请总结当前页面"
+            // 根据选择的语言添加提示
+            const languagePrompt = selectedLanguage === "zh-CN" ? "请用中文回答：" : 
+                                  selectedLanguage === "en-US" ? "Please answer in English:" :
+                                  selectedLanguage === "ja-JP" ? "日本語で回答してください：" :
+                                  selectedLanguage === "ko-KR" ? "한국어로 답변해 주세요：" :
+                                  selectedLanguage === "fr-FR" ? "Veuillez répondre en français:" :
+                                  selectedLanguage === "de-DE" ? "Bitte antworten Sie auf Deutsch:" :
+                                  selectedLanguage === "es-ES" ? "Por favor, responda en español:" :
+                                  selectedLanguage === "ru-RU" ? "Пожалуйста, ответьте на русском:" : ""
+            
             const newMessagesForUI: Message[] = [
               ...messages,
               { role: "user", content: userMessageContent },
@@ -560,11 +600,11 @@ function IndexSidePanel() {
 
             const messagesForAI: Message[] = [
               ...messages,
-              { role: "user", content: `${userMessageContent}:\n${aiInputText}` }
+              { role: "user", content: `${languagePrompt}${userMessageContent}:\n${aiInputText}` }
             ]
 
             const port = browser.runtime.connect({ name: "summarize" })
-            port.postMessage({ messages: messagesForAI, model: selectedModel })
+            port.postMessage({ messages: messagesForAI, model: selectedModel, language: selectedLanguage })
             port.onMessage.addListener((chunk: Chunk) => {
               if (chunk.error) {
                 setMessages((prevMessages) => {
@@ -631,12 +671,22 @@ function IndexSidePanel() {
       return
     }
     if (!selectedModel) {
-      alert("请先选择一个模型")
+      alert(t('messages.selectModelFirst'))
       return
     }
     const newMessages: Message[] = [
       ...messages,
-      { role: "user", content: input },
+      { 
+        role: "user", 
+        content: `${selectedLanguage === "zh-CN" ? "请用中文回答：" : 
+                selectedLanguage === "en-US" ? "Please answer in English:" :
+                selectedLanguage === "ja-JP" ? "日本語で回答してください：" :
+                selectedLanguage === "ko-KR" ? "한국어로 답변해 주세요：" :
+                selectedLanguage === "fr-FR" ? "Veuillez répondre en français:" :
+                selectedLanguage === "de-DE" ? "Bitte antworten Sie auf Deutsch:" :
+                selectedLanguage === "es-ES" ? "Por favor, responda en español:" :
+                selectedLanguage === "ru-RU" ? "Пожалуйста, ответьте на русском:" : ""}${input}` 
+      },
       { role: "assistant", content: "" }
     ]
     setMessages(newMessages)
@@ -645,7 +695,7 @@ function IndexSidePanel() {
 
     try {
       const port = browser.runtime.connect({ name: "summarize" })
-      port.postMessage({ messages: newMessages, model: selectedModel })
+      port.postMessage({ messages: newMessages, model: selectedModel, language: selectedLanguage })
       port.onMessage.addListener((chunk: Chunk) => {
         if (chunk.error) {
           setMessages((prevMessages) => {
@@ -742,9 +792,9 @@ function IndexSidePanel() {
 
   const renderSettings = () => (
     <div style={{ padding: 16 }}>
-      <h2>设置</h2>
+      <h2>{t('settings')}</h2>
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>AI提供商</label>
+        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>{t('settings_section.aiProvider')}</label>
         <select
           value={selectedProvider}
           onChange={(e) => handleProviderChange(e.target.value)}
@@ -771,7 +821,7 @@ function IndexSidePanel() {
           type="text"
           onChange={(e) => setApiEndpointInput(e.target.value)}
           value={apiEndpointInput}
-          placeholder={selectedProvider === "custom" ? "输入自定义 Base URL" : `自动填充 (${aiProviders.find(p => p.id === selectedProvider)?.baseUrl})`}
+          placeholder={selectedProvider === "custom" ? t('placeholders.enterCustomBaseUrl') : `自动填充 (${aiProviders.find(p => p.id === selectedProvider)?.baseUrl})`}
           style={{
             width: "100%",
             padding: 8,
@@ -784,12 +834,12 @@ function IndexSidePanel() {
       </div>
 
       <div style={{ marginBottom: 16 }}>
-        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>API Token</label>
+        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>{t('settings_section.apiToken')}</label>
         <input
           type="text"
           onChange={(e) => setApiKeyInput(e.target.value)}
           value={apiKeyInput}
-          placeholder="输入您的 API Token"
+          placeholder={t('messages.enterApiToken')}
           style={{
             width: "100%",
             padding: 8,
@@ -799,6 +849,33 @@ function IndexSidePanel() {
             fontSize: "14px"
           }}
         />
+      </div>
+
+      <div style={{ marginBottom: 16 }}>
+        <label style={{ display: "block", marginBottom: 4, fontSize: "14px" }}>{t('settings_section.language')}</label>
+        <select
+          value={selectedLanguage}
+          onChange={(e) => {
+            const newLanguage = e.target.value;
+            setSelectedLanguage(newLanguage);
+            // 立即切换语言，使设置页面文字立即更新
+            i18n.changeLanguage(newLanguage);
+          }}
+          style={{
+            width: "100%",
+            padding: 8,
+            boxSizing: "border-box",
+            border: "1px solid #ccc",
+            borderRadius: "4px",
+            fontSize: "14px"
+          }}
+        >
+          {languages.map(language => (
+            <option key={language.code} value={language.code}>
+              {language.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <button
@@ -813,7 +890,7 @@ function IndexSidePanel() {
           cursor: "pointer",
           fontSize: "14px"
         }}>
-        保存
+        {t('settings_section.save')}
       </button>
     </div>
   )
@@ -852,7 +929,7 @@ function IndexSidePanel() {
                 fontSize: "12px"
               }}
             >
-              设置
+              {t('settings')}
             </button>
           </div>
           <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, paddingRight: 8 }}>
@@ -894,7 +971,7 @@ function IndexSidePanel() {
               >
                 <input
                   type="text"
-                  placeholder="模型"
+                  placeholder={t('labels.model')}
                   value={modelSearchTerm}
                   onChange={(e) => {
                     setModelSearchTerm(e.target.value);
@@ -918,24 +995,24 @@ function IndexSidePanel() {
               </div>
               {showModelList && (
                 <div
-                  style={{
-                    position: "absolute",
-                    bottom: "100%",
-                    left: 0,
-                    right: 0,
-                    border: "1px solid #ccc",
-                    borderBottom: "none",
-                    borderRadius: "4px 4px 0 0",
-                    maxHeight: "200px",
-                    overflowY: "auto",
-                    backgroundColor: "white",
-                    zIndex: 1000,
-                    boxShadow: "0 -2px 5px rgba(0,0,0,0.1)"
-                  }}
-                >
-                  {fetchingModels ? (
-                    <div style={{ padding: "4px 8px", fontSize: "12px", color: "#666" }}>加载模型中...</div>
-                  ) : (
+                style={{
+                  position: "absolute",
+                  bottom: "100%",
+                  left: 0,
+                  right: 0,
+                  border: "1px solid #ccc",
+                  borderBottom: "none",
+                  borderRadius: "4px 4px 0 0",
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                  backgroundColor: "white",
+                  zIndex: 1000,
+                  boxShadow: "0 -2px 5px rgba(0,0,0,0.1)"
+                }}
+              >
+                {fetchingModels ? (
+                  <div style={{ padding: "4px 8px", fontSize: "12px", color: "#666" }}>{t('messages.loadingModels')}</div>
+                ) : (
                     <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                       {(() => {
                         const filteredModels = models.filter(model => {
@@ -987,8 +1064,8 @@ function IndexSidePanel() {
                               ))
                             ) : (
                               <li style={{ padding: "4px 8px", fontSize: "12px", color: "#999" }}>
-                                未找到匹配的模型
-                              </li>
+                                  {t('messages.noMatchingModels')}
+                                </li>
                             )}
                           </>
                         );
@@ -1014,7 +1091,7 @@ function IndexSidePanel() {
                 }
               }}
               style={{ flex: 1, padding: 8, border: "1px solid #ccc", borderRadius: "4px", backgroundColor: "white" }}
-              placeholder="请输入您的消息..."
+              placeholder={t('placeholders.enterMessage')}
             />
             <button onClick={() => {
               // 如果输入了自定义模型，保存它
@@ -1023,10 +1100,10 @@ function IndexSidePanel() {
               }
               sendMessage();
             }} style={{ padding: 8, marginLeft: 8, backgroundColor: "#4CAF50", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", minWidth: "60px" }}>
-              发送
+              {t('send')}
             </button>
             <button onClick={summarizePage} style={{ padding: 8, marginLeft: 8, backgroundColor: "#2196F3", color: "white", border: "none", borderRadius: "4px", cursor: "pointer", minWidth: "100px" }}>
-              总结页面
+              {t('buttons.chatWithPage')}
             </button>
           </div>
         </>

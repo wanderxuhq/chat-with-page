@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "apiToken": "API 토큰",
+    "model": "모델",
+    "language": "언어",
+    "save": "저장"
+  },
+  "messages": {
+    "enterApiToken": "API 토큰을 입력하세요",
+    "selectModelFirst": "먼저 모델을 선택하세요",
+    "apiKeyNotFound": "API 키를 찾을 수 없습니다"
+  },
+  "buttons": {
+    "chatWithPage": "페이지와 채팅",
+    "clearContext": "컨텍스트 지우기",
+    "copy": "복사",
+    "expand": "펼치기",
+    "collapse": "접기"
+  },
+  "labels": {
+    "chat": "채팅",
+    "context": "컨텍스트",
+    "model": "모델",
+    "language": "언어",
+    "prompt": "프롬프트"
+  },
+  "placeholders": {
+    "enterMessage": "메시지를 입력하세요..."
+  }
+}

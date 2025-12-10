@@ -1,0 +1,36 @@
+{
+  "settings": "設定",
+  "settings_section": {
+    "aiProvider": "AIプロバイダー",
+    "apiToken": "API Token",
+    "model": "モデル",
+    "language": "言語",
+    "save": "保存"
+  },
+  "messages": {
+    "enterApiToken": "API Tokenを入力してください",
+    "selectModelFirst": "まずモデルを選択してください",
+    "apiKeyNotFound": "API Keyが見つかりません",
+    "loadingModels": "モデルを読み込み中...",
+    "noMatchingModels": "一致するモデルが見つかりません"
+  },
+  "buttons": {
+    "chatWithPage": "ページを要約",
+    "clearContext": "コンテキストをクリア",
+    "copy": "コピー",
+    "expand": "展開",
+    "collapse": "折りたたむ"
+  },
+  "labels": {
+    "chat": "チャット",
+    "context": "コンテキスト",
+    "model": "モデル",
+    "language": "言語",
+    "prompt": "プロンプト"
+  },
+  "placeholders": {
+    "enterMessage": "メッセージを入力してください...",
+    "enterCustomBaseUrl": "カスタムBase URLを入力してください"
+  },
+  "send": "送信"
+}

@@ -1,0 +1,30 @@
+{
+  "settings": {
+    "apiToken": "Token API",
+    "model": "Modelo",
+    "language": "Idioma",
+    "save": "Guardar"
+  },
+  "messages": {
+    "enterApiToken": "Por favor, ingrese su token API",
+    "selectModelFirst": "Por favor, seleccione un modelo primero",
+    "apiKeyNotFound": "Clave API no encontrada"
+  },
+  "buttons": {
+    "chatWithPage": "Chatear con la página",
+    "clearContext": "Limpiar contexto",
+    "copy": "Copiar",
+    "expand": "Expandir",
+    "collapse": "Colapsar"
+  },
+  "labels": {
+    "chat": "Chat",
+    "context": "Contexto",
+    "model": "Modelo",
+    "language": "Idioma",
+    "prompt": "Prompt"
+  },
+  "placeholders": {
+    "enterMessage": "Ingrese un mensaje..."
+  }
+}
