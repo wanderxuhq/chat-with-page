@@ -113,22 +113,40 @@ function IndexSidePanel() {
   
   useEffect(() => {
     const fetchSettings = async () => {
-      const data = await browser.storage.local.get(["apiKey", "apiEndpoint", "selectedProvider"])
-      if (data.apiKey) {
-        setApiKey(data.apiKey as string)
-        setApiKeyInput(data.apiKey as string)
-      }
-      if (data.apiEndpoint) {
-        setApiEndpoint(data.apiEndpoint as string)
-        setApiEndpointInput(data.apiEndpoint as string)
-      }
+      const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
+      
+      // 初始化provider配置结构（如果不存在）
+      const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
+      
+      const selectedProviderValue = (data.selectedProvider as string) || aiProviders[0].id;
+      
       if (data.selectedProvider) {
         setSelectedProvider(data.selectedProvider as string)
       } else {
         // 默认选择OpenAI
         const defaultProvider = aiProviders[0]
         setSelectedProvider(defaultProvider.id)
-        if (!data.apiEndpoint) {
+      }
+      
+      // 加载当前选中provider的配置
+      const currentProviderConfig = providerConfigs[selectedProviderValue] || {};
+      
+      if (currentProviderConfig.apiKey) {
+        setApiKey(currentProviderConfig.apiKey as string)
+        setApiKeyInput(currentProviderConfig.apiKey as string)
+      } else {
+        setApiKey("")
+        setApiKeyInput("")
+      }
+      
+      if (currentProviderConfig.apiEndpoint) {
+        setApiEndpoint(currentProviderConfig.apiEndpoint as string)
+        setApiEndpointInput(currentProviderConfig.apiEndpoint as string)
+      } else {
+        // 使用provider的默认baseUrl
+        const defaultProvider = aiProviders.find(p => p.id === (data.selectedProvider || aiProviders[0].id))
+        if (defaultProvider) {
+          setApiEndpoint(defaultProvider.baseUrl)
           setApiEndpointInput(defaultProvider.baseUrl)
         }
       }
@@ -166,20 +184,66 @@ function IndexSidePanel() {
   }, [])
 
   // 处理提供商选择变化
-  const handleProviderChange = (providerId: string) => {
+  const handleProviderChange = async (providerId: string) => {
+    // 先保存当前provider的配置
+    const data = await browser.storage.local.get(["providerConfigs"])
+    const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
+    
+    // 保存当前配置
+    await browser.storage.local.set({
+      providerConfigs: {
+        ...providerConfigs,
+        [selectedProvider]: {
+          apiKey: apiKeyInput,
+          apiEndpoint: apiEndpointInput
+        }
+      }
+    });
+    
+    // 切换到新provider
     setSelectedProvider(providerId)
+    
+    // 加载新provider的配置
+    const newProviderConfig = providerConfigs[providerId] || {};
+    
+    if (newProviderConfig.apiKey) {
+      setApiKey(newProviderConfig.apiKey)
+      setApiKeyInput(newProviderConfig.apiKey)
+    } else {
+      setApiKey("")
+      setApiKeyInput("")
+    }
+    
     const provider = aiProviders.find(p => p.id === providerId)
-    if (provider && provider.id !== "custom") {
-      setApiEndpointInput(provider.baseUrl)
+    if (provider) {
+      if (newProviderConfig.apiEndpoint) {
+        setApiEndpoint(newProviderConfig.apiEndpoint)
+        setApiEndpointInput(newProviderConfig.apiEndpoint)
+      } else if (provider.id !== "custom") {
+        setApiEndpoint(provider.baseUrl)
+        setApiEndpointInput(provider.baseUrl)
+      } else {
+        setApiEndpoint("")
+        setApiEndpointInput("")
+      }
     }
   }
 
   const saveSettings = async () => {
+    const data = await browser.storage.local.get(["providerConfigs"])
+    const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
+    
     await browser.storage.local.set({
-      apiKey: apiKeyInput,
-      apiEndpoint: apiEndpointInput,
+      providerConfigs: {
+        ...providerConfigs,
+        [selectedProvider]: {
+          apiKey: apiKeyInput,
+          apiEndpoint: apiEndpointInput
+        }
+      },
       selectedProvider: selectedProvider
     })
+    
     setApiKey(apiKeyInput)
     setApiEndpoint(apiEndpointInput)
     setShowSettings(false)
@@ -218,6 +282,11 @@ function IndexSidePanel() {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
+
+  // 当selectedModel变化时，更新modelSearchTerm
+  useEffect(() => {
+    setModelSearchTerm(selectedModel);
+  }, [selectedModel]);
 
   const scrollToOriginalText = async (refId: string) => {
     try {
@@ -274,17 +343,92 @@ function IndexSidePanel() {
     let refCounter = 1
     const refIdToNumber: Record<string, number> = {}
 
-    const processedContent = rawContent.replace(
-      /`?\[REF(\w+)\]`?/g,
-      (match, refId) => {
-        if (refIdToNumber[refId] === undefined) {
-          refIdToNumber[refId] = refCounter++
-        }
-        const refNumber = refIdToNumber[refId]
-        return `<a href="#" class="summary-link" data-ref-id="${refId}"><sup>[${refNumber}]</sup></a>`
+    // 辅助函数：处理单个引用ID并返回HTML
+    const processSingleRef = (refId: string) => {
+      if (refIdToNumber[refId] === undefined) {
+        refIdToNumber[refId] = refCounter++
       }
-    )
-    return processedContent
+      const refNumber = refIdToNumber[refId]
+      return `<a href="#" class="summary-link" data-ref-id="${refId}"><sup>[${refNumber}]</sup></a>`
+    }
+
+    // 移除反引号
+    let content = rawContent.replace(/`\[(.*?)\]`/g, '[$1]')
+
+    // 处理[REFx]-[REFy]格式的范围引用
+    const separateRangePattern = /\[(REF(\d+))\]-\[(REF(\d+))\]/g
+    content = content.replace(separateRangePattern, (match, startRef, startId, endRef, endId) => {
+      let processedRefs = ''
+      const start = parseInt(startId)
+      const end = parseInt(endId)
+      
+      if (!isNaN(start) && !isNaN(end)) {
+        // 生成范围内的所有引用
+        for (let i = start; i <= end; i++) {
+          processedRefs += processSingleRef(i.toString())
+        }
+        return processedRefs
+      }
+      
+      return match
+    })
+
+    // 处理所有引用格式
+    // 首先找到所有的引用组（允许空格）
+    const refPattern = /\[(REF[\d,REF\s-]+)\]/g
+    let match
+    const matches: Array<{ fullMatch: string; refsStr: string; index: number }> = []
+    
+    // 先收集所有匹配项
+    while ((match = refPattern.exec(content)) !== null) {
+      matches.push({
+        fullMatch: match[0],
+        refsStr: match[1],
+        index: match.index
+      })
+    }
+    
+    // 从后往前替换，避免索引偏移
+    for (let i = matches.length - 1; i >= 0; i--) {
+      const { fullMatch, refsStr } = matches[i]
+      let processedRefs = ''
+      
+      // 处理范围引用和逗号分隔引用
+      const parts = refsStr.split(',')
+      
+      parts.forEach(part => {
+        part = part.trim()
+        
+        // 检查是否是范围引用
+        if (part.includes('-')) {
+          const rangeParts = part.split('-')
+          if (rangeParts.length === 2) {
+            const startStr = rangeParts[0].replace('REF', '')
+            const endStr = rangeParts[1].replace('REF', '')
+            
+            const start = parseInt(startStr)
+            const end = parseInt(endStr)
+            
+            if (!isNaN(start) && !isNaN(end)) {
+              // 生成范围内的所有引用
+              for (let j = start; j <= end; j++) {
+                processedRefs += processSingleRef(j.toString())
+              }
+              return
+            }
+          }
+        }
+        
+        // 单个引用
+        const refId = part.replace('REF', '')
+        processedRefs += processSingleRef(refId)
+      })
+      
+      // 替换原引用组
+      content = content.replace(fullMatch, processedRefs)
+    }
+    
+    return content
   }
 
   const summarizePage = async () => {
@@ -305,7 +449,7 @@ function IndexSidePanel() {
         if (results && results.length > 0) {
           const pageHtml = results[0].result as string
           const doc = new DOMParser().parseFromString(pageHtml, "text/html")
-          const readability = new ReadabilityParser(doc, { debug: true }); // true for debug logs
+          const readability = new ReadabilityParser(doc, { debug: false }); // true for debug logs
           const articleBody = readability.parse().node;
 
           if (articleBody) {
@@ -314,8 +458,6 @@ function IndexSidePanel() {
                 "p, h1, h2, h3, h4, h5, h6, li, blockquote, pre"
               )
             )
-
-            console.log('articleBody', articleBody)
 
             const elementsToMark = keyElements
               .map((el) => {
@@ -737,10 +879,8 @@ function IndexSidePanel() {
             ))}
             {loading && <div>加载中...</div>}
           </div>
-          <div style={{ marginBottom: "8px", fontSize: "14px", color: "#333" }}>发送消息：</div>
           {/* 模型选择 */}
           <div style={{ marginBottom: "8px" }}>
-            <div style={{ marginBottom: "4px", fontSize: "12px", color: "#666" }}>选择模型:</div>
             <div ref={modelSelectRef} style={{ position: "relative" }}>
               <div
                 style={{
@@ -896,3 +1036,4 @@ function IndexSidePanel() {
 }
 
 export default IndexSidePanel
+

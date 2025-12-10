@@ -8,16 +8,21 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     const messages = req.body.messages
     console.log("Messages:", messages)
 
-    const data = await browser.storage.local.get(["apiKey", "apiEndpoint", "selectedProvider"])
-    if (!data.apiKey) {
+    const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
+    console.log('data', data);
+    
+    const selectedProvider = data.selectedProvider as string || "openai"
+    const providerConfigs = data.providerConfigs || {}
+    const currentProviderConfig = providerConfigs[selectedProvider] || {}
+    
+    if (!currentProviderConfig.apiKey) {
       console.log("API key not found")
       res.send({ error: "API key not found" })
       return
     }
     console.log("API key found")
 
-    const selectedProvider = data.selectedProvider as string || "openai"
-    const baseURL = (data.apiEndpoint as string) || "https://api.openai.com/v1"
+    const baseURL = currentProviderConfig.apiEndpoint || "https://api.openai.com/v1"
     
     // 只使用前端传递的模型参数
     const modelToUse = req.body.model
@@ -34,7 +39,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
       // 处理 Anthropic API
       const anthropic = new OpenAI({
         baseURL: baseURL || "https://api.anthropic.com/v1",
-        apiKey: data.apiKey as string,
+        apiKey: currentProviderConfig.apiKey as string,
         dangerouslyAllowBrowser: true
       })
 
@@ -52,7 +57,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
       // 默认使用 OpenAI 兼容的 API
       const openai = new OpenAI({
         baseURL: baseURL,
-        apiKey: data.apiKey as string,
+        apiKey: currentProviderConfig.apiKey as string,
         dangerouslyAllowBrowser: true
       })
 

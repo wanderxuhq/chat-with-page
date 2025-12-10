@@ -15,15 +15,20 @@ browser.runtime.onConnect.addListener((port) => {
   if (port.name === "summarize") {
     port.onMessage.addListener(async (msg: PortMessage) => {
       try {
-        const data = await browser.storage.local.get(["apiKey", "apiEndpoint"])
-        if (!data.apiKey) {
+        const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
+        
+        const selectedProvider = data.selectedProvider as string || "openai"
+        const providerConfigs = data.providerConfigs || {}
+        const currentProviderConfig = providerConfigs[selectedProvider] || {}
+        
+        if (!currentProviderConfig.apiKey) {
           port.postMessage({ error: "API key not found" })
           return
         }
 
         const openai = new OpenAI({
-          baseURL: (data.apiEndpoint as string) || "https://api.openai.com/v1",
-          apiKey: data.apiKey as string,
+          baseURL: currentProviderConfig.apiEndpoint || "https://api.openai.com/v1",
+          apiKey: currentProviderConfig.apiKey as string,
           dangerouslyAllowBrowser: true
         })
 
