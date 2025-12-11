@@ -15,7 +15,8 @@
     "clearContext": "Очистить контекст",
     "copy": "Копировать",
     "expand": "Развернуть",
-    "collapse": "Свернуть"
+    "collapse": "Свернуть",
+    "clear_chat": "Очистить чат"
   },
   "labels": {
     "chat": "Чат",

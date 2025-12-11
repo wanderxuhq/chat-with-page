@@ -391,6 +391,7 @@ function IndexSidePanel() {
   const processAIOutput = (rawContent: string) => {
     let refCounter = 1
     const refIdToNumber: Record<string, number> = {}
+    const allRefIds: string[] = []
 
     // 辅助函数：处理单个引用ID并返回HTML
     const processSingleRef = (refId: string) => {
@@ -403,6 +404,68 @@ function IndexSidePanel() {
 
     // 移除反引号
     let content = rawContent.replace(/`\[(.*?)\]`/g, '[$1]')
+
+    // 收集所有需要处理的引用ID（保持出现顺序）
+    const collectRefIds = (text: string) => {
+      // 处理[REFx]-[REFy]格式的范围引用
+      const separateRangePattern = /\[(REF(\d+))\]-\[(REF(\d+))\]/g
+      let match
+      while ((match = separateRangePattern.exec(text)) !== null) {
+        const start = parseInt(match[2])
+        const end = parseInt(match[4])
+        if (!isNaN(start) && !isNaN(end)) {
+          for (let i = start; i <= end; i++) {
+            const refId = i.toString()
+            if (!allRefIds.includes(refId)) {
+              allRefIds.push(refId)
+            }
+          }
+        }
+      }
+
+      // 处理所有引用格式
+      const refPattern = /\[(REF[\d,REF\s-]+)\]/g
+      while ((match = refPattern.exec(text)) !== null) {
+        const refsStr = match[1]
+        const parts = refsStr.split(',')
+        parts.forEach(part => {
+          part = part.trim()
+          if (part.includes('-')) {
+            const rangeParts = part.split('-')
+            if (rangeParts.length === 2) {
+              const startStr = rangeParts[0].replace('REF', '')
+              const endStr = rangeParts[1].replace('REF', '')
+              const start = parseInt(startStr)
+              const end = parseInt(endStr)
+              if (!isNaN(start) && !isNaN(end)) {
+                for (let j = start; j <= end; j++) {
+                  const refId = j.toString()
+                  if (!allRefIds.includes(refId)) {
+                    allRefIds.push(refId)
+                  }
+                }
+                return
+              }
+            }
+          }
+          // 单个引用
+          const refId = part.replace('REF', '')
+          if (!allRefIds.includes(refId)) {
+            allRefIds.push(refId)
+          }
+        })
+      }
+    }
+
+    // 先收集所有引用ID
+    collectRefIds(content)
+
+    // 按照出现顺序为每个引用ID分配序号
+    allRefIds.forEach(refId => {
+      if (refIdToNumber[refId] === undefined) {
+        refIdToNumber[refId] = refCounter++
+      }
+    })
 
     // 处理[REFx]-[REFy]格式的范围引用
     const separateRangePattern = /\[(REF(\d+))\]-\[(REF(\d+))\]/g
@@ -768,6 +831,147 @@ function IndexSidePanel() {
     }
   }
 
+  // 页面URL状态，用于标识当前聊天记录
+  const [currentPageUrl, setCurrentPageUrl] = useState<string>('')
+
+  // 获取当前页面URL
+  useEffect(() => {
+    const getCurrentTabUrl = async () => {
+      try {
+        const tabs = await browser.tabs.query({
+          active: true,
+          currentWindow: true
+        })
+        const activeTab = tabs[0]
+        if (activeTab && activeTab.url) {
+          setCurrentPageUrl(activeTab.url)
+        }
+      } catch (error) {
+        console.error("Error getting current tab URL:", error)
+      }
+    }
+    getCurrentTabUrl()
+  }, [])
+
+  // 自动保存聊天记录和highlightMap到localStorage
+  useEffect(() => {
+    if (currentPageUrl && messages.length > 0) {
+      localStorage.setItem(`chat_history_${currentPageUrl}`, JSON.stringify({
+        messages,
+        highlightMap
+      }))
+    }
+  }, [messages, highlightMap, currentPageUrl])
+
+  // 自动加载聊天记录和highlightMap
+  useEffect(() => {
+    if (currentPageUrl) {
+      const savedHistory = localStorage.getItem(`chat_history_${currentPageUrl}`)
+      if (savedHistory) {
+        try {
+          const parsedData = JSON.parse(savedHistory) as {
+            messages: Message[]
+            highlightMap: Record<string, string>
+          }
+          // 确保messages是数组
+          if (Array.isArray(parsedData.messages)) {
+            setMessages(parsedData.messages)
+          } else {
+            console.error("Invalid messages format in saved data")
+            setMessages([])
+          }
+          setHighlightMap(parsedData.highlightMap || {})
+        } catch (error) {
+          console.error("Error parsing saved chat history:", error)
+          // 尝试兼容旧格式
+          try {
+            const parsedMessages = JSON.parse(savedHistory) as Message[]
+            // 确保messages是数组
+            if (Array.isArray(parsedMessages)) {
+              setMessages(parsedMessages)
+            } else {
+              console.error("Invalid messages format in old saved data")
+              setMessages([])
+            }
+          } catch (parseError) {
+            console.error("Error parsing old format chat history:", parseError)
+            // 解析失败时确保messages是数组
+            setMessages([])
+          }
+        }
+      }
+    }
+  }, [currentPageUrl])
+
+  // 清除聊天记录
+  const clearChatHistory = () => {
+    setMessages([])
+    if (currentPageUrl) {
+      localStorage.removeItem(`chat_history_${currentPageUrl}`)
+    }
+  }
+
+  // 重新标记页面元素
+  const relinkPageElements = async () => {
+    if (!Object.keys(highlightMap).length) return
+
+    try {
+      const tabs = await browser.tabs.query({
+        active: true,
+        currentWindow: true
+      })
+      const activeTab = tabs[0]
+
+      if (activeTab && activeTab.id) {
+        await browser.scripting.executeScript({
+          target: { tabId: activeTab.id },
+          func: (map: Record<string, string>) => {
+            // 将highlightMap转换为数组以便处理
+            const elementsToRelink = Object.entries(map)
+              .map(([index, text]) => ({ index, text }))
+              .filter(el => el.text && el.text.length > 10)
+
+            if (elementsToRelink.length > 0) {
+              for (const elInfo of elementsToRelink) {
+                // 查找所有可能的标签类型
+                const possibleTags = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "blockquote", "pre"]
+                for (const tag of possibleTags) {
+                  const candidates = document.querySelectorAll(tag)
+                  for (const candidate of Array.from(candidates)) {
+                    if ((candidate as HTMLElement).innerText?.trim() === elInfo.text) {
+                      // 只在没有标记时添加
+                      if (!candidate.hasAttribute("data-summary-ref-id")) {
+                        candidate.setAttribute(
+                          "data-summary-ref-id",
+                          elInfo.index
+                        )
+                      }
+                      break
+                    }
+                  }
+                }
+              }
+            }
+          },
+          args: [highlightMap]
+        })
+      }
+    } catch (error) {
+      console.error("Error relinking page elements:", error)
+    }
+  }
+
+  // 当聊天记录加载时重新标记页面元素
+  useEffect(() => {
+    if (messages.length > 0) {
+      // 延迟执行，确保页面已经加载完成
+      const timer = setTimeout(() => {
+        relinkPageElements()
+      }, 1000)
+      return () => clearTimeout(timer)
+    }
+  }, [messages, highlightMap])
+
   // 使用useEffect添加全局样式
   useEffect(() => {
     // 创建style元素
@@ -936,7 +1140,21 @@ function IndexSidePanel() {
         renderSettings()
       ) : (
         <>
-          <div style={{ marginBottom: 16, display: "flex", justifyContent: "flex-end" }}>
+          <div style={{ marginBottom: 16, display: "flex", justifyContent: "flex-end", gap: "8px" }}>
+            <button
+              onClick={clearChatHistory}
+              style={{
+                padding: "4px 8px",
+                backgroundColor: "#ffebee",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+                fontSize: "12px",
+                color: "#c62828"
+              }}
+            >
+              {t('buttons.clear_chat')}
+            </button>
             <button
               onClick={() => setShowSettings(true)}
               style={{
@@ -952,7 +1170,7 @@ function IndexSidePanel() {
             </button>
           </div>
           <div style={{ flex: 1, overflowY: "auto", marginBottom: 16, paddingRight: 8 }}>
-            {messages.map((msg, index) => (
+            {(messages || []).map((msg, index) => (
               <div
                 key={index}
                 style={{

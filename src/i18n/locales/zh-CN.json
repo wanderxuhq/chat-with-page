@@ -19,7 +19,8 @@
     "clearContext": "清空上下文",
     "copy": "复制",
     "expand": "展开",
-    "collapse": "收起"
+    "collapse": "收起",
+    "clear_chat": "清除聊天"
   },
   "labels": {
     "chat": "聊天",

@@ -15,7 +15,8 @@
     "clearContext": "컨텍스트 지우기",
     "copy": "복사",
     "expand": "펼치기",
-    "collapse": "접기"
+    "collapse": "접기",
+    "clear_chat": "채팅 지우기"
   },
   "labels": {
     "chat": "채팅",

@@ -19,7 +19,8 @@
     "clearContext": "Clear Context",
     "copy": "Copy",
     "expand": "Expand",
-    "collapse": "Collapse"
+    "collapse": "Collapse",
+    "clear_chat": "Clear Chat"
   },
   "labels": {
     "chat": "Chat",

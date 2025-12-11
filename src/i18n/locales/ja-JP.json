@@ -19,7 +19,8 @@
     "clearContext": "コンテキストをクリア",
     "copy": "コピー",
     "expand": "展開",
-    "collapse": "折りたたむ"
+    "collapse": "折りたたむ",
+    "clear_chat": "チャットをクリア"
   },
   "labels": {
     "chat": "チャット",

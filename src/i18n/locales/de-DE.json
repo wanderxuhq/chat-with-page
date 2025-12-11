@@ -15,7 +15,8 @@
     "clearContext": "Kontext löschen",
     "copy": "Kopieren",
     "expand": "Erweitern",
-    "collapse": "Einklappen"
+    "collapse": "Einklappen",
+    "clear_chat": "Chat löschen"
   },
   "labels": {
     "chat": "Chat",

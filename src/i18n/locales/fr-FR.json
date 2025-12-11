@@ -11,11 +11,12 @@
     "apiKeyNotFound": "Clé API non trouvée"
   },
   "buttons": {
-    "chatWithPage": "Chatter avec la page",
+    "chatWithPage": "Résumer la page",
     "clearContext": "Effacer le contexte",
     "copy": "Copier",
     "expand": "Développer",
-    "collapse": "Réduire"
+    "collapse": "Réduire",
+    "clear_chat": "Effacer le chat"
   },
   "labels": {
     "chat": "Chat",
