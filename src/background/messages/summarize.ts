@@ -6,21 +6,30 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   try {
     const messages = req.body.messages
 
-    const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
+    // 获取当前选择的提供商
+    const selectedProviderData = await browser.storage.local.get("selectedProvider")
+    const selectedProvider = (selectedProviderData.selectedProvider as string) || "openai"
     
-    // 确保data不为空
-    const safeData = data || {};
+    // 获取提供商特定的API配置
+    const apiKeyData = await browser.storage.local.get(`${selectedProvider}ApiKey`)
+    const apiEndpointData = await browser.storage.local.get(`${selectedProvider}ApiEndpoint`)
     
-    const selectedProvider = (safeData.selectedProvider as string) || "openai"
-    const providerConfigs = safeData.providerConfigs || {}
-    const currentProviderConfig = providerConfigs[selectedProvider] || {}
+    // 获取通用API配置作为备选
+    const genericApiKeyData = await browser.storage.local.get("apiKey")
+    const genericApiEndpointData = await browser.storage.local.get("apiEndpoint")
+
+    // 使用提供商特定的配置，如果没有则使用通用配置
+    const apiKey = (apiKeyData[`${selectedProvider}ApiKey`] as string) || 
+                  (genericApiKeyData.apiKey as string)
+
+    const baseURL = (apiEndpointData[`${selectedProvider}ApiEndpoint`] as string) || 
+                   (genericApiEndpointData.apiEndpoint as string) || 
+                   "https://api.openai.com/v1"
     
-    if (!currentProviderConfig.apiKey) {
+    if (!apiKey) {
       res.send({ error: "API key not found" })
       return
     }
-
-    const baseURL = currentProviderConfig.apiEndpoint || "https://api.openai.com/v1"
     
     // 只使用前端传递的模型参数
     const modelToUse = req.body.model
@@ -36,7 +45,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
       // 处理 Anthropic API
       const anthropic = new OpenAI({
         baseURL: baseURL || "https://api.anthropic.com/v1",
-        apiKey: currentProviderConfig.apiKey as string,
+        apiKey: apiKey as string,
         dangerouslyAllowBrowser: true
       })
 
@@ -53,7 +62,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
       // 默认使用 OpenAI 兼容的 API
       const openai = new OpenAI({
         baseURL: baseURL,
-        apiKey: currentProviderConfig.apiKey as string,
+        apiKey: apiKey as string,
         dangerouslyAllowBrowser: true
       })
 

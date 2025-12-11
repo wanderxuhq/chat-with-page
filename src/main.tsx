@@ -1,4 +1,4 @@
-import IndexSidePanel from "./IndexSidePanel";
-import "./i18n/i18n";
+import { ChatApp } from "./components";
+import "./i18n";
 
-export default IndexSidePanel;
+export default ChatApp;

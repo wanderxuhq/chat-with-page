@@ -12,7 +12,8 @@
     "selectModelFirst": "请先选择一个模型",
     "apiKeyNotFound": "未找到API Key",
     "loadingModels": "加载模型中...",
-    "noMatchingModels": "未找到匹配的模型"
+    "noMatchingModels": "未找到匹配的模型",
+    "loading": "加载中..."
   },
   "buttons": {
     "chatWithPage": "总结页面",

@@ -45,23 +45,34 @@ waitForAPI().then((browser) => {
     if (port.name === "summarize") {
       port.onMessage.addListener(async (msg: PortMessage) => {
         try {
-          const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
+          // 获取当前选择的提供商
+          const selectedProviderData = await browser.storage.local.get("selectedProvider")
+          const selectedProvider = (selectedProviderData.selectedProvider as string) || "openai"
+          
+          // 获取提供商特定的API配置
+          const apiKeyData = await browser.storage.local.get(`${selectedProvider}ApiKey`)
+          const apiEndpointData = await browser.storage.local.get(`${selectedProvider}ApiEndpoint`)
+          
+          // 获取通用API配置作为备选
+          const genericApiKeyData = await browser.storage.local.get("apiKey")
+          const genericApiEndpointData = await browser.storage.local.get("apiEndpoint")
 
-          // 确保data不为空
-          const safeData = data || {};
+          // 使用提供商特定的配置，如果没有则使用通用配置
+          const apiKey = (apiKeyData[`${selectedProvider}ApiKey`] as string) || 
+                        (genericApiKeyData.apiKey as string)
 
-          const selectedProvider = (safeData.selectedProvider as string) || "openai"
-          const providerConfigs = safeData.providerConfigs || {}
-          const currentProviderConfig = providerConfigs[selectedProvider] || {}
+          const apiEndpoint = (apiEndpointData[`${selectedProvider}ApiEndpoint`] as string) || 
+                            (genericApiEndpointData.apiEndpoint as string) || 
+                            "https://api.openai.com/v1"
 
-          if (!currentProviderConfig.apiKey) {
+          if (!apiKey) {
             port.postMessage({ error: "API key not found" })
             return
           }
 
           const openai = new OpenAI({
-            baseURL: currentProviderConfig.apiEndpoint || "https://api.openai.com/v1",
-            apiKey: currentProviderConfig.apiKey as string,
+            baseURL: apiEndpoint,
+            apiKey: apiKey as string,
             dangerouslyAllowBrowser: true
           })
 

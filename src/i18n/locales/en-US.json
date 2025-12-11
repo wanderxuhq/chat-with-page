@@ -12,7 +12,8 @@
     "selectModelFirst": "Please select a model first",
     "apiKeyNotFound": "API Key not found",
     "loadingModels": "Loading models...",
-    "noMatchingModels": "No matching models found"
+    "noMatchingModels": "No matching models found",
+    "loading": "Loading..."
   },
   "buttons": {
     "chatWithPage": "Summarize Page",
