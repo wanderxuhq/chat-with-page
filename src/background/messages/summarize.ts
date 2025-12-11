@@ -11,8 +11,11 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
     console.log('data', data);
     
-    const selectedProvider = data.selectedProvider as string || "openai"
-    const providerConfigs = data.providerConfigs || {}
+    // 确保data不为空
+    const safeData = data || {};
+    
+    const selectedProvider = (safeData.selectedProvider as string) || "openai"
+    const providerConfigs = safeData.providerConfigs || {}
     const currentProviderConfig = providerConfigs[selectedProvider] || {}
     
     if (!currentProviderConfig.apiKey) {

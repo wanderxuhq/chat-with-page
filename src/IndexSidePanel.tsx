@@ -1,10 +1,11 @@
 import * as browser from "webextension-polyfill"
 import { useEffect, useState, useRef } from "react"
 import { marked } from "marked"
-import { escape } from "./escape"
+import { escape } from "../escape"
 import { ReadabilityParser } from './ReadabilityParser';
 import { useTranslation } from 'react-i18next';
-import './src/i18n/i18n'; // 导入i18n配置
+import './i18n/i18n'; // 导入i18n配置
+
 
 marked.use({
   renderer: {
@@ -129,15 +130,19 @@ function IndexSidePanel() {
   
   useEffect(() => {
     const fetchSettings = async () => {
-      const data = await browser.storage.local.get(["providerConfigs", "selectedProvider", "selectedLanguage"])
+      try {
+        const data = await browser.storage.local.get(["providerConfigs", "selectedProvider", "selectedLanguage"])
+        
+        // 确保data不为空
+        const safeData = data || {};
+        
+        // 初始化provider配置结构（如果不存在）
+        const providerConfigs = (safeData.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }>) || {};
+        
+        const selectedProviderValue = (safeData.selectedProvider as string) || aiProviders[0].id;
       
-      // 初始化provider配置结构（如果不存在）
-      const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
-      
-      const selectedProviderValue = (data.selectedProvider as string) || aiProviders[0].id;
-      
-      if (data.selectedProvider) {
-        setSelectedProvider(data.selectedProvider as string)
+      if (safeData.selectedProvider) {
+        setSelectedProvider(safeData.selectedProvider as string)
       } else {
         // 默认选择OpenAI
         const defaultProvider = aiProviders[0]
@@ -145,9 +150,9 @@ function IndexSidePanel() {
       }
       
       // 加载语言设置
-      if (data.selectedLanguage) {
-        setSelectedLanguage(data.selectedLanguage as string)
-        i18n.changeLanguage(data.selectedLanguage as string)
+      if (safeData.selectedLanguage) {
+        setSelectedLanguage(safeData.selectedLanguage as string)
+        i18n.changeLanguage(safeData.selectedLanguage as string)
       } else {
         // 默认选择中文
         setSelectedLanguage("zh-CN")
@@ -170,11 +175,14 @@ function IndexSidePanel() {
         setApiEndpointInput(currentProviderConfig.apiEndpoint as string)
       } else {
         // 使用provider的默认baseUrl
-        const defaultProvider = aiProviders.find(p => p.id === (data.selectedProvider || aiProviders[0].id))
+        const defaultProvider = aiProviders.find(p => p.id === (safeData.selectedProvider || aiProviders[0].id))
         if (defaultProvider) {
           setApiEndpoint(defaultProvider.baseUrl)
           setApiEndpointInput(defaultProvider.baseUrl)
         }
+      }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
       }
     }
     fetchSettings()
@@ -211,9 +219,12 @@ function IndexSidePanel() {
 
   // 处理提供商选择变化
   const handleProviderChange = async (providerId: string) => {
-    // 先保存当前provider的配置
-    const data = await browser.storage.local.get(["providerConfigs"])
-    const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
+    console.log(providerId);
+    try {
+      // 先保存当前provider的配置
+      const data = await browser.storage.local.get(["providerConfigs"])
+      const safeData = data || {};
+      const providerConfigs = (safeData.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }>) || {};
     
     // 保存当前配置
     await browser.storage.local.set({
@@ -253,23 +264,30 @@ function IndexSidePanel() {
         setApiEndpointInput("")
       }
     }
+    } catch (error) {
+      console.error('Error changing provider:', error);
+    }
   }
 
   const saveSettings = async () => {
-    const data = await browser.storage.local.get(["providerConfigs"])
-    const providerConfigs = data.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }> || {};
-    
-    await browser.storage.local.set({
-      providerConfigs: {
-        ...providerConfigs,
-        [selectedProvider]: {
-          apiKey: apiKeyInput,
-          apiEndpoint: apiEndpointInput
-        }
-      },
-      selectedProvider: selectedProvider,
-      selectedLanguage: selectedLanguage
-    })
+    try {
+      // 等待browser API可用
+      console.log( await browser.storage.local.get(["providerConfigs"]));
+      const data = await browser.storage.local.get(["providerConfigs"])
+      const safeData = data || {};
+      const providerConfigs = (safeData.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }>) || {};
+      
+      await browser.storage.local.set({
+        providerConfigs: {
+          ...providerConfigs,
+          [selectedProvider]: {
+            apiKey: apiKeyInput,
+            apiEndpoint: apiEndpointInput
+          }
+        },
+        selectedProvider: selectedProvider,
+        selectedLanguage: selectedLanguage
+      })
     
     // 更新i18n语言
     i18n.changeLanguage(selectedLanguage)
@@ -278,6 +296,9 @@ function IndexSidePanel() {
     setApiEndpoint(apiEndpointInput)
     setShowSettings(false)
     console.log("Settings saved")
+    } catch (error) {
+      console.error('Error saving settings:', error);
+    }
   }
   
   // 保存选择的模型到localStorage

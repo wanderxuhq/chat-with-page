@@ -15,6 +15,6 @@
       ]
     },
     "baseUrl": ".",
-    "types": ["@types/webextension-polyfill"]
+    "types": ["@types/webextension-polyfill", "chrome"]
   }
 }
