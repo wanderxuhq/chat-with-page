@@ -3,13 +3,10 @@ import OpenAI from "openai"
 import * as browser from "webextension-polyfill"
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
-  console.log("Summarize message handler called")
   try {
     const messages = req.body.messages
-    console.log("Messages:", messages)
 
     const data = await browser.storage.local.get(["providerConfigs", "selectedProvider"])
-    console.log('data', data);
     
     // 确保data不为空
     const safeData = data || {};
@@ -19,11 +16,9 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     const currentProviderConfig = providerConfigs[selectedProvider] || {}
     
     if (!currentProviderConfig.apiKey) {
-      console.log("API key not found")
       res.send({ error: "API key not found" })
       return
     }
-    console.log("API key found")
 
     const baseURL = currentProviderConfig.apiEndpoint || "https://api.openai.com/v1"
     
@@ -32,7 +27,6 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
     
     // 如果没有传递模型参数，返回错误
     if (!modelToUse) {
-      console.log("Model not provided")
       res.send({ error: "Model not provided" })
       return
     }
@@ -46,7 +40,6 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
         dangerouslyAllowBrowser: true
       })
 
-      console.log(`Sending request to Anthropic API at ${baseURL || "https://api.anthropic.com/v1"} using model ${modelToUse}`)
       const stream = await anthropic.chat.completions.create({
         model: modelToUse,
         stream: true,
@@ -64,7 +57,6 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
         dangerouslyAllowBrowser: true
       })
 
-      console.log(`Sending request to ${selectedProvider} API at ${baseURL} using model ${modelToUse}`)
       const stream = await openai.chat.completions.create({
         model: modelToUse,
         stream: true,

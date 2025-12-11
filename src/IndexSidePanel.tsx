@@ -70,6 +70,7 @@ function IndexSidePanel() {
     { id: "anthropic", name: "Anthropic", baseUrl: "https://api.anthropic.com/v1" },
     { id: "google", name: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
     { id: "openrouter", name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1" },
+    { id: "ollama", name: "Ollama", baseUrl: "http://localhost:11434/v1/" },
     { id: "custom", name: "自定义", baseUrl: "" }
   ]
 
@@ -154,9 +155,9 @@ function IndexSidePanel() {
         setSelectedLanguage(safeData.selectedLanguage as string)
         i18n.changeLanguage(safeData.selectedLanguage as string)
       } else {
-        // 默认选择中文
-        setSelectedLanguage("zh-CN")
-        i18n.changeLanguage("zh-CN")
+        // 使用i18n检测到的浏览器语言作为默认语言
+        const detectedLanguage = i18n.language;
+        setSelectedLanguage(detectedLanguage)
       }
       
       // 加载当前选中provider的配置
@@ -219,7 +220,6 @@ function IndexSidePanel() {
 
   // 处理提供商选择变化
   const handleProviderChange = async (providerId: string) => {
-    console.log(providerId);
     try {
       // 先保存当前provider的配置
       const data = await browser.storage.local.get(["providerConfigs"])
@@ -272,7 +272,6 @@ function IndexSidePanel() {
   const saveSettings = async () => {
     try {
       // 等待browser API可用
-      console.log( await browser.storage.local.get(["providerConfigs"]));
       const data = await browser.storage.local.get(["providerConfigs"])
       const safeData = data || {};
       const providerConfigs = (safeData.providerConfigs as Record<string, { apiKey?: string; apiEndpoint?: string }>) || {};
@@ -295,7 +294,6 @@ function IndexSidePanel() {
     setApiKey(apiKeyInput)
     setApiEndpoint(apiEndpointInput)
     setShowSettings(false)
-    console.log("Settings saved")
     } catch (error) {
       console.error('Error saving settings:', error);
     }

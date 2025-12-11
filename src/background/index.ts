@@ -28,7 +28,6 @@ const waitForAPI = () => {
 // 使用等待后的 API  
 waitForAPI().then((browser) => {
 
-  console.log(browser.storage)
   // Manifest V3 (Chrome/Edge)  
   chrome.action.onClicked.addListener(async (tab) => {
     await chrome.sidePanel.open({ tabId: tab.id })
