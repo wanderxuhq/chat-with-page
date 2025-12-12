@@ -30,11 +30,11 @@ function ChatApp() {
   
   // 外部hooks
   const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
-  const { messages, setMessages, input, setInput, clearChatHistory } = useChatHistory();
+  const { currentPageUrl } = usePageInteraction([]);
+  const { messages, setMessages, input, setInput, clearChatHistory } = useChatHistory(currentPageUrl);
   const { selectedProvider, setSelectedProvider, apiKey, setApiKey, apiEndpoint, setApiEndpoint, apiKeyInput, setApiKeyInput, apiEndpointInput, setApiEndpointInput, handleProviderChange, saveSettings: saveProviderSettings } = useProviderConfig();
   const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
-  const { currentPageUrl } = usePageInteraction(messages);
-  const { highlightMap, setHighlightMap } = useTextHighlighting(messages);
+  const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
   
   // ======================================
   // 2. 常量定义
@@ -64,43 +64,16 @@ function ChatApp() {
     setModelSearchTerm(selectedModel);
   }, [selectedModel]);
   
-  // 自动保存聊天记录和highlightMap到localStorage
+  // 当聊天记录加载时重新标记页面元素
   useEffect(() => {
-    if (currentPageUrl && messages.length > 0) {
-      localStorage.setItem(`chat_history_${currentPageUrl}`, JSON.stringify({
-        messages,
-        highlightMap
-      }));
+    if (messages.length > 0) {
+      // 延迟执行，确保页面已经加载完成
+      const timer = setTimeout(() => {
+        relinkPageElements();
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [messages, highlightMap, currentPageUrl]);
-  
-  // 自动加载聊天记录和highlightMap
-  useEffect(() => {
-    if (currentPageUrl) {
-      const savedHistory = localStorage.getItem(`chat_history_${currentPageUrl}`);
-      if (savedHistory) {
-        try {
-          const parsedData = JSON.parse(savedHistory) as {
-            messages: Message[];
-            highlightMap: Record<string, string>;
-          };
-          // 确保messages是数组
-          if (Array.isArray(parsedData.messages)) {
-            setMessages(parsedData.messages);
-          } else {
-            console.error("Invalid messages format in saved data");
-            setMessages([]);
-          }
-          setHighlightMap(parsedData.highlightMap || {});
-        } catch (error) {
-          console.error("Error parsing saved chat history:", error);
-          // 解析失败时确保messages是数组
-          setMessages([]);
-          setHighlightMap({});
-        }
-      }
-    }
-  }, [currentPageUrl]);
+  }, [messages, relinkPageElements]);
   
   // ======================================
   // 4. 事件处理函数 (使用 useCallback 优化)
