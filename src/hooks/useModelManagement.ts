@@ -87,41 +87,16 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
   useEffect(() => {
     const loadDefaultModel = async () => {
       try {
-        // 1. 先从 browser.storage.local 获取保存的模型
-        const savedModelFromStorage = await browser.storage.local.get('selectedModel');
-        if (savedModelFromStorage.selectedModel) {
-          setSelectedModel(savedModelFromStorage.selectedModel as string);
+        // 优先从 browser.storage.local 获取当前提供商的上次选择模型
+        const savedProviderModel = await browser.storage.local.get(`${selectedProvider}SelectedModel`);
+        if (savedProviderModel[`${selectedProvider}SelectedModel`]) {
+          setSelectedModel(savedProviderModel[`${selectedProvider}SelectedModel`] as string);
           return;
         }
-
-        // 2. 如果没有，再从 localStorage 获取保存的模型（兼容旧的存储方式）
-        if (apiEndpoint) {
-          const cachedModelData = localStorage.getItem(`models_${apiEndpoint}`);
-          if (cachedModelData) {
-            const { selectedModel } = JSON.parse(cachedModelData);
-            if (selectedModel) {
-              setSelectedModel(selectedModel);
-              return;
-            }
-          }
-        }
-
-        // 3. 如果都没有，根据提供商设置默认模型
-        let defaultModel = '';
-        switch (selectedProvider) {
-          case 'anthropic':
-            defaultModel = 'claude-3-sonnet-20240229';
-            break;
-          case 'gemini':
-            defaultModel = 'gemini-1.0-pro';
-            break;
-          case 'groq':
-            defaultModel = 'mixtral-8x7b-32768';
-            break;
-          default:
-            defaultModel = '';
-        }
-        setSelectedModel(defaultModel);
+        // 当用户第一次使用某个提供商时，模型选择为空，需要用户手动选择
+        setSelectedModel('');
+        // 同时更新搜索词，保持一致
+        setModelSearchTerm('');
       } catch (error) {
         console.error('Error loading default model:', error);
       }
@@ -141,15 +116,12 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
     setSelectedModel(modelId)
     
     // 保存到 browser.storage.local，确保插件重新打开时能记住选择
-    browser.storage.local.set({ selectedModel: modelId })
-      .catch(error => console.error('Error saving model to storage:', error));
-    
-    // 同时保存到 localStorage（兼容旧的存储方式）
-    localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
-      models: models,
+    // 同时按提供商保存模型，以便切换提供商时能恢复上次选择
+    browser.storage.local.set({ 
       selectedModel: modelId,
-      timestamp: Date.now()
-    }))
+      [`${selectedProvider}SelectedModel`]: modelId 
+    })
+      .catch(error => console.error('Error saving model to storage:', error));
     
     setShowModelList(false); // 选择后隐藏列表
   };
