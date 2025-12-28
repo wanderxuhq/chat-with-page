@@ -1,9 +1,16 @@
 {
-  "settings": {
+  "settings": "Configuración",
+  "settings_section": {
+    "aiProvider": "Proveedor de IA",
     "apiToken": "Token API",
     "model": "Modelo",
     "language": "Idioma",
-    "save": "Guardar"
+    "save": "Guardar",
+    "theme": "Tema",
+    "themeSystem": "Auto",
+    "themeLight": "Claro",
+    "themeDark": "Oscuro",
+    "autoFill": "Dejar vacío para usar URL predeterminada"
   },
   "messages": {
     "enterApiToken": "Por favor, ingrese su token API",

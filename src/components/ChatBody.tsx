@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import MessageList from './MessageList';
 import type { Message } from '../types/index';
+import type { ThemeColors } from '../hooks/useTheme';
 
 interface ChatBodyProps {
   messages: Message[];
@@ -11,6 +12,7 @@ interface ChatBodyProps {
   onEdit?: (index: number, content: string) => void;
   onRegenerate?: (index: number) => void;
   onStopGeneration?: () => void;
+  colors: ThemeColors;
 }
 
 const ChatBody: React.FC<ChatBodyProps> = ({
@@ -21,7 +23,8 @@ const ChatBody: React.FC<ChatBodyProps> = ({
   onCopy,
   onEdit,
   onRegenerate,
-  onStopGeneration
+  onStopGeneration,
+  colors
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -51,7 +54,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
     },
     stopButtonInner: {
       padding: '8px 16px',
-      backgroundColor: '#ef4444',
+      backgroundColor: colors.danger,
       color: 'white',
       border: 'none',
       borderRadius: '8px',
@@ -77,6 +80,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
           onCopy={onCopy}
           onEdit={onEdit}
           onRegenerate={onRegenerate}
+          colors={colors}
         />
       </div>
 
@@ -87,10 +91,10 @@ const ChatBody: React.FC<ChatBodyProps> = ({
             style={styles.stopButtonInner}
             onClick={onStopGeneration}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc2626';
+              e.currentTarget.style.backgroundColor = colors.dangerHover;
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#ef4444';
+              e.currentTarget.style.backgroundColor = colors.danger;
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">

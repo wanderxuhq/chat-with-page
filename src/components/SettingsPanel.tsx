@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { ThemeColors, ThemeMode } from '../hooks/useTheme';
 
 interface SettingsPanelProps {
   selectedProvider: string;
@@ -23,6 +24,9 @@ interface SettingsPanelProps {
   i18n: {
     changeLanguage: (language: string) => void;
   };
+  colors: ThemeColors;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -38,53 +42,64 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   setApiKeyInput,
   setSelectedLanguage,
   saveSettings,
-  i18n
+  i18n,
+  colors,
+  themeMode,
+  setThemeMode
 }) => {
   const [showApiKey, setShowApiKey] = useState(false);
 
+  const themeOptions = [
+    { value: 'system' as ThemeMode, label: t('settings_section.themeSystem') || '跟随系统' },
+    { value: 'light' as ThemeMode, label: t('settings_section.themeLight') || '浅色' },
+    { value: 'dark' as ThemeMode, label: t('settings_section.themeDark') || '深色' },
+  ];
+
   const styles = {
     container: {
-      padding: '24px',
+      padding: '0 12px 12px 12px',
       maxWidth: '100%',
-      margin: '0 auto',
+      backgroundColor: colors.bgPrimary,
     },
     header: {
-      fontSize: '20px',
+      fontSize: '18px',
       fontWeight: 600,
-      marginBottom: '24px',
-      color: '#1a1a1a',
-      borderBottom: '2px solid #4CAF50',
-      paddingBottom: '12px',
+      marginBottom: '16px',
+      color: colors.textPrimary,
+      borderBottom: `2px solid ${colors.primary}`,
+      paddingBottom: '8px',
     },
     formGroup: {
-      marginBottom: '20px',
+      marginBottom: '14px',
     },
     label: {
       display: 'block',
       marginBottom: '8px',
       fontSize: '14px',
       fontWeight: 500,
-      color: '#374151',
+      color: colors.textSecondary,
     },
     input: {
       width: '100%',
       padding: '12px 14px',
       boxSizing: 'border-box' as const,
-      border: '1px solid #d1d5db',
+      border: `1px solid ${colors.borderPrimary}`,
       borderRadius: '8px',
       fontSize: '14px',
       transition: 'border-color 0.2s, box-shadow 0.2s',
       outline: 'none',
-      backgroundColor: '#fff',
+      backgroundColor: colors.bgInput,
+      color: colors.textPrimary,
     },
     select: {
       width: '100%',
       padding: '12px 14px',
       boxSizing: 'border-box' as const,
-      border: '1px solid #d1d5db',
+      border: `1px solid ${colors.borderPrimary}`,
       borderRadius: '8px',
       fontSize: '14px',
-      backgroundColor: '#fff',
+      backgroundColor: colors.bgInput,
+      color: colors.textPrimary,
       cursor: 'pointer',
       outline: 'none',
       appearance: 'none' as const,
@@ -102,12 +117,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       width: '100%',
       padding: '12px 44px 12px 14px',
       boxSizing: 'border-box' as const,
-      border: '1px solid #d1d5db',
+      border: `1px solid ${colors.borderPrimary}`,
       borderRadius: '8px',
       fontSize: '14px',
       transition: 'border-color 0.2s, box-shadow 0.2s',
       outline: 'none',
-      backgroundColor: '#fff',
+      backgroundColor: colors.bgInput,
+      color: colors.textPrimary,
     },
     toggleButton: {
       position: 'absolute' as const,
@@ -119,12 +135,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      color: '#6b7280',
+      color: colors.textMuted,
     },
     saveButton: {
       width: '100%',
       padding: '14px 20px',
-      backgroundColor: '#4CAF50',
+      backgroundColor: colors.primary,
       color: 'white',
       border: 'none',
       borderRadius: '8px',
@@ -136,14 +152,58 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     },
     hint: {
       fontSize: '12px',
-      color: '#6b7280',
+      color: colors.textMuted,
       marginTop: '4px',
     },
+    themeSelector: {
+      display: 'flex',
+      gap: '6px',
+      width: '100%',
+    },
+    themeButton: (isActive: boolean) => ({
+      flex: 1,
+      padding: '10px 12px',
+      border: `1px solid ${isActive ? colors.primary : colors.borderPrimary}`,
+      borderRadius: '8px',
+      backgroundColor: isActive ? colors.primaryLight : colors.bgInput,
+      color: isActive ? colors.primary : colors.textSecondary,
+      cursor: 'pointer',
+      fontSize: '14px',
+      fontWeight: isActive ? 500 : 400,
+      transition: 'all 0.2s',
+      textAlign: 'center' as const,
+    }),
   };
 
   return (
     <div style={styles.container}>
       <h2 style={styles.header}>{t('settings')}</h2>
+
+      {/* 主题选择 */}
+      <div style={styles.formGroup}>
+        <label style={styles.label}>{t('settings_section.theme') || '主题'}</label>
+        <div style={styles.themeSelector}>
+          {themeOptions.map((option) => (
+            <button
+              key={option.value}
+              style={styles.themeButton(themeMode === option.value)}
+              onClick={() => setThemeMode(option.value)}
+              onMouseOver={(e) => {
+                if (themeMode !== option.value) {
+                  e.currentTarget.style.backgroundColor = colors.bgHover;
+                }
+              }}
+              onMouseOut={(e) => {
+                if (themeMode !== option.value) {
+                  e.currentTarget.style.backgroundColor = colors.bgInput;
+                }
+              }}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div style={styles.formGroup}>
         <label style={styles.label}>{t('settings_section.aiProvider')}</label>
@@ -230,10 +290,10 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         onClick={saveSettings}
         style={styles.saveButton}
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#45a049';
+          e.currentTarget.style.backgroundColor = colors.primaryHover;
         }}
         onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = '#4CAF50';
+          e.currentTarget.style.backgroundColor = colors.primary;
         }}
       >
         {t('settings_section.save')}

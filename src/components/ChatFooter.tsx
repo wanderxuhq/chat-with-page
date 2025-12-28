@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { ThemeColors } from '../hooks/useTheme';
 
 interface ChatFooterProps {
   models: string[];
@@ -14,6 +15,7 @@ interface ChatFooterProps {
   saveSelectedModel: (model: string) => void;
   sendMessage: () => void;
   summarizePage: () => void;
+  colors: ThemeColors;
 }
 
 const ChatFooter: React.FC<ChatFooterProps> = ({
@@ -29,7 +31,8 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
   setShowModelList,
   saveSelectedModel,
   sendMessage,
-  summarizePage
+  summarizePage,
+  colors
 }) => {
   const [showModelSelector, setShowModelSelector] = useState(false);
 
@@ -39,7 +42,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
       flexDirection: 'column' as const,
       gap: '8px',
       padding: '8px 0',
-      borderTop: '1px solid #e5e7eb',
+      borderTop: `1px solid ${colors.borderSecondary}`,
     },
     inputRow: {
       display: 'flex',
@@ -50,9 +53,10 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
       flex: 1,
       minWidth: '0',
       padding: '10px 12px',
-      border: '1px solid #d1d5db',
+      border: `1px solid ${colors.borderPrimary}`,
       borderRadius: '8px',
-      backgroundColor: 'white',
+      backgroundColor: colors.bgInput,
+      color: colors.textPrimary,
       fontSize: '14px',
       outline: 'none',
       transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -61,22 +65,22 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
       width: '36px',
       height: '36px',
       padding: '0',
-      backgroundColor: '#f3f4f6',
-      border: '1px solid #e5e7eb',
+      backgroundColor: colors.bgTertiary,
+      border: `1px solid ${colors.borderSecondary}`,
       borderRadius: '8px',
       cursor: 'pointer',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       transition: 'all 0.2s',
-      color: '#6b7280',
+      color: colors.textMuted,
       flexShrink: 0,
     },
     sendButton: {
       width: '36px',
       height: '36px',
       padding: '0',
-      backgroundColor: '#4CAF50',
+      backgroundColor: colors.primary,
       color: 'white',
       border: 'none',
       borderRadius: '8px',
@@ -121,11 +125,12 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
                 width: '100%',
                 height: '36px',
                 padding: '0 10px',
-                border: '1px solid #d1d5db',
+                border: `1px solid ${colors.borderPrimary}`,
                 borderRadius: '8px',
                 fontSize: '13px',
                 outline: 'none',
-                backgroundColor: '#f9fafb',
+                backgroundColor: colors.bgSecondary,
+                color: colors.textPrimary,
                 boxSizing: 'border-box' as const,
               }}
             />
@@ -135,20 +140,20 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
                 bottom: '100%',
                 left: 0,
                 right: 0,
-                border: '1px solid #d1d5db',
+                border: `1px solid ${colors.borderPrimary}`,
                 borderBottom: 'none',
                 borderRadius: '8px 8px 0 0',
                 maxHeight: '220px',
                 overflowY: 'auto' as const,
-                backgroundColor: 'white',
+                backgroundColor: colors.bgModelList,
                 zIndex: 1000,
-                boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
+                boxShadow: `0 -4px 12px ${colors.shadowLight}`,
               }}>
                 {fetchingModels ? (
                   <div style={{
                     padding: '12px 14px',
                     fontSize: '13px',
-                    color: '#6b7280',
+                    color: colors.textMuted,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -186,23 +191,24 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
                               padding: '10px 14px',
                               cursor: 'pointer',
                               fontSize: '13px',
-                              backgroundColor: selectedModel === model ? '#ecfdf5' : 'white',
-                              borderBottom: '1px solid #f3f4f6',
+                              color: colors.textPrimary,
+                              backgroundColor: selectedModel === model ? colors.bgSelected : colors.bgModelList,
+                              borderBottom: `1px solid ${colors.bgTertiary}`,
                               display: 'flex',
                               alignItems: 'center',
                               gap: '8px',
                             }}
                             onMouseEnter={(e) => {
                               if (selectedModel !== model) {
-                                e.currentTarget.style.backgroundColor = '#f9fafb';
+                                e.currentTarget.style.backgroundColor = colors.bgSecondary;
                               }
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = selectedModel === model ? '#ecfdf5' : 'white';
+                              e.currentTarget.style.backgroundColor = selectedModel === model ? colors.bgSelected : colors.bgModelList;
                             }}
                           >
                             {selectedModel === model && (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12"></polyline>
                               </svg>
                             )}
@@ -210,7 +216,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
                           </li>
                         ))
                       ) : (
-                        <li style={{ padding: '12px 14px', fontSize: '13px', color: '#9ca3af', textAlign: 'center' }}>
+                        <li style={{ padding: '12px 14px', fontSize: '13px', color: colors.textDisabled, textAlign: 'center' }}>
                           {t('messages.noMatchingModels')}
                         </li>
                       );
@@ -232,12 +238,12 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
             style={styles.iconButton}
             title={`${t('labels.model')}: ${selectedModel}`}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#e5e7eb';
-              e.currentTarget.style.color = '#374151';
+              e.currentTarget.style.backgroundColor = colors.bgHover;
+              e.currentTarget.style.color = colors.textSecondary;
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-              e.currentTarget.style.color = '#6b7280';
+              e.currentTarget.style.backgroundColor = colors.bgTertiary;
+              e.currentTarget.style.color = colors.textMuted;
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -254,12 +260,12 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           style={styles.iconButton}
           title={t('buttons.chatWithPage')}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#dbeafe';
-            e.currentTarget.style.color = '#2563eb';
+            e.currentTarget.style.backgroundColor = colors.infoLight;
+            e.currentTarget.style.color = colors.info;
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#f3f4f6';
-            e.currentTarget.style.color = '#6b7280';
+            e.currentTarget.style.backgroundColor = colors.bgTertiary;
+            e.currentTarget.style.color = colors.textMuted;
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -281,11 +287,11 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
             }
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = '#4CAF50';
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(76, 175, 80, 0.1)';
+            e.currentTarget.style.borderColor = colors.borderFocus;
+            e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryLight}`;
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = '#d1d5db';
+            e.currentTarget.style.borderColor = colors.borderPrimary;
             e.currentTarget.style.boxShadow = 'none';
           }}
           style={styles.input}
@@ -298,10 +304,10 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           style={styles.sendButton}
           title={t('send')}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = '#45a049';
+            e.currentTarget.style.backgroundColor = colors.primaryHover;
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = '#4CAF50';
+            e.currentTarget.style.backgroundColor = colors.primary;
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

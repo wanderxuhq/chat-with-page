@@ -1,9 +1,16 @@
 {
-  "settings": {
+  "settings": "Einstellungen",
+  "settings_section": {
+    "aiProvider": "AI-Anbieter",
     "apiToken": "API-Token",
     "model": "Modell",
     "language": "Sprache",
-    "save": "Speichern"
+    "save": "Speichern",
+    "theme": "Design",
+    "themeSystem": "Auto",
+    "themeLight": "Hell",
+    "themeDark": "Dunkel",
+    "autoFill": "Leer lassen für Standard-URL"
   },
   "messages": {
     "enterApiToken": "Bitte geben Sie Ihren API-Token ein",

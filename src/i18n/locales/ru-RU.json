@@ -1,9 +1,16 @@
 {
-  "settings": {
+  "settings": "Настройки",
+  "settings_section": {
+    "aiProvider": "Провайдер ИИ",
     "apiToken": "Токен API",
     "model": "Модель",
     "language": "Язык",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "theme": "Тема",
+    "themeSystem": "Авто",
+    "themeLight": "Светлая",
+    "themeDark": "Тёмная",
+    "autoFill": "Оставьте пустым для URL по умолчанию"
   },
   "messages": {
     "enterApiToken": "Пожалуйста, введите токен API",

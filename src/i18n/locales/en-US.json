@@ -5,7 +5,12 @@
     "apiToken": "API Token",
     "model": "Model",
     "language": "Language",
-    "save": "Save"
+    "save": "Save",
+    "theme": "Theme",
+    "themeSystem": "Auto",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "autoFill": "Leave empty to use default URL"
   },
   "messages": {
     "enterApiToken": "Please enter API Token",

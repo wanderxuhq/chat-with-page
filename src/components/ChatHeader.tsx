@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import type { ThemeColors } from '../hooks/useTheme';
 
 interface ChatHeaderProps {
   showSettings: boolean;
@@ -10,6 +11,7 @@ interface ChatHeaderProps {
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
   matchCount?: number;
+  colors: ThemeColors;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -20,7 +22,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   setShowSearch,
   searchTerm = '',
   setSearchTerm,
-  matchCount = 0
+  matchCount = 0,
+  colors
 }) => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -45,7 +48,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       alignItems: 'center',
       justifyContent: 'center',
       transition: 'all 0.2s',
-      color: '#6b7280',
+      color: colors.textMuted,
       flexShrink: 0,
     },
     searchBar: {
@@ -55,9 +58,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       flex: 1,
       height: '32px',
       padding: '0 10px',
-      backgroundColor: '#f9fafb',
+      backgroundColor: colors.bgSecondary,
       borderRadius: '6px',
-      border: '1px solid #e5e7eb',
+      border: `1px solid ${colors.borderSecondary}`,
     },
     searchInput: {
       flex: 1,
@@ -67,10 +70,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       outline: 'none',
       height: '100%',
       minWidth: 0,
+      color: colors.textPrimary,
     },
     searchCount: {
       fontSize: '11px',
-      color: '#9ca3af',
+      color: colors.textDisabled,
       whiteSpace: 'nowrap' as const,
     },
     confirmBar: {
@@ -79,13 +83,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       gap: '6px',
       height: '32px',
       padding: '0 10px',
-      backgroundColor: '#fef2f2',
+      backgroundColor: colors.dangerLight,
       borderRadius: '6px',
-      border: '1px solid #fecaca',
+      border: `1px solid ${colors.dangerBorder}`,
     },
     confirmText: {
       fontSize: '12px',
-      color: '#dc2626',
+      color: colors.textConfirm,
       whiteSpace: 'nowrap' as const,
     },
     confirmButton: {
@@ -104,7 +108,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       {/* 搜索栏 */}
       {showSearch && setShowSearch && setSearchTerm ? (
         <div style={styles.searchBar}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" strokeWidth="2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textDisabled} strokeWidth="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
@@ -129,12 +133,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             }}
             title={t('buttons.close') || '关闭'}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-              e.currentTarget.style.color = '#374151';
+              e.currentTarget.style.backgroundColor = colors.bgTertiary;
+              e.currentTarget.style.color = colors.textSecondary;
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#6b7280';
+              e.currentTarget.style.color = colors.textMuted;
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -150,7 +154,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <button
             style={{
               ...styles.confirmButton,
-              backgroundColor: '#dc2626',
+              backgroundColor: colors.danger,
               color: 'white',
             }}
             onClick={() => {
@@ -158,10 +162,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               setShowClearConfirm(false);
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#b91c1c';
+              e.currentTarget.style.backgroundColor = colors.dangerHover;
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#dc2626';
+              e.currentTarget.style.backgroundColor = colors.danger;
             }}
           >
             {t('buttons.confirm') || '确认'}
@@ -169,15 +173,15 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <button
             style={{
               ...styles.confirmButton,
-              backgroundColor: '#e5e7eb',
-              color: '#374151',
+              backgroundColor: colors.bgHover,
+              color: colors.textSecondary,
             }}
             onClick={() => setShowClearConfirm(false)}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#d1d5db';
+              e.currentTarget.style.backgroundColor = colors.borderPrimary;
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = '#e5e7eb';
+              e.currentTarget.style.backgroundColor = colors.bgHover;
             }}
           >
             {t('buttons.cancel') || '取消'}
@@ -190,12 +194,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             style={styles.iconButton}
             title={t('buttons.search') || '搜索'}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = '#f3f4f6';
-              e.currentTarget.style.color = '#374151';
+              e.currentTarget.style.backgroundColor = colors.bgTertiary;
+              e.currentTarget.style.color = colors.textSecondary;
             }}
             onMouseOut={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.color = '#6b7280';
+              e.currentTarget.style.color = colors.textMuted;
             }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -211,12 +215,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         style={styles.iconButton}
         title={t('buttons.clear_chat')}
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#fef2f2';
-          e.currentTarget.style.color = '#dc2626';
+          e.currentTarget.style.backgroundColor = colors.dangerLight;
+          e.currentTarget.style.color = colors.danger;
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = '#6b7280';
+          e.currentTarget.style.color = colors.textMuted;
         }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -229,12 +233,12 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         style={styles.iconButton}
         title={t('settings')}
         onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#f3f4f6';
-          e.currentTarget.style.color = '#374151';
+          e.currentTarget.style.backgroundColor = colors.bgTertiary;
+          e.currentTarget.style.color = colors.textSecondary;
         }}
         onMouseOut={(e) => {
           e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = '#6b7280';
+          e.currentTarget.style.color = colors.textMuted;
         }}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

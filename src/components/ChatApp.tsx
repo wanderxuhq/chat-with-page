@@ -10,6 +10,7 @@ import { useLanguageManagement } from '../hooks/useLanguageManagement';
 import { usePageInteraction } from '../hooks/usePageInteraction';
 import { useTextHighlighting } from '../hooks/useTextHighlighting';
 import { useGlobalStyles } from '../hooks/useGlobalStyles';
+import { useTheme } from '../hooks/useTheme';
 
 // 导入组件
 import { SettingsPanel, MessageList, ModelSelector, InputPanel } from "./index";
@@ -21,8 +22,11 @@ function ChatApp() {
   // ======================================
   // 1. 状态管理与Hooks
   // ======================================
-  // 使用全局样式hook
-  useGlobalStyles();
+  // 使用主题hook
+  const { themeMode, setThemeMode, isDark, colors } = useTheme();
+
+  // 使用全局样式hook（传入主题颜色）
+  useGlobalStyles(colors);
   
   // 组件内部状态
   const [loading, setLoading] = useState(false);
@@ -182,6 +186,9 @@ function ChatApp() {
         setSelectedLanguage={saveLanguage}
         saveSettings={saveSettings}
         i18n={i18n}
+        colors={colors}
+        themeMode={themeMode}
+        setThemeMode={setThemeMode}
       />
     );
   }
@@ -196,7 +203,9 @@ function ChatApp() {
         padding: 16,
         overflow: "hidden",
         boxSizing: "border-box",
-        margin: 0
+        margin: 0,
+        backgroundColor: colors.bgPrimary,
+        transition: 'background-color 0.2s',
       }}
     >
       {/* 设置按钮 */}
@@ -215,6 +224,9 @@ function ChatApp() {
           setSelectedLanguage={saveLanguage}
           saveSettings={saveSettings}
           i18n={i18n}
+          colors={colors}
+          themeMode={themeMode}
+          setThemeMode={setThemeMode}
         />
       ) : (
         <>
@@ -229,6 +241,7 @@ function ChatApp() {
             searchTerm={searchTerm}
             setSearchTerm={setSearchTerm}
             matchCount={matchCount}
+            colors={colors}
           />
 
           {/* 消息列表 */}
@@ -241,8 +254,9 @@ function ChatApp() {
             onEdit={handleEditMessage}
             onRegenerate={handleRegenerateMessage}
             onStopGeneration={handleStopGeneration}
+            colors={colors}
           />
-          
+
           {/* 聊天底部 */}
           <ChatFooter
             models={models}
@@ -258,6 +272,7 @@ function ChatApp() {
             saveSelectedModel={saveSelectedModel}
             sendMessage={handleSendMessage}
             summarizePage={handleSummarizePage}
+            colors={colors}
           />
         </>
       )}

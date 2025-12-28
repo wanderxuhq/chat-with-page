@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { marked } from 'marked';
 import type { Message } from '../types/index';
+import type { ThemeColors } from '../hooks/useTheme';
 
 interface MessageListProps {
   messages: Message[];
@@ -10,6 +11,7 @@ interface MessageListProps {
   onCopy?: (content: string) => void;
   onEdit?: (index: number, content: string) => void;
   onRegenerate?: (index: number) => void;
+  colors: ThemeColors;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
@@ -19,7 +21,8 @@ const MessageList: React.FC<MessageListProps> = ({
   searchTerm = '',
   onCopy,
   onEdit,
-  onRegenerate
+  onRegenerate,
+  colors
 }) => {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editContent, setEditContent] = useState<string>('');
@@ -44,21 +47,21 @@ const MessageList: React.FC<MessageListProps> = ({
       display: 'inline-block',
       padding: '10px 14px',
       borderRadius: isUser ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
-      backgroundColor: isHighlighted ? '#fef3c7' : (isUser ? '#4CAF50' : '#f3f4f6'),
-      color: isUser ? 'white' : '#1f2937',
+      backgroundColor: isHighlighted ? colors.warningLight : (isUser ? colors.bgUserMessage : colors.bgMessage),
+      color: isUser ? colors.textUserMessage : colors.textPrimary,
       maxWidth: '85%',
-      boxShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+      boxShadow: `0 1px 2px ${colors.shadowLight}`,
       fontSize: '14px',
       lineHeight: '1.5',
       wordBreak: 'break-word' as const,
-      border: isHighlighted ? '2px solid #f59e0b' : 'none',
+      border: isHighlighted ? `2px solid ${colors.warning}` : 'none',
     }),
     loadingContainer: {
       display: 'flex',
       alignItems: 'center',
       gap: '8px',
       padding: '10px 14px',
-      backgroundColor: '#f3f4f6',
+      backgroundColor: colors.bgMessage,
       borderRadius: '12px 12px 12px 4px',
       maxWidth: '80px',
     },
@@ -69,7 +72,7 @@ const MessageList: React.FC<MessageListProps> = ({
     dot: {
       width: '8px',
       height: '8px',
-      backgroundColor: '#9ca3af',
+      backgroundColor: colors.textDisabled,
       borderRadius: '50%',
       animation: 'pulse 1.4s ease-in-out infinite',
     },
@@ -92,7 +95,7 @@ const MessageList: React.FC<MessageListProps> = ({
       backgroundColor: 'transparent',
       cursor: 'pointer',
       fontSize: '12px',
-      color: '#6b7280',
+      color: colors.textMuted,
       display: 'flex',
       alignItems: 'center',
       gap: '4px',
@@ -103,12 +106,14 @@ const MessageList: React.FC<MessageListProps> = ({
       minHeight: '80px',
       padding: '10px 14px',
       borderRadius: '12px',
-      border: '2px solid #4CAF50',
+      border: `2px solid ${colors.primary}`,
       fontSize: '14px',
       lineHeight: '1.5',
       resize: 'vertical' as const,
       outline: 'none',
       fontFamily: 'inherit',
+      backgroundColor: colors.bgInput,
+      color: colors.textPrimary,
     },
     editActions: {
       display: 'flex',
@@ -154,7 +159,7 @@ const MessageList: React.FC<MessageListProps> = ({
   const highlightSearchTerm = (content: string, term: string): string => {
     if (!term.trim()) return content;
     const regex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    return content.replace(regex, '<mark style="background-color: #fef3c7; padding: 1px 2px; border-radius: 2px;">$1</mark>');
+    return content.replace(regex, `<mark style="background-color: ${colors.warningLight}; padding: 1px 2px; border-radius: 2px;">$1</mark>`);
   };
 
   const isMessageHighlighted = (content: string): boolean => {
@@ -173,11 +178,11 @@ const MessageList: React.FC<MessageListProps> = ({
           .message-content p { margin: 0 0 8px 0; }
           .message-content p:last-child { margin-bottom: 0; }
           .message-content ul, .message-content ol { margin: 8px 0; padding-left: 20px; }
-          .message-content code { background: rgba(0,0,0,0.1); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
-          .message-content pre { background: #1f2937; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; }
+          .message-content code { background: ${colors.bgCode}; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+          .message-content pre { background: ${colors.bgCodeBlock}; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; }
           .message-content pre code { background: none; padding: 0; }
           .user-message .message-content code { background: rgba(255,255,255,0.2); }
-          .action-button:hover { background-color: #f3f4f6 !important; color: #1f2937 !important; }
+          .action-button:hover { background-color: ${colors.bgTertiary} !important; color: ${colors.textPrimary} !important; }
         `}
       </style>
       {(messages || []).map((msg, index) => (
@@ -197,13 +202,13 @@ const MessageList: React.FC<MessageListProps> = ({
               />
               <div style={styles.editActions}>
                 <button
-                  style={{ ...styles.editButton, backgroundColor: '#4CAF50', color: 'white' }}
+                  style={{ ...styles.editButton, backgroundColor: colors.primary, color: 'white' }}
                   onClick={() => handleSaveEdit(index)}
                 >
                   {t('buttons.save') || '保存并发送'}
                 </button>
                 <button
-                  style={{ ...styles.editButton, backgroundColor: '#e5e7eb', color: '#1f2937' }}
+                  style={{ ...styles.editButton, backgroundColor: colors.bgHover, color: colors.textPrimary }}
                   onClick={handleCancelEdit}
                 >
                   {t('buttons.cancel') || '取消'}
@@ -233,7 +238,7 @@ const MessageList: React.FC<MessageListProps> = ({
                       title={t('buttons.copy') || '复制'}
                     >
                       {copiedIndex === index ? (
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" strokeWidth="2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.success} strokeWidth="2">
                           <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
                       ) : (

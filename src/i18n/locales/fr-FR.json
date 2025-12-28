@@ -1,9 +1,16 @@
 {
-  "settings": {
+  "settings": "Paramètres",
+  "settings_section": {
+    "aiProvider": "Fournisseur IA",
     "apiToken": "Jeton API",
     "model": "Modèle",
     "language": "Langue",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "theme": "Thème",
+    "themeSystem": "Auto",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "autoFill": "Laisser vide pour l'URL par défaut"
   },
   "messages": {
     "enterApiToken": "Veuillez entrer votre jeton API",

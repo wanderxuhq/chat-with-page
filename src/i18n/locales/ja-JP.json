@@ -5,7 +5,12 @@
     "apiToken": "API Token",
     "model": "モデル",
     "language": "言語",
-    "save": "保存"
+    "save": "保存",
+    "theme": "テーマ",
+    "themeSystem": "自動",
+    "themeLight": "ライト",
+    "themeDark": "ダーク",
+    "autoFill": "空欄の場合はデフォルトURLを使用"
   },
   "messages": {
     "enterApiToken": "API Tokenを入力してください",
