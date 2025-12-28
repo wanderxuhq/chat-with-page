@@ -13,7 +13,8 @@
     "apiKeyNotFound": "API Key not found",
     "loadingModels": "Loading models...",
     "noMatchingModels": "No matching models found",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "confirmClear": "Confirm clear?"
   },
   "buttons": {
     "chatWithPage": "Summarize Page",
@@ -29,7 +30,8 @@
     "save": "Save & Send",
     "cancel": "Cancel",
     "search": "Search",
-    "close": "Close"
+    "close": "Close",
+    "confirm": "Confirm"
   },
   "labels": {
     "chat": "Chat",

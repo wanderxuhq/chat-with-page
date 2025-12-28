@@ -27,6 +27,13 @@ function ChatApp() {
   // 组件内部状态
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // 计算搜索匹配数量
+  const matchCount = searchTerm.trim()
+    ? messages.filter(msg => msg.content.toLowerCase().includes(searchTerm.toLowerCase())).length
+    : 0;
   
   // 外部hooks
   const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
@@ -217,13 +224,19 @@ function ChatApp() {
             setShowSettings={setShowSettings}
             clearChatHistory={clearChatHistory}
             t={t}
+            showSearch={showSearch}
+            setShowSearch={setShowSearch}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            matchCount={matchCount}
           />
-          
+
           {/* 消息列表 */}
           <ChatBody
             messages={messages}
             loading={loading}
             t={t}
+            searchTerm={searchTerm}
             onCopy={handleCopyMessage}
             onEdit={handleEditMessage}
             onRegenerate={handleRegenerateMessage}

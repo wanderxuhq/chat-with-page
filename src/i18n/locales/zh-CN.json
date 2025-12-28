@@ -13,7 +13,8 @@
     "apiKeyNotFound": "未找到API Key",
     "loadingModels": "加载模型中...",
     "noMatchingModels": "未找到匹配的模型",
-    "loading": "加载中..."
+    "loading": "加载中...",
+    "confirmClear": "确认清除?"
   },
   "buttons": {
     "chatWithPage": "总结页面",
@@ -29,7 +30,8 @@
     "save": "保存并发送",
     "cancel": "取消",
     "search": "搜索",
-    "close": "关闭"
+    "close": "关闭",
+    "confirm": "确认"
   },
   "labels": {
     "chat": "聊天",
