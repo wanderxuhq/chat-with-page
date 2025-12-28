@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react"
 import type { Message } from '../types/index';
-import { sendMessage, summarizePage } from '../utils/chatUtils';
+import { sendMessage, summarizePage, stopGeneration, regenerateMessage, editAndResendMessage, copyMessageToClipboard } from '../utils/chatUtils';
 
 // 导入hooks
 import { useChatHistory } from '../hooks/useChatHistory';
@@ -108,6 +108,57 @@ function ChatApp() {
     setInput("");
   }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput]);
 
+  // 处理停止生成
+  const handleStopGeneration = useCallback(() => {
+    stopGeneration();
+    setLoading(false);
+    // 标记最后一条消息为已完成
+    setMessages((prevMessages: Message[]) => {
+      if (prevMessages.length > 0) {
+        const lastMessage = prevMessages[prevMessages.length - 1];
+        if (lastMessage.type === 'assistant' && lastMessage.isGenerating) {
+          return [
+            ...prevMessages.slice(0, -1),
+            { ...lastMessage, isGenerating: false }
+          ];
+        }
+      }
+      return prevMessages;
+    });
+  }, [setLoading, setMessages]);
+
+  // 处理复制消息
+  const handleCopyMessage = useCallback(async (content: string) => {
+    await copyMessageToClipboard(content);
+  }, []);
+
+  // 处理编辑消息
+  const handleEditMessage = useCallback(async (index: number, newContent: string) => {
+    await editAndResendMessage(
+      index,
+      newContent,
+      messages,
+      setMessages,
+      selectedModel,
+      selectedLanguage,
+      highlightMap,
+      setLoading
+    );
+  }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading]);
+
+  // 处理重新生成
+  const handleRegenerateMessage = useCallback(async (index: number) => {
+    await regenerateMessage(
+      index,
+      messages,
+      setMessages,
+      selectedModel,
+      selectedLanguage,
+      highlightMap,
+      setLoading
+    );
+  }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading]);
+
   if (!apiKey && !showSettings) {
     return (
       <SettingsPanel
@@ -173,6 +224,10 @@ function ChatApp() {
             messages={messages}
             loading={loading}
             t={t}
+            onCopy={handleCopyMessage}
+            onEdit={handleEditMessage}
+            onRegenerate={handleRegenerateMessage}
+            onStopGeneration={handleStopGeneration}
           />
           
           {/* 聊天底部 */}

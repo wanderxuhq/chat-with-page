@@ -3,6 +3,22 @@ import type { Message } from '../types/index';
 import * as browser from "webextension-polyfill"
 import { ReadabilityParser } from '../ReadabilityParser';
 
+// 当前活跃的端口，用于停止生成
+let currentPort: browser.Runtime.Port | null = null;
+
+// 停止生成函数
+export const stopGeneration = () => {
+  if (currentPort) {
+    try {
+      currentPort.postMessage({ action: "stop" });
+      currentPort.disconnect();
+    } catch (e) {
+      // 忽略错误
+    }
+    currentPort = null;
+  }
+};
+
 // 处理AI输出的内容，将引用转换为可点击的链接
 export const processAIOutput = (rawContent: string) => {
   let refCounter = 1;
@@ -347,8 +363,12 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
           ];
 
           const port = browser.runtime.connect({ name: "summarize" });
+          currentPort = port;
           port.postMessage({ messages: messagesForAI, model: selectedModel, language: selectedLanguage });
           port.onMessage.addListener((chunk: any) => {
+            if (chunk.stopped) {
+              return;
+            }
             if (chunk.error) {
               setMessages((prevMessages) => {
                 const lastMessage = prevMessages[prevMessages.length - 1];
@@ -379,6 +399,7 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
             }
           });
           port.onDisconnect.addListener(() => {
+            currentPort = null;
             setLoading(false);
             setMessages((prevMessages: Message[]) => {
               const lastMessage = prevMessages[prevMessages.length - 1];
@@ -465,9 +486,13 @@ export const sendMessage = async (
 
   // 发送到AI并处理响应
   const port = browser.runtime.connect({ name: "chat" });
+  currentPort = port;
   port.postMessage({ messages: messagesForAI, model: selectedModel, language: selectedLanguage });
 
   port.onMessage.addListener((chunk: any) => {
+    if (chunk.stopped) {
+      return;
+    }
     if (chunk.error) {
       setMessages((prevMessages: Message[]) => {
         const lastMessage = prevMessages[prevMessages.length - 1];
@@ -500,6 +525,7 @@ export const sendMessage = async (
   });
 
   port.onDisconnect.addListener(() => {
+    currentPort = null;
     setLoading(false);
     setMessages((prevMessages: Message[]) => {
       const lastMessage = prevMessages[prevMessages.length - 1];
@@ -520,6 +546,80 @@ export const clearChatHistory = (setMessages: (messages: Message[]) => void, cur
   setMessages([]);
   if (currentPageUrl) {
     localStorage.removeItem(`chat_history_${currentPageUrl}`);
+  }
+};
+
+// 重新生成消息
+export const regenerateMessage = async (
+  messageIndex: number,
+  messages: Message[],
+  setMessages: (messages: Message[] | ((prevMessages: Message[]) => Message[])) => void,
+  selectedModel: string,
+  selectedLanguage: string,
+  highlightMap: Record<string, string>,
+  setLoading: (loading: boolean) => void
+) => {
+  // 找到对应的用户消息（assistant消息之前的user消息）
+  if (messageIndex <= 0 || messages[messageIndex].type !== 'assistant') return;
+
+  const userMessageIndex = messageIndex - 1;
+  if (messages[userMessageIndex].type !== 'user') return;
+
+  const userMessage = messages[userMessageIndex];
+
+  // 删除从用户消息开始的所有后续消息
+  const newMessages = messages.slice(0, userMessageIndex);
+  setMessages(newMessages);
+
+  // 重新发送消息
+  await sendMessage(
+    userMessage.content,
+    newMessages,
+    setMessages,
+    selectedModel,
+    selectedLanguage,
+    highlightMap,
+    setLoading
+  );
+};
+
+// 编辑消息并重新发送
+export const editAndResendMessage = async (
+  messageIndex: number,
+  newContent: string,
+  messages: Message[],
+  setMessages: (messages: Message[] | ((prevMessages: Message[]) => Message[])) => void,
+  selectedModel: string,
+  selectedLanguage: string,
+  highlightMap: Record<string, string>,
+  setLoading: (loading: boolean) => void
+) => {
+  if (messages[messageIndex].type !== 'user') return;
+
+  // 删除从该消息开始的所有后续消息
+  const newMessages = messages.slice(0, messageIndex);
+  setMessages(newMessages);
+
+  // 重新发送编辑后的消息
+  await sendMessage(
+    newContent,
+    newMessages,
+    setMessages,
+    selectedModel,
+    selectedLanguage,
+    highlightMap,
+    setLoading
+  );
+};
+
+// 复制消息内容到剪贴板
+export const copyMessageToClipboard = async (content: string): Promise<boolean> => {
+  try {
+    await navigator.clipboard.writeText(content);
+    return true;
+  } catch (error) {
+    console.error('Failed to copy message:', error);
+    return false;
   }
 };
 

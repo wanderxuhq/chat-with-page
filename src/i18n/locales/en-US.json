@@ -19,20 +19,30 @@
     "chatWithPage": "Summarize Page",
     "clearContext": "Clear Context",
     "copy": "Copy",
+    "copied": "Copied",
     "expand": "Expand",
     "collapse": "Collapse",
-    "clear_chat": "Clear Chat"
+    "clear_chat": "Clear Chat",
+    "edit": "Edit",
+    "regenerate": "Regenerate",
+    "stopGenerating": "Stop Generating",
+    "save": "Save & Send",
+    "cancel": "Cancel",
+    "search": "Search",
+    "close": "Close"
   },
   "labels": {
     "chat": "Chat",
     "context": "Context",
     "model": "Model",
     "language": "Language",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "matches": "matches"
   },
   "placeholders": {
     "enterMessage": "Please enter your message...",
-    "enterCustomBaseUrl": "Enter custom Base URL"
+    "enterCustomBaseUrl": "Enter custom Base URL",
+    "search": "Search messages..."
   },
   "send": "Send"
 }

@@ -7,10 +7,14 @@ interface Message {
 }
 
 interface PortMessage {
-  messages: Message[]
-  model: string
-  language: string
+  messages?: Message[]
+  model?: string
+  language?: string
+  action?: string
 }
+
+// 存储活跃的流以便可以中断
+const activeStreams = new Map<string, AbortController>()
 
 const waitForAPI = () => {
   return new Promise<typeof browser>((resolve) => {
@@ -43,7 +47,19 @@ waitForAPI().then((browser) => {
   */
   browser.runtime.onConnect.addListener((port) => {
     if (port.name === "summarize" || port.name === "chat") {
+      const portId = `${port.name}_${Date.now()}`
+
       port.onMessage.addListener(async (msg: PortMessage) => {
+        // 处理停止请求
+        if (msg.action === "stop") {
+          const controller = activeStreams.get(portId)
+          if (controller) {
+            controller.abort()
+            activeStreams.delete(portId)
+          }
+          return
+        }
+
         try {
           // 获取当前选择的提供商
           const selectedProviderData = await browser.storage.local.get("selectedProvider")
@@ -91,24 +107,33 @@ waitForAPI().then((browser) => {
             ? `你是一个善于总结的专家。你需要对用户提供的文本进行总结，${languagePrompt}。输入文本中包含 [REF***] 格式的标记，在引用原文时，必须将对应标记原封不动地紧跟在引用句的末尾。`
             : `你是一个智能助手，${languagePrompt}。如果用户提供了包含 [REF***] 格式标记的参考内容，在引用时请保留对应标记。`
 
+          // 创建 AbortController 以便可以中断流
+          const abortController = new AbortController()
+          activeStreams.set(portId, abortController)
+
           const stream = await openai.chat.completions.create({
-            model: msg.model,
+            model: msg.model!,
             stream: true,
             messages: [
               {
                 role: "system",
                 content: systemPrompt
               },
-              ...msg.messages
+              ...msg.messages!
             ]
-          })
+          }, { signal: abortController.signal })
 
           for await (const chunk of stream) {
             port.postMessage(chunk)
           }
-        } catch (error) {
-          port.postMessage({ error: error.message });
+        } catch (error: any) {
+          if (error.name === 'AbortError') {
+            port.postMessage({ stopped: true })
+          } else {
+            port.postMessage({ error: error.message })
+          }
         } finally {
+          activeStreams.delete(portId)
           port.disconnect()
         }
       })
