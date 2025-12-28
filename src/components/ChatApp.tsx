@@ -100,12 +100,13 @@ function ChatApp() {
   
   // 处理消息发送
   const handleSendMessage = useCallback(() => {
+    console.log('handleSendMessage called', { input, selectedModel, modelSearchTerm });
     if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
       saveSelectedModel(modelSearchTerm.trim());
     }
     sendMessage(input, messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading);
     setInput("");
-  }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput, sendMessage]);
+  }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput]);
 
   if (!apiKey && !showSettings) {
     return (

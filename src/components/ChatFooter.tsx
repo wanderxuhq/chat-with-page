@@ -52,10 +52,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
       <InputPanel
         input={input}
         setInput={setInput}
-        modelSearchTerm={modelSearchTerm}
-        selectedModel={selectedModel}
         t={t}
-        saveSelectedModel={saveSelectedModel}
         sendMessage={sendMessage}
         summarizePage={summarizePage}
       />

@@ -3,10 +3,7 @@ import React from 'react';
 interface InputPanelProps {
   input: string;
   setInput: (value: string) => void;
-  modelSearchTerm: string;
-  selectedModel: string;
   t: (key: string) => string;
-  saveSelectedModel: (model: string) => void;
   sendMessage: () => void;
   summarizePage: () => void;
 }
@@ -14,19 +11,10 @@ interface InputPanelProps {
 const InputPanel: React.FC<InputPanelProps> = ({
   input,
   setInput,
-  modelSearchTerm,
-  selectedModel,
   t,
-  saveSelectedModel,
   sendMessage,
   summarizePage
 }) => {
-  const handleSendMessage = () => {
-    if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
-      saveSelectedModel(modelSearchTerm.trim());
-    }
-    sendMessage();
-  };
 
   const styles = {
     container: {
@@ -90,7 +78,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
         onChange={(e) => setInput(e.target.value)}
         onKeyPress={(e) => {
           if (e.key === "Enter") {
-            handleSendMessage();
+            sendMessage();
           }
         }}
         onFocus={(e) => {
@@ -105,7 +93,7 @@ const InputPanel: React.FC<InputPanelProps> = ({
         placeholder={t('placeholders.enterMessage')}
       />
       <button
-        onClick={handleSendMessage}
+        onClick={sendMessage}
         style={styles.sendButton}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = '#45a049';

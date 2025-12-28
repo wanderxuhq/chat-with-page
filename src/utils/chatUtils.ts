@@ -419,8 +419,13 @@ export const sendMessage = async (
   highlightMap: Record<string, string>,
   setLoading: (loading: boolean) => void
 ) => {
-  if (!userMessageContent.trim()) return;
+  console.log('sendMessage called', { userMessageContent, selectedModel, selectedLanguage });
+  if (!userMessageContent.trim()) {
+    console.log('sendMessage: empty input, returning');
+    return;
+  }
   if (!selectedModel) {
+    console.log('sendMessage: no model selected');
     alert("请先选择一个模型");
     return;
   }
