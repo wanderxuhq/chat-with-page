@@ -60,5 +60,8 @@
     "yesterday": "Yesterday",
     "daysAgo": "days ago"
   },
-  "send": "Send"
+  "send": "Send",
+  "languagePrompts": {
+    "answerInLanguage": "and answer in English"
+  }
 }

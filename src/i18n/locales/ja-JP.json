@@ -60,5 +60,8 @@
     "yesterday": "昨日",
     "daysAgo": "日前"
   },
-  "send": "送信"
+  "send": "送信",
+  "languagePrompts": {
+    "answerInLanguage": "日本語で回答してください"
+  }
 }

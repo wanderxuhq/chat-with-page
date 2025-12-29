@@ -2,6 +2,7 @@
 import type { Message } from '../types/index';
 import * as browser from "webextension-polyfill"
 import { ReadabilityParser } from '../ReadabilityParser';
+import i18n from '../i18n';
 
 // 当前活跃的端口，用于停止生成
 let currentPort: browser.Runtime.Port | null = null;
@@ -341,14 +342,8 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
 
           const userMessageContent = "请总结当前页面";
           // 根据选择的语言添加提示
-          const languagePrompt = selectedLanguage === "zh-CN" ? "请用中文回答：" : 
-                                selectedLanguage === "en-US" ? "Please answer in English:" :
-                                selectedLanguage === "ja-JP" ? "日本語で回答してください：" :
-                                selectedLanguage === "ko-KR" ? "한국어로 답변해 주세요：" :
-                                selectedLanguage === "fr-FR" ? "Veuillez répondre en français:" :
-                                selectedLanguage === "de-DE" ? "Bitte antworten Sie auf Deutsch:" :
-                                selectedLanguage === "es-ES" ? "Por favor, responda en español:" :
-                                selectedLanguage === "ru-RU" ? "Пожалуйста, ответьте на русском:" : "";
+          i18n.changeLanguage(selectedLanguage || i18n.language);
+          const languagePrompt = i18n.t("languagePrompts.answerInLanguage");
           
           const newMessagesForUI: Message[] = [
             ...messages,
@@ -584,14 +579,8 @@ export const sendMessage = async (
   setLoading(true);
 
   // 根据选择的语言添加提示
-  const languagePrompt = selectedLanguage === "zh-CN" ? "请用中文回答：" :
-                        selectedLanguage === "en-US" ? "Please answer in English:" :
-                        selectedLanguage === "ja-JP" ? "日本語で回答してください：" :
-                        selectedLanguage === "ko-KR" ? "한국어로 답변해 주세요：" :
-                        selectedLanguage === "fr-FR" ? "Veuillez répondre en français:" :
-                        selectedLanguage === "de-DE" ? "Bitte antworten Sie auf Deutsch:" :
-                        selectedLanguage === "es-ES" ? "Por favor, responda en español:" :
-                        selectedLanguage === "ru-RU" ? "Пожалуйста, ответьте на русском:" : "";
+  i18n.changeLanguage(selectedLanguage || i18n.language);
+  const languagePrompt = i18n.t("languagePrompts.answerInLanguage");
 
   // 构建消息
   const newMessagesForUI: Message[] = [

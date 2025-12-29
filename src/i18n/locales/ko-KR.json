@@ -60,5 +60,8 @@
     "yesterday": "어제",
     "daysAgo": "일 전"
   },
-  "send": "보내기"
+  "send": "보내기",
+  "languagePrompts": {
+    "answerInLanguage": "한국어로 답변해 주세요"
+  }
 }

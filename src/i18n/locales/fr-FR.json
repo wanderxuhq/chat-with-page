@@ -60,5 +60,8 @@
     "yesterday": "Hier",
     "daysAgo": "jours"
   },
-  "send": "Envoyer"
+  "send": "Envoyer",
+  "languagePrompts": {
+    "answerInLanguage": "et répondez en français"
+  }
 }

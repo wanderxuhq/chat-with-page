@@ -60,5 +60,8 @@
     "yesterday": "昨天",
     "daysAgo": "天前"
   },
-  "send": "发送"
+  "send": "发送",
+  "languagePrompts": {
+    "answerInLanguage": "并使用中文回答"
+  }
 }

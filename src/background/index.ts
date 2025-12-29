@@ -1,5 +1,6 @@
 import OpenAI from "openai"
 import * as browser from "webextension-polyfill"
+import i18n from "../i18n"
 
 interface Message {
   role: "user" | "assistant"
@@ -93,14 +94,8 @@ waitForAPI().then((browser) => {
           })
 
           // 根据用户选择的语言设置系统提示语
-          const languagePrompt = msg.language === "zh-CN" ? "并使用中文回答" :
-            msg.language === "en-US" ? "and answer in English" :
-              msg.language === "ja-JP" ? "日本語で回答してください" :
-                msg.language === "ko-KR" ? "한국어로 답변해 주세요" :
-                  msg.language === "fr-FR" ? "et répondez en français" :
-                    msg.language === "de-DE" ? "und antworten Sie auf Deutsch" :
-                      msg.language === "es-ES" ? "y responda en español" :
-                        msg.language === "ru-RU" ? "и ответьте на русском" : "并使用中文回答"
+          i18n.changeLanguage(msg.language || i18n.language);
+          const languagePrompt = i18n.t("languagePrompts.answerInLanguage");
 
           // 根据端口类型使用不同的系统提示
           const systemPrompt = port.name === "summarize"

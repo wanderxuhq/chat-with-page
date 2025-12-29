@@ -60,5 +60,8 @@
     "yesterday": "Вчера",
     "daysAgo": "дней назад"
   },
-  "send": "Отправить"
+  "send": "Отправить",
+  "languagePrompts": {
+    "answerInLanguage": "и ответьте на русском"
+  }
 }
