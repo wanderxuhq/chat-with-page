@@ -68,11 +68,11 @@ const lightTheme: ThemeColors = {
   bgHover: '#e5e7eb',
   bgInput: '#ffffff',
   bgMessage: '#f3f4f6',
-  bgUserMessage: '#4CAF50',
+  bgUserMessage: '#9333ea',
   bgCode: 'rgba(0,0,0,0.1)',
   bgCodeBlock: '#1f2937',
   bgModelList: '#ffffff',
-  bgSelected: '#ecfdf5',
+  bgSelected: '#f3e8ff',
   bgConfirm: '#fef2f2',
   bgConfirmBorder: '#fecaca',
 
@@ -88,12 +88,12 @@ const lightTheme: ThemeColors = {
   borderPrimary: '#d1d5db',
   borderSecondary: '#e5e7eb',
   borderInput: '#d1d5db',
-  borderFocus: '#4CAF50',
+  borderFocus: '#9333ea',
 
-  // 主题色
-  primary: '#4CAF50',
-  primaryHover: '#45a049',
-  primaryLight: 'rgba(76, 175, 80, 0.1)',
+  // 主题色 - 紫色
+  primary: '#9333ea',
+  primaryHover: '#7c3aed',
+  primaryLight: 'rgba(147, 51, 234, 0.1)',
 
   // 功能色
   danger: '#ef4444',
@@ -104,9 +104,9 @@ const lightTheme: ThemeColors = {
   successLight: '#ecfdf5',
   warning: '#f59e0b',
   warningLight: '#fef3c7',
-  info: '#2563eb',
-  infoHover: '#1d4ed8',
-  infoLight: '#dbeafe',
+  info: '#7c3aed',
+  infoHover: '#6d28d9',
+  infoLight: '#ede9fe',
 
   // 滚动条
   scrollbarTrack: '#f1f1f1',
@@ -126,11 +126,11 @@ const darkTheme: ThemeColors = {
   bgHover: '#3d3d3d',
   bgInput: '#2d2d2d',
   bgMessage: '#2d2d2d',
-  bgUserMessage: '#3d8b40',
+  bgUserMessage: '#7c3aed',
   bgCode: 'rgba(255,255,255,0.1)',
   bgCodeBlock: '#0d0d0d',
   bgModelList: '#242424',
-  bgSelected: '#1a3d1c',
+  bgSelected: '#2d1f3d',
   bgConfirm: '#2d1a1a',
   bgConfirmBorder: '#5c2626',
 
@@ -146,12 +146,12 @@ const darkTheme: ThemeColors = {
   borderPrimary: '#4b5563',
   borderSecondary: '#374151',
   borderInput: '#4b5563',
-  borderFocus: '#4CAF50',
+  borderFocus: '#a855f7',
 
-  // 主题色
-  primary: '#4CAF50',
-  primaryHover: '#5cbf60',
-  primaryLight: 'rgba(76, 175, 80, 0.2)',
+  // 主题色 - 紫色
+  primary: '#a855f7',
+  primaryHover: '#c084fc',
+  primaryLight: 'rgba(168, 85, 247, 0.2)',
 
   // 功能色
   danger: '#f87171',
@@ -159,12 +159,12 @@ const darkTheme: ThemeColors = {
   dangerLight: '#2d1a1a',
   dangerBorder: '#5c2626',
   success: '#34d399',
-  successLight: '#1a3d1c',
+  successLight: '#1a3d2d',
   warning: '#fbbf24',
   warningLight: '#3d3520',
-  info: '#60a5fa',
-  infoHover: '#3b82f6',
-  infoLight: '#1a2d4d',
+  info: '#c4b5fd',
+  infoHover: '#a78bfa',
+  infoLight: '#2d1f3d',
 
   // 滚动条
   scrollbarTrack: '#2d2d2d',

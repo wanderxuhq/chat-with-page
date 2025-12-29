@@ -181,7 +181,12 @@ const MessageList: React.FC<MessageListProps> = ({
           .message-content code { background: ${colors.bgCode}; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
           .message-content pre { background: ${colors.bgCodeBlock}; color: #f3f4f6; padding: 12px; border-radius: 8px; overflow-x: auto; }
           .message-content pre code { background: none; padding: 0; }
+          .message-content a { color: ${colors.info}; text-decoration: none; }
+          .message-content a:hover { color: ${colors.infoHover}; text-decoration: underline; }
+          .message-content blockquote { border-left: 3px solid ${colors.primary}; margin: 8px 0; padding-left: 12px; color: ${colors.textSecondary}; }
+          .message-content blockquote a { color: ${colors.info}; }
           .user-message .message-content code { background: rgba(255,255,255,0.2); }
+          .user-message a { color: rgba(255,255,255,0.9); text-decoration: underline; }
           .action-button:hover { background-color: ${colors.bgTertiary} !important; color: ${colors.textPrimary} !important; }
         `}
       </style>
