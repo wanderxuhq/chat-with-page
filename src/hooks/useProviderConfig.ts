@@ -34,9 +34,27 @@ export const useProviderConfig = () => {
                           (savedGenericApiKey.apiKey as string) || 
                           '';
         
-        const apiEndpointToUse = (savedApiEndpoint[`${providerToLoad}ApiEndpoint`] as string) || 
-                                (savedGenericApiEndpoint.apiEndpoint as string) || 
-                                '';
+        // 获取默认端点
+        const getDefaultEndpoint = (provider: string) => {
+          switch (provider) {
+            case 'openai':
+              return 'https://api.openai.com/v1';
+            case 'anthropic':
+              return 'https://api.anthropic.com/v1';
+            case 'google':
+              return 'https://generativelanguage.googleapis.com/v1beta/openai';
+            case 'openrouter':
+              return 'https://openrouter.ai/api/v1';
+            case 'ollama':
+              return 'http://localhost:11434/v1/';
+            default:
+              return '';
+          }
+        };
+
+        const apiEndpointToUse = (savedApiEndpoint[`${providerToLoad}ApiEndpoint`] as string) ||
+                                (savedGenericApiEndpoint.apiEndpoint as string) ||
+                                getDefaultEndpoint(providerToLoad);
         
         setApiKey(apiKeyToUse);
         setApiKeyInput(apiKeyToUse);
