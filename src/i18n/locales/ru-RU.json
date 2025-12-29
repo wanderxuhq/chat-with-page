@@ -19,7 +19,8 @@
     "loadingModels": "Загрузка моделей...",
     "noMatchingModels": "Нет совпадающих моделей",
     "loading": "Загрузка...",
-    "confirmClear": "Подтвердить удаление?"
+    "confirmClear": "Подтвердить удаление?",
+    "noArticleFound": "Содержимое статьи не обнаружено"
   },
   "buttons": {
     "chatWithPage": "Сделать резюме страницы",

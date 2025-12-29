@@ -19,7 +19,8 @@
     "loadingModels": "Loading models...",
     "noMatchingModels": "No matching models found",
     "loading": "Loading...",
-    "confirmClear": "Confirm clear?"
+    "confirmClear": "Confirm clear?",
+    "noArticleFound": "No article content detected"
   },
   "buttons": {
     "chatWithPage": "Summarize Page",

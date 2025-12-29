@@ -19,7 +19,8 @@
     "loadingModels": "Lade Modelle...",
     "noMatchingModels": "Keine passenden Modelle gefunden",
     "loading": "Laden...",
-    "confirmClear": "Bestätigen Sie die Löschung?"
+    "confirmClear": "Bestätigen Sie die Löschung?",
+    "noArticleFound": "Kein Artikelinhalt erkannt"
   },
   "buttons": {
     "chatWithPage": "Seite zusammenfassen",

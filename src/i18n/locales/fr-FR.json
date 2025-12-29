@@ -19,7 +19,8 @@
     "loadingModels": "Chargement des modèles...",
     "noMatchingModels": "Aucun modèle correspondant trouvé",
     "loading": "Chargement...",
-    "confirmClear": "Confirmer la suppression?"
+    "confirmClear": "Confirmer la suppression?",
+    "noArticleFound": "Aucun contenu d'article détecté"
   },
   "buttons": {
     "chatWithPage": "Résumer la page",

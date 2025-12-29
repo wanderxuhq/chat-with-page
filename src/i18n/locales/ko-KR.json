@@ -19,7 +19,8 @@
     "loadingModels": "모델을 로딩 중...",
     "noMatchingModels": "일치하는 모델이 없습니다",
     "loading": "로딩 중...",
-    "confirmClear": "확인하시겠습니까?"
+    "confirmClear": "확인하시겠습니까?",
+    "noArticleFound": "기사 내용이 감지되지 않았습니다"
   },
   "buttons": {
     "chatWithPage": "페이지 요약",

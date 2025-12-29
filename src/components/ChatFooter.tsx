@@ -16,6 +16,7 @@ interface ChatFooterProps {
   sendMessage: () => void;
   summarizePage: () => void;
   colors: ThemeColors;
+  hasArticle: boolean | null;
 }
 
 const ChatFooter: React.FC<ChatFooterProps> = ({
@@ -32,7 +33,8 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
   saveSelectedModel,
   sendMessage,
   summarizePage,
-  colors
+  colors,
+  hasArticle
 }) => {
   const [showModelSelector, setShowModelSelector] = useState(false);
 
@@ -254,18 +256,27 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           </button>
         )}
 
-        {/* 总结页面按钮 */}
+        {/* 总结页面按钮 - 无文章时禁用 */}
         <button
           onClick={summarizePage}
-          style={styles.iconButton}
-          title={t('buttons.chatWithPage')}
+          style={{
+            ...styles.iconButton,
+            opacity: hasArticle === false ? 0.5 : 1,
+            cursor: hasArticle === false ? 'not-allowed' : 'pointer',
+          }}
+          title={hasArticle === false ? t('messages.noArticleFound') : t('buttons.chatWithPage')}
+          disabled={hasArticle === false}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = colors.infoLight;
-            e.currentTarget.style.color = colors.info;
+            if (hasArticle !== false) {
+              e.currentTarget.style.backgroundColor = colors.infoLight;
+              e.currentTarget.style.color = colors.info;
+            }
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = colors.bgTertiary;
-            e.currentTarget.style.color = colors.textMuted;
+            if (hasArticle !== false) {
+              e.currentTarget.style.backgroundColor = colors.bgTertiary;
+              e.currentTarget.style.color = colors.textMuted;
+            }
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

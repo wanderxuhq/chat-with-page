@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react"
 import type { Message } from '../types/index';
-import { sendMessage, summarizePage, stopGeneration, regenerateMessage, editAndResendMessage, copyMessageToClipboard } from '../utils/chatUtils';
+import { sendMessage, summarizePage, stopGeneration, regenerateMessage, editAndResendMessage, copyMessageToClipboard, getPageContext } from '../utils/chatUtils';
 
 // 导入hooks
 import { useChatHistory } from '../hooks/useChatHistory';
@@ -27,18 +27,19 @@ function ChatApp() {
 
   // 使用全局样式hook（传入主题颜色）
   useGlobalStyles(colors);
-  
+
   // 组件内部状态
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [hasArticle, setHasArticle] = useState<boolean | null>(null);
 
   // 计算搜索匹配数量
   const matchCount = searchTerm.trim()
     ? messages.filter(msg => msg.content.toLowerCase().includes(searchTerm.toLowerCase())).length
     : 0;
-  
+
   // 外部hooks
   const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
   const { currentPageUrl } = usePageInteraction([]);
@@ -46,7 +47,7 @@ function ChatApp() {
   const { selectedProvider, setSelectedProvider, apiKey, setApiKey, apiEndpoint, setApiEndpoint, apiKeyInput, setApiKeyInput, apiEndpointInput, setApiEndpointInput, handleProviderChange, saveSettings: saveProviderSettings } = useProviderConfig();
   const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
   const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
-  
+
   // ======================================
   // 2. 常量定义
   // ======================================
@@ -59,7 +60,7 @@ function ChatApp() {
     { id: "ollama", name: "Ollama", baseUrl: "http://localhost:11434/v1/" },
     { id: "custom", name: "自定义", baseUrl: "" }
   ];
-  
+
   // ======================================
   // 3. 副作用处理
   // ======================================
@@ -69,12 +70,12 @@ function ChatApp() {
       fetchModels();
     }
   }, [apiKey, apiEndpoint, selectedProvider, fetchModels]);
-  
+
   // 当selectedModel变化时，更新modelSearchTerm
   useEffect(() => {
     setModelSearchTerm(selectedModel);
   }, [selectedModel]);
-  
+
   // 当聊天记录加载时重新标记页面元素
   useEffect(() => {
     if (messages.length > 0) {
@@ -85,7 +86,22 @@ function ChatApp() {
       return () => clearTimeout(timer);
     }
   }, [messages, relinkPageElements]);
-  
+
+  // 检测页面是否有文章内容
+  useEffect(() => {
+    const checkArticle = async () => {
+      try {
+        const pageContext = await getPageContext();
+        setHasArticle(pageContext.hasArticle);
+      } catch (error) {
+        console.error('Error checking article:', error);
+        setHasArticle(false);
+      }
+    };
+
+    checkArticle();
+  }, [currentPageUrl]);
+
   // ======================================
   // 4. 事件处理函数 (使用 useCallback 优化)
   // ======================================
@@ -94,30 +110,30 @@ function ChatApp() {
     try {
       // 保存提供商配置
       await saveProviderSettings(selectedLanguage);
-      
+
       // 保存语言设置
       await saveLanguage(selectedLanguage);
-      
+
       setShowSettings(false);
     } catch (error) {
       console.error('Error saving settings:', error);
     }
   }, [saveProviderSettings, selectedLanguage, saveLanguage, setShowSettings]);
-  
+
   // 处理页面总结
   const handleSummarizePage = useCallback(async () => {
     await summarizePage(setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap);
   }, [setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap, summarizePage]);
-  
+
   // 处理消息发送
   const handleSendMessage = useCallback(() => {
     console.log('handleSendMessage called', { input, selectedModel, modelSearchTerm });
     if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
       saveSelectedModel(modelSearchTerm.trim());
     }
-    sendMessage(input, messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading);
+    sendMessage(input, messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap);
     setInput("");
-  }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput]);
+  }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput, setHighlightMap]);
 
   // 处理停止生成
   const handleStopGeneration = useCallback(() => {
@@ -153,9 +169,10 @@ function ChatApp() {
       selectedModel,
       selectedLanguage,
       highlightMap,
-      setLoading
+      setLoading,
+      setHighlightMap
     );
-  }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading]);
+  }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap]);
 
   // 处理重新生成
   const handleRegenerateMessage = useCallback(async (index: number) => {
@@ -166,9 +183,10 @@ function ChatApp() {
       selectedModel,
       selectedLanguage,
       highlightMap,
-      setLoading
+      setLoading,
+      setHighlightMap
     );
-  }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading]);
+  }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap]);
 
   if (!apiKey && !showSettings) {
     return (
@@ -273,6 +291,7 @@ function ChatApp() {
             sendMessage={handleSendMessage}
             summarizePage={handleSummarizePage}
             colors={colors}
+            hasArticle={hasArticle}
           />
         </>
       )}

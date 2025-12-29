@@ -19,7 +19,8 @@
     "loadingModels": "Cargando modelos...",
     "noMatchingModels": "No se encontraron modelos coincidentes",
     "loading": "Cargando...",
-    "confirmClear": "¿Confirmar eliminación?"
+    "confirmClear": "¿Confirmar eliminación?",
+    "noArticleFound": "No se detectó contenido de artículo"
   },
   "buttons": {
     "chatWithPage": "Resumir página",

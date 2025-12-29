@@ -19,7 +19,8 @@
     "loadingModels": "加载模型中...",
     "noMatchingModels": "未找到匹配的模型",
     "loading": "加载中...",
-    "confirmClear": "确认清除?"
+    "confirmClear": "确认清除?",
+    "noArticleFound": "未检测到文章内容"
   },
   "buttons": {
     "chatWithPage": "总结页面",
