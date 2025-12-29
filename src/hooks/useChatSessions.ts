@@ -22,6 +22,7 @@ export interface ChatSession {
   url: string;
   urlHash: string;
   title: string;
+  pageTitle?: string; // Actual page title from document.title
   lastActive: number;
   messageCount: number;
   lastMessage?: string;
@@ -68,7 +69,7 @@ export const useChatSessions = () => {
   }, []);
 
   // Update or add session to indices
-  const updateSessionIndex = useCallback(async (url: string, messages: Message[]) => {
+  const updateSessionIndex = useCallback(async (url: string, messages: Message[], pageTitle?: string) => {
     if (!url || messages.length === 0) return;
 
     const urlHash = getPageHash(url);
@@ -78,6 +79,7 @@ export const useChatSessions = () => {
       url,
       urlHash,
       title: getUrlDisplayTitle(url),
+      pageTitle: pageTitle,
       lastActive: Date.now(),
       messageCount: messages.length,
       lastMessage: lastMessage?.content?.substring(0, 100)
@@ -88,9 +90,12 @@ export const useChatSessions = () => {
       let newSessions: ChatSession[];
 
       if (existingIndex >= 0) {
-        // Update existing session
+        // Update existing session, preserve pageTitle if not provided
         newSessions = [...prev];
-        newSessions[existingIndex] = newSession;
+        newSessions[existingIndex] = {
+          ...newSession,
+          pageTitle: pageTitle || prev[existingIndex].pageTitle
+        };
       } else {
         // Add new session
         newSessions = [newSession, ...prev];

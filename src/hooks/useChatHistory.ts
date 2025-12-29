@@ -16,14 +16,16 @@ export const useChatHistory = (currentPageUrl: string = '') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [currentUrl, setCurrentUrl] = useState<string>(currentPageUrl);
+  const [isUrlSynced, setIsUrlSynced] = useState<boolean>(true); // Track if messages are synced with current URL
   const previousUrlRef = useRef<string>('');
   const isLoadingRef = useRef<boolean>(false);
 
   // Update the current URL and clear messages immediately when URL changes
   useEffect(() => {
     if (currentPageUrl && currentPageUrl !== previousUrlRef.current) {
-      // URL changed, clear messages first
+      // URL changed, mark as not synced and clear messages first
       if (previousUrlRef.current) {
+        setIsUrlSynced(false);
         setMessages([]);
       }
       previousUrlRef.current = currentPageUrl;
@@ -37,6 +39,7 @@ export const useChatHistory = (currentPageUrl: string = '') => {
       if (!currentUrl) return;
 
       isLoadingRef.current = true;
+      setIsUrlSynced(false);
 
       try {
         const pageHash = getPageHash(currentUrl);
@@ -66,6 +69,7 @@ export const useChatHistory = (currentPageUrl: string = '') => {
         setMessages([]);
       } finally {
         isLoadingRef.current = false;
+        setIsUrlSynced(true);
       }
     };
 
@@ -133,6 +137,7 @@ export const useChatHistory = (currentPageUrl: string = '') => {
     input,
     setInput,
     clearChatHistory,
-    addMessage
+    addMessage,
+    isUrlSynced
   };
 };

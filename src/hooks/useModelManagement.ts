@@ -11,61 +11,34 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
   // Get model list, use useCallback to ensure reference stability
   const fetchModels = useCallback(async () => {
     if (!apiKey || !apiEndpoint) {
-      console.log('Skipping model fetch: API Key or Endpoint is empty');
       return;
     }
-    
+
     setFetchingModels(true);
-    console.log('Starting to get model list, API endpoint:', apiEndpoint);
-    
+
     try {
       // Clear cache to ensure API request is sent every time
       localStorage.removeItem(`models_${apiEndpoint}`);
-      
-      // Try to get model list from cache (temporarily disabled for debugging)
-      /* const cachedModels = localStorage.getItem(`models_${apiEndpoint}`)
-      if (cachedModels) {
-        const parsedModels = JSON.parse(cachedModels)
-        setModels(parsedModels.models)
-        if (parsedModels.selectedModel) {
-          setSelectedModel(parsedModels.selectedModel)
-        }
-        console.log('Using cached model list');
-        return
-      } */
-      
+
       // Get model list from API
-      console.log('Sending API request to get model list:', `${apiEndpoint}/models`);
       const response = await fetch(`${apiEndpoint}/models`, {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
           "Content-Type": "application/json"
         }
       })
-      
-      console.log('API response status:', response.status);
+
       if (response.ok) {
         const data = await response.json()
-        console.log('API response data:', data);
         const modelNames = data.data.map((model: any) => model.id)
-        
-        console.log('Retrieved model list:', modelNames);
+
         setModels(modelNames)
-        
+
         // Cache model list to localStorage
         localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
           models: modelNames,
           timestamp: Date.now()
         }))
-      } else {
-        console.error('Failed to get model list, response status:', response.status);
-        // Try to parse error response
-        try {
-          const errorData = await response.json();
-          console.error('Error response data:', errorData);
-        } catch (parseError) {
-          console.error('Unable to parse error response:', parseError);
-        }
       }
     } catch (error) {
       console.error("Failed to get model list:", error)
@@ -76,10 +49,6 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
 
   // Get model list when API Key, Endpoint or provider changes
   useEffect(() => {
-    console.log('useModelManagement: Dependencies changed, triggering fetchModels');
-    console.log('Current API Key:', apiKey ? 'Set' : 'Not set');
-    console.log('Current API Endpoint:', apiEndpoint);
-    console.log('Current provider:', selectedProvider);
     fetchModels();
   }, [apiKey, apiEndpoint, selectedProvider, fetchModels]);
 

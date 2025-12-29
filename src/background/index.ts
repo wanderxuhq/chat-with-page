@@ -1,6 +1,7 @@
 import OpenAI from "openai"
 import * as browser from "webextension-polyfill"
 import i18n from "../i18n"
+import { decryptValue } from "../utils/crypto"
 
 interface Message {
   role: "user" | "assistant"
@@ -75,21 +76,28 @@ waitForAPI().then((browser) => {
           const genericApiEndpointData = await browser.storage.local.get("apiEndpoint")
 
           // Use provider-specific configuration, fallback to generic if not available
-          const apiKey = (apiKeyData[`${selectedProvider}ApiKey`] as string) ||
+          const encryptedApiKey = (apiKeyData[`${selectedProvider}ApiKey`] as string) ||
                         (genericApiKeyData.apiKey as string)
 
           const apiEndpoint = (apiEndpointData[`${selectedProvider}ApiEndpoint`] as string) ||
                             (genericApiEndpointData.apiEndpoint as string) ||
                             "https://api.openai.com/v1"
 
-          if (!apiKey) {
+          if (!encryptedApiKey) {
             port.postMessage({ error: "API key not found" })
+            return
+          }
+
+          // Decrypt API key
+          const apiKey = await decryptValue(encryptedApiKey)
+          if (!apiKey) {
+            port.postMessage({ error: "Failed to decrypt API key. Please re-enter your API key in settings." })
             return
           }
 
           const openai = new OpenAI({
             baseURL: apiEndpoint,
-            apiKey: apiKey as string,
+            apiKey: apiKey,
             dangerouslyAllowBrowser: true
           })
 

@@ -159,12 +159,26 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
-                    {/* Title */}
+                    {/* Page Title */}
                     <div
                       style={{
                         color: colors.textPrimary,
                         fontSize: 14,
                         fontWeight: 500,
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        marginBottom: 2,
+                      }}
+                      title={session.pageTitle || session.title}
+                    >
+                      {session.pageTitle || session.title}
+                    </div>
+                    {/* URL - shown below title in smaller text */}
+                    <div
+                      style={{
+                        color: colors.textMuted,
+                        fontSize: 11,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',

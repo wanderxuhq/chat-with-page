@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import type { ThemeColors } from '../hooks/useTheme';
 
 interface ChatFooterProps {
@@ -17,6 +17,7 @@ interface ChatFooterProps {
   summarizePage: () => void;
   colors: ThemeColors;
   hasArticle: boolean | null;
+  needsModelSelection?: boolean; // Flag to indicate model selection is required
 }
 
 const ChatFooter: React.FC<ChatFooterProps> = ({
@@ -34,9 +35,29 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
   sendMessage,
   summarizePage,
   colors,
-  hasArticle
+  hasArticle,
+  needsModelSelection = false
 }) => {
   const [showModelSelector, setShowModelSelector] = useState(false);
+  const [highlightModelButton, setHighlightModelButton] = useState(false);
+  const modelInputRef = useRef<HTMLInputElement>(null);
+
+  // When needsModelSelection changes to true, open the model selector and highlight
+  useEffect(() => {
+    if (needsModelSelection && !selectedModel) {
+      setShowModelSelector(true);
+      setShowModelList(true);
+      setHighlightModelButton(true);
+      // Focus the input after a brief delay to ensure it's rendered
+      setTimeout(() => {
+        modelInputRef.current?.focus();
+      }, 100);
+      // Remove highlight after animation
+      setTimeout(() => {
+        setHighlightModelButton(false);
+      }, 2000);
+    }
+  }, [needsModelSelection, selectedModel, setShowModelList]);
 
   const styles = {
     container: {
@@ -108,6 +129,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
             maxWidth: '200px',
           }}>
             <input
+              ref={modelInputRef}
               type="text"
               placeholder={t('labels.model')}
               value={modelSearchTerm}
@@ -127,13 +149,15 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
                 width: '100%',
                 height: '36px',
                 padding: '0 10px',
-                border: `1px solid ${colors.borderPrimary}`,
+                border: highlightModelButton ? `2px solid ${colors.primary}` : `1px solid ${colors.borderPrimary}`,
                 borderRadius: '8px',
                 fontSize: '13px',
                 outline: 'none',
                 backgroundColor: colors.bgSecondary,
                 color: colors.textPrimary,
                 boxSizing: 'border-box' as const,
+                boxShadow: highlightModelButton ? `0 0 0 3px ${colors.primaryLight}` : 'none',
+                animation: highlightModelButton ? 'pulse 0.5s ease-in-out 3' : 'none',
               }}
             />
             {showModelList && (
@@ -228,7 +252,13 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
               </div>
             )}
             <style>
-              {`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}
+              {`
+                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+                @keyframes pulse {
+                  0%, 100% { transform: scale(1); }
+                  50% { transform: scale(1.02); }
+                }
+              `}
             </style>
           </div>
         ) : (

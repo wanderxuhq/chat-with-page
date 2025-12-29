@@ -9,6 +9,7 @@ export interface Chunk {
 
 export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: string, oldUrl: string) => void) => {
   const [currentPageUrl, setCurrentPageUrl] = useState<string>('');
+  const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
   const [pageContent, setPageContent] = useState<string>('');
   const [pageChunks, setPageChunks] = useState<Chunk[]>([]);
   const previousUrlRef = useRef<string>('');
@@ -20,12 +21,14 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         if (tabs[0]?.url) {
           const newUrl = tabs[0].url;
+          const newTitle = tabs[0].title || '';
           if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
             // Tab switched
             onTabChange?.(newUrl, previousUrlRef.current);
           }
           previousUrlRef.current = newUrl;
           setCurrentPageUrl(newUrl);
+          setCurrentPageTitle(newTitle);
         }
       } catch (error) {
         console.error('Error getting current page URL:', error);
@@ -38,12 +41,14 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     const onTabUpdated = async (tabId: number, changeInfo: any, tab: any) => {
       if (changeInfo.status === 'complete' && tab.active) {
         const newUrl = tab.url || '';
+        const newTitle = tab.title || '';
         if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
           // Tab switched
           onTabChange?.(newUrl, previousUrlRef.current);
         }
         previousUrlRef.current = newUrl;
         setCurrentPageUrl(newUrl);
+        setCurrentPageTitle(newTitle);
       }
     };
 
@@ -53,12 +58,14 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
         const tab = await browser.tabs.get(activeInfo.tabId);
         if (tab?.url) {
           const newUrl = tab.url;
+          const newTitle = tab.title || '';
           if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
             // Tab switched
             onTabChange?.(newUrl, previousUrlRef.current);
           }
           previousUrlRef.current = newUrl;
           setCurrentPageUrl(newUrl);
+          setCurrentPageTitle(newTitle);
         }
       } catch (error) {
         console.error('Error getting activated tab:', error);
@@ -79,24 +86,16 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     const removeAttributes = async () => {
       try {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-        
-        // Add detailed error checking
+
         if (!tabs || tabs.length === 0) {
-          console.log('No active tabs found');
           return;
         }
-        
+
         const activeTab = tabs[0];
-        if (!activeTab) {
-          console.log('Active tab is undefined');
+        if (!activeTab || !activeTab.id) {
           return;
         }
-        
-        if (!activeTab.id) {
-          console.log('Active tab has no ID');
-          return;
-        }
-        
+
         await browser.scripting.executeScript({
           target: { tabId: activeTab.id, allFrames: true },
           func: () => {
@@ -105,15 +104,13 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
               elements.forEach(element => {
                 element.removeAttribute('data-chat-with-page-id');
               });
-              console.log(`Removed attributes from ${elements.length} elements`);
             } catch (error) {
-              console.error('Error in executeScript func:', error);
+              // Silently handle errors in content script
             }
           }
         });
       } catch (error) {
-        console.error('Error removing attributes:', error);
-        console.error('Error details:', JSON.stringify(error));
+        // Silently handle tab access errors
       }
     };
 
@@ -277,6 +274,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
 
   return {
     currentPageUrl,
+    currentPageTitle,
     pageContent,
     pageChunks,
     scrollToOriginalText,

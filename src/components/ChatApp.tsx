@@ -37,6 +37,7 @@ function ChatApp() {
   const [searchTerm, setSearchTerm] = useState('');
   const [hasArticle, setHasArticle] = useState<boolean | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [needsModelSelection, setNeedsModelSelection] = useState(false);
 
   // Chat session management
   const {
@@ -49,14 +50,13 @@ function ChatApp() {
 
   // Tab change handling
   const handleTabChange = useCallback((newUrl: string, oldUrl: string) => {
-    console.log('Tab changed from', oldUrl, 'to', newUrl);
     // When tab changes, useChatHistory automatically loads corresponding chat history based on currentPageUrl
   }, []);
 
   // External hooks - Note: usePageInteraction now accepts onTabChange callback
   const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
-  const { currentPageUrl } = usePageInteraction([], handleTabChange);
-  const { messages, setMessages, input, setInput, clearChatHistory } = useChatHistory(currentPageUrl);
+  const { currentPageUrl, currentPageTitle } = usePageInteraction([], handleTabChange);
+  const { messages, setMessages, input, setInput, clearChatHistory, isUrlSynced } = useChatHistory(currentPageUrl);
   const { selectedProvider, setSelectedProvider, apiKey, setApiKey, apiEndpoint, setApiEndpoint, apiKeyInput, setApiKeyInput, apiEndpointInput, setApiEndpointInput, handleProviderChange, saveSettings: saveProviderSettings } = useProviderConfig();
   const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
   const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
@@ -125,19 +125,34 @@ function ChatApp() {
 
   // Update session index when messages change
   useEffect(() => {
-    if (currentPageUrl && messages.length > 0) {
-      updateSessionIndex(currentPageUrl, messages);
+    // Only update session index when URL and messages are synced to prevent
+    // old messages being saved to new URL during tab switch
+    if (currentPageUrl && messages.length > 0 && isUrlSynced) {
+      updateSessionIndex(currentPageUrl, messages, currentPageTitle);
     }
-  }, [messages, currentPageUrl, updateSessionIndex]);
+  }, [messages, currentPageUrl, currentPageTitle, updateSessionIndex, isUrlSynced]);
 
   // ======================================
   // 4. Event Handling Functions (optimized with useCallback)
   // ======================================
   // Handle selecting historical session
   const handleSelectSession = useCallback(async (session: { url: string; urlHash: string }) => {
-    // Open selected URL in new tab, which will automatically trigger tab change and load corresponding chat history
     try {
-      await chrome.tabs.create({ url: session.url, active: true });
+      // First, try to find an existing tab with the same URL
+      const tabs = await chrome.tabs.query({});
+      const existingTab = tabs.find(tab => tab.url === session.url);
+
+      if (existingTab && existingTab.id) {
+        // Found existing tab, switch to it
+        await chrome.tabs.update(existingTab.id, { active: true });
+        // Also switch to the window containing this tab
+        if (existingTab.windowId) {
+          await chrome.windows.update(existingTab.windowId, { focused: true });
+        }
+      } else {
+        // No existing tab found, open in new tab
+        await chrome.tabs.create({ url: session.url, active: true });
+      }
       setShowHistory(false);
     } catch (error) {
       console.error('Error opening session URL:', error);
@@ -166,16 +181,23 @@ function ChatApp() {
 
   // Handle page summary
   const handleSummarizePage = useCallback(async () => {
-    await summarizePage(setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap);
+    await summarizePage(setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap, () => {
+      setNeedsModelSelection(true);
+      // Reset after a delay
+      setTimeout(() => setNeedsModelSelection(false), 100);
+    });
   }, [setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap, summarizePage]);
 
   // Handle message sending
   const handleSendMessage = useCallback(() => {
-    console.log('handleSendMessage called', { input, selectedModel, modelSearchTerm });
     if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
       saveSelectedModel(modelSearchTerm.trim());
     }
-    sendMessage(input, messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap);
+    sendMessage(input, messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap, () => {
+      setNeedsModelSelection(true);
+      // Reset after a delay
+      setTimeout(() => setNeedsModelSelection(false), 100);
+    });
     setInput("");
   }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput, setHighlightMap]);
 
@@ -339,6 +361,7 @@ function ChatApp() {
             summarizePage={handleSummarizePage}
             colors={colors}
             hasArticle={hasArticle}
+            needsModelSelection={needsModelSelection}
           />
 
           {/* Chat history popup */}

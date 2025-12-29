@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import * as browser from "webextension-polyfill";
 import { useTranslation } from 'react-i18next';
+import { encryptValue, decryptValue, migrateToEncrypted } from '../utils/crypto';
 
 export const useProviderConfig = () => {
   const { i18n } = useTranslation();
@@ -16,23 +17,25 @@ export const useProviderConfig = () => {
       try {
         const savedProvider = await browser.storage.local.get('selectedProvider');
         const providerToLoad = (savedProvider.selectedProvider as string) || 'openai';
-        
+
         // Load provider-specific API configuration
         const savedApiKey = await browser.storage.local.get(`${providerToLoad}ApiKey`);
         const savedApiEndpoint = await browser.storage.local.get(`${providerToLoad}ApiEndpoint`);
-        
+
         // Load generic API configuration as fallback
         const savedGenericApiKey = await browser.storage.local.get('apiKey');
         const savedGenericApiEndpoint = await browser.storage.local.get('apiEndpoint');
-        
+
         const savedLanguage = await browser.storage.local.get('language');
 
         setSelectedProvider(providerToLoad);
-        
+
         // Use provider-specific configuration, fallback to generic if not available
-        const apiKeyToUse = (savedApiKey[`${providerToLoad}ApiKey`] as string) || 
-                          (savedGenericApiKey.apiKey as string) || 
-                          '';
+        // Decrypt API key from storage
+        const encryptedKey = (savedApiKey[`${providerToLoad}ApiKey`] as string) ||
+                            (savedGenericApiKey.apiKey as string) ||
+                            '';
+        const apiKeyToUse = encryptedKey ? await decryptValue(encryptedKey) : '';
         
         // Get default endpoint
         const getDefaultEndpoint = (provider: string) => {
@@ -82,8 +85,10 @@ export const useProviderConfig = () => {
     const savedApiEndpoint = await browser.storage.local.get(`${provider}ApiEndpoint`);
 
     if (savedApiKey[`${provider}ApiKey`]) {
-      setApiKey(savedApiKey[`${provider}ApiKey`] as string);
-      setApiKeyInput(savedApiKey[`${provider}ApiKey`] as string);
+      // Decrypt API key
+      const decryptedKey = await decryptValue(savedApiKey[`${provider}ApiKey`] as string);
+      setApiKey(decryptedKey);
+      setApiKeyInput(decryptedKey);
     } else {
       setApiKey('');
       setApiKeyInput('');
@@ -121,12 +126,15 @@ export const useProviderConfig = () => {
 
   const saveSettings = async (selectedLanguage?: string) => {
     try {
+      // Encrypt API key before saving
+      const encryptedApiKey = apiKeyInput ? await encryptValue(apiKeyInput) : '';
+
       // Save current provider's API Key and Endpoint
       await browser.storage.local.set({
         selectedProvider,
-        apiKey: apiKeyInput,
+        apiKey: encryptedApiKey,
         apiEndpoint: apiEndpointInput,
-        [`${selectedProvider}ApiKey`]: apiKeyInput,
+        [`${selectedProvider}ApiKey`]: encryptedApiKey,
         [`${selectedProvider}ApiEndpoint`]: apiEndpointInput
       });
 

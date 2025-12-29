@@ -7,6 +7,18 @@ import i18n from '../i18n';
 // Currently active port for stopping generation
 let currentPort: browser.Runtime.Port | null = null;
 
+// Escape HTML special characters to prevent XSS
+const escapeHtml = (str: string): string => {
+  const htmlEscapes: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  };
+  return str.replace(/[&<>"']/g, char => htmlEscapes[char]);
+};
+
 // Stop generation function
 export const stopGeneration = () => {
   if (currentPort) {
@@ -28,11 +40,17 @@ export const processAIOutput = (rawContent: string) => {
 
   // Helper function: process single reference ID and return HTML
   const processSingleRef = (refId: string) => {
-    if (refIdToNumber[refId] === undefined) {
-      refIdToNumber[refId] = refCounter++;
+    // Validate refId is a safe numeric string to prevent XSS
+    const sanitizedRefId = refId.replace(/[^0-9]/g, '');
+    if (!sanitizedRefId || sanitizedRefId !== refId) {
+      return ''; // Invalid refId, skip
     }
-    const refNumber = refIdToNumber[refId];
-    return `<a href="#" class="summary-link" data-ref-id="${refId}"><sup>[${refNumber}]</sup></a>`;
+
+    if (refIdToNumber[sanitizedRefId] === undefined) {
+      refIdToNumber[sanitizedRefId] = refCounter++;
+    }
+    const refNumber = refIdToNumber[sanitizedRefId];
+    return `<a href="#" class="summary-link" data-ref-id="${escapeHtml(sanitizedRefId)}"><sup>[${refNumber}]</sup></a>`;
   };
 
   // Remove backticks
@@ -220,7 +238,7 @@ export const scrollToOriginalText = async (refId: string) => {
 };
 
 // Page summary function
-export const summarizePage = async (setLoading: (loading: boolean) => void, setMessages: (messages: Message[] | ((prevMessages: Message[]) => Message[])) => void, selectedModel: string, selectedLanguage: string, messages: Message[], setHighlightMap: (highlightMap: Record<string, string>) => void) => {
+export const summarizePage = async (setLoading: (loading: boolean) => void, setMessages: (messages: Message[] | ((prevMessages: Message[]) => Message[])) => void, selectedModel: string, selectedLanguage: string, messages: Message[], setHighlightMap: (highlightMap: Record<string, string>) => void, onNoModelSelected?: () => void) => {
   setLoading(true);
   try {
     const tabs = await browser.tabs.query({
@@ -325,8 +343,8 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
             return;
           }
           if (!selectedModel) {
-            alert("Please select a model first");
             setLoading(false);
+            onNoModelSelected?.();
             return;
           }
 
@@ -564,16 +582,14 @@ export const sendMessage = async (
   selectedLanguage: string,
   highlightMap: Record<string, string>,
   setLoading: (loading: boolean) => void,
-  setHighlightMap?: (highlightMap: Record<string, string>) => void
+  setHighlightMap?: (highlightMap: Record<string, string>) => void,
+  onNoModelSelected?: () => void
 ) => {
-  console.log('sendMessage called', { userMessageContent, selectedModel, selectedLanguage });
   if (!userMessageContent.trim()) {
-    console.log('sendMessage: empty input, returning');
     return;
   }
   if (!selectedModel) {
-    console.log('sendMessage: no model selected');
-    alert("Please select a model first");
+    onNoModelSelected?.();
     return;
   }
   setLoading(true);
