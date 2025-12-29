@@ -1,6 +1,6 @@
 {
-  "settings": "Settings",
-  "settings_section": {
+  "settings": {
+    "title": "Settings",
     "aiProvider": "AI Provider",
     "apiToken": "API Token",
     "model": "Model",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "Summarize Page",
-    "summarizePage": "Please summarize the current page",
     "clearContext": "Clear Context",
     "copy": "Copy",
     "copied": "Copied",
     "expand": "Expand",
     "collapse": "Collapse",
-    "clear_chat": "Clear Chat",
+    "clearChat": "Clear Chat",
     "edit": "Edit",
     "regenerate": "Regenerate",
     "stopGenerating": "Stop Generating",
@@ -38,7 +37,8 @@
     "cancel": "Cancel",
     "search": "Search",
     "close": "Close",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "send": "Send"
   },
   "labels": {
     "chat": "Chat",
@@ -61,8 +61,10 @@
     "yesterday": "Yesterday",
     "daysAgo": "days ago"
   },
-  "send": "Send",
   "languagePrompts": {
     "answerInLanguage": "and answer in English"
+  },
+  "prompts": {
+    "summarizePage": "Please summarize the current page"
   }
 }

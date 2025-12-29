@@ -1,6 +1,6 @@
 {
-  "settings": "Einstellungen",
-  "settings_section": {
+  "settings": {
+    "title": "Einstellungen",
     "aiProvider": "AI-Anbieter",
     "apiToken": "API-Token",
     "model": "Modell",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "Seite zusammenfassen",
-    "summarizePage": "Bitte fassen Sie die aktuelle Seite zusammen",
     "clearContext": "Kontext löschen",
     "copy": "Kopieren",
     "copied": "Kopiert",
     "expand": "Erweitern",
     "collapse": "Einklappen",
-    "clear_chat": "Chat löschen",
+    "clearChat": "Chat löschen",
     "edit": "Bearbeiten",
     "regenerate": "Neu generieren",
     "stopGenerating": "Generierung stoppen",
@@ -38,7 +37,8 @@
     "cancel": "Abbrechen",
     "search": "Suchen",
     "close": "Schließen",
-    "confirm": "Bestätigen"
+    "confirm": "Bestätigen",
+    "send": "Senden"
   },
   "labels": {
     "chat": "Chat",
@@ -61,8 +61,10 @@
     "yesterday": "Gestern",
     "daysAgo": "Tage"
   },
-  "send": "Senden",
   "languagePrompts": {
     "answerInLanguage": "und antworten Sie auf Deutsch"
+  },
+  "prompts": {
+    "summarizePage": "Bitte fassen Sie die aktuelle Seite zusammen"
   }
 }

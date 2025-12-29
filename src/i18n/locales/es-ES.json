@@ -1,6 +1,6 @@
 {
-  "settings": "Configuración",
-  "settings_section": {
+  "settings": {
+    "title": "Configuración",
     "aiProvider": "Proveedor de IA",
     "apiToken": "Token API",
     "model": "Modelo",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "Resumir página",
-    "summarizePage": "Por favor, resuma la página actual",
     "clearContext": "Limpiar contexto",
     "copy": "Copiar",
     "copied": "Copiado",
     "expand": "Expandir",
     "collapse": "Colapsar",
-    "clear_chat": "Limpiar chat",
+    "clearChat": "Limpiar chat",
     "edit": "Editar",
     "regenerate": "Regenerar",
     "stopGenerating": "Detener generación",
@@ -38,7 +37,8 @@
     "cancel": "Cancelar",
     "search": "Buscar",
     "close": "Cerrar",
-    "confirm": "Confirmar"
+    "confirm": "Confirmar",
+    "send": "Enviar"
   },
   "labels": {
     "chat": "Chat",
@@ -61,8 +61,10 @@
     "yesterday": "Ayer",
     "daysAgo": "días"
   },
-  "send": "Enviar",
   "languagePrompts": {
     "answerInLanguage": "y responda en español"
+  },
+  "prompts": {
+    "summarizePage": "Por favor, resuma la página actual"
   }
 }

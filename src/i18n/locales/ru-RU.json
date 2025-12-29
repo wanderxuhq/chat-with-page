@@ -1,6 +1,6 @@
 {
-  "settings": "Настройки",
-  "settings_section": {
+  "settings": {
+    "title": "Настройки",
     "aiProvider": "Провайдер ИИ",
     "apiToken": "Токен API",
     "model": "Модель",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "Сделать резюме страницы",
-    "summarizePage": "Пожалуйста, кратко опишите текущую страницу",
     "clearContext": "Очистить контекст",
     "copy": "Копировать",
     "copied": "Скопировано",
     "expand": "Развернуть",
     "collapse": "Свернуть",
-    "clear_chat": "Очистить чат",
+    "clearChat": "Очистить чат",
     "edit": "Редактировать",
     "regenerate": "Сгенерировать заново",
     "stopGenerating": "Остановить генерацию",
@@ -38,7 +37,8 @@
     "cancel": "Отменить",
     "search": "Поиск",
     "close": "Закрыть",
-    "confirm": "Подтвердить"
+    "confirm": "Подтвердить",
+    "send": "Отправить"
   },
   "labels": {
     "chat": "Чат",
@@ -61,8 +61,10 @@
     "yesterday": "Вчера",
     "daysAgo": "дней назад"
   },
-  "send": "Отправить",
   "languagePrompts": {
-    "answerInLanguage": "и ответьте на русском"
+    "answerInLanguage": "и ответьте на русском языке"
+  },
+  "prompts": {
+    "summarizePage": "Пожалуйста, кратко опишите текущую страницу"
   }
 }

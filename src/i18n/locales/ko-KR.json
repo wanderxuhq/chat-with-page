@@ -1,6 +1,6 @@
 {
-  "settings": "설정",
-  "settings_section": {
+  "settings": {
+    "title": "설정",
     "aiProvider": "AI 제공자",
     "apiToken": "API 토큰",
     "model": "모델",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "페이지 요약",
-    "summarizePage": "현재 페이지를 요약해 주세요",
     "clearContext": "컨텍스트 지우기",
     "copy": "복사",
     "copied": "복사됨",
     "expand": "펼치기",
     "collapse": "접기",
-    "clear_chat": "채팅 지우기",
+    "clearChat": "채팅 지우기",
     "edit": "편집",
     "regenerate": "재생성",
     "stopGenerating": "생성 중지",
@@ -38,7 +37,8 @@
     "cancel": "취소",
     "search": "검색",
     "close": "닫기",
-    "confirm": "확인"
+    "confirm": "확인",
+    "send": "보내기"
   },
   "labels": {
     "chat": "채팅",
@@ -61,8 +61,10 @@
     "yesterday": "어제",
     "daysAgo": "일 전"
   },
-  "send": "보내기",
   "languagePrompts": {
     "answerInLanguage": "한국어로 답변해 주세요"
+  },
+  "prompts": {
+    "summarizePage": "현재 페이지를 요약해 주세요"
   }
 }

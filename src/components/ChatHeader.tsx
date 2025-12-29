@@ -219,7 +219,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       <button
         onClick={() => setShowClearConfirm(true)}
         style={styles.iconButton}
-        title={t('buttons.clear_chat')}
+        title={t('buttons.clearChat')}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = colors.dangerLight;
           e.currentTarget.style.color = colors.danger;
@@ -276,7 +276,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       <button
         onClick={() => setShowSettings(true)}
         style={styles.iconButton}
-        title={t('settings')}
+        title={t('settings.title')}
         onMouseOver={(e) => {
           e.currentTarget.style.backgroundColor = colors.bgTertiary;
           e.currentTarget.style.color = colors.textSecondary;

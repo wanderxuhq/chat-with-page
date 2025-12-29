@@ -50,9 +50,9 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   const [showApiKey, setShowApiKey] = useState(false);
 
   const themeOptions = [
-    { value: 'system' as ThemeMode, label: t('settings_section.themeSystem') || '跟随系统' },
-    { value: 'light' as ThemeMode, label: t('settings_section.themeLight') || '浅色' },
-    { value: 'dark' as ThemeMode, label: t('settings_section.themeDark') || '深色' },
+    { value: 'system' as ThemeMode, label: t('settings.themeSystem') || '跟随系统' },
+    { value: 'light' as ThemeMode, label: t('settings.themeLight') || '浅色' },
+    { value: 'dark' as ThemeMode, label: t('settings.themeDark') || '深色' },
   ];
 
   const styles = {
@@ -177,11 +177,11 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
   return (
     <div style={styles.container}>
-      <h2 style={styles.header}>{t('settings')}</h2>
+      <h2 style={styles.header}>{t('settings.title')}</h2>
 
       {/* Theme selection */}
       <div style={styles.formGroup}>
-        <label style={styles.label}>{t('settings_section.theme') || '主题'}</label>
+        <label style={styles.label}>{t('settings.theme') || '主题'}</label>
         <div style={styles.themeSelector}>
           {themeOptions.map((option) => (
             <button
@@ -206,7 +206,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </div>
 
       <div style={styles.formGroup}>
-        <label style={styles.label}>{t('settings_section.aiProvider')}</label>
+        <label style={styles.label}>{t('settings.aiProvider')}</label>
         <select
           value={selectedProvider}
           onChange={(e) => handleProviderChange(e.target.value)}
@@ -231,13 +231,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         />
         {selectedProvider !== "custom" && (
           <p style={styles.hint}>
-            {t('settings_section.autoFill') || 'Leave empty to use default URL'}
+            {t('settings.autoFill') || 'Leave empty to use default URL'}
           </p>
         )}
       </div>
 
       <div style={styles.formGroup}>
-        <label style={styles.label}>{t('settings_section.apiToken')}</label>
+        <label style={styles.label}>{t('settings.apiToken')}</label>
         <div style={styles.passwordWrapper}>
           <input
             type={showApiKey ? "text" : "password"}
@@ -268,7 +268,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       </div>
 
       <div style={styles.formGroup}>
-        <label style={styles.label}>{t('settings_section.language')}</label>
+        <label style={styles.label}>{t('settings.language')}</label>
         <select
           value={selectedLanguage}
           onChange={(e) => {
@@ -296,7 +296,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           e.currentTarget.style.backgroundColor = colors.primary;
         }}
       >
-        {t('settings_section.save')}
+        {t('settings.save')}
       </button>
     </div>
   );

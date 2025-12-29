@@ -340,7 +340,7 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
 
           setHighlightMap(newHighlightMap);
 
-          const userMessageContent = i18n.t("buttons.summarizePage");
+          const userMessageContent = i18n.t("prompts.summarizePage");
           // Add prompt based on selected language
           i18n.changeLanguage(selectedLanguage || i18n.language);
           const languagePrompt = i18n.t("languagePrompts.answerInLanguage");

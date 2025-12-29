@@ -1,6 +1,6 @@
 {
-  "settings": "Paramètres",
-  "settings_section": {
+  "settings": {
+    "title": "Paramètres",
     "aiProvider": "Fournisseur IA",
     "apiToken": "Jeton API",
     "model": "Modèle",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "Résumer la page",
-    "summarizePage": "Veuillez résumer la page actuelle",
     "clearContext": "Effacer le contexte",
     "copy": "Copier",
     "copied": "Copié",
     "expand": "Développer",
     "collapse": "Réduire",
-    "clear_chat": "Effacer le chat",
+    "clearChat": "Effacer le chat",
     "edit": "Modifier",
     "regenerate": "Régénérer",
     "stopGenerating": "Arrêter la génération",
@@ -38,7 +37,8 @@
     "cancel": "Annuler",
     "search": "Rechercher",
     "close": "Fermer",
-    "confirm": "Confirmer"
+    "confirm": "Confirmer",
+    "send": "Envoyer"
   },
   "labels": {
     "chat": "Chat",
@@ -54,15 +54,17 @@
     "search": "Rechercher des messages..."
   },
   "history": {
-    "title": "Historique des chats",
-    "empty": "Aucun historique de chat",
+    "title": "Historique des discussions",
+    "empty": "Aucun historique de discussion",
     "messages": "messages",
     "delete": "Supprimer",
     "yesterday": "Hier",
     "daysAgo": "jours"
   },
-  "send": "Envoyer",
   "languagePrompts": {
-    "answerInLanguage": "et répondez en français"
+    "answerInLanguage": "et répondre en français"
+  },
+  "prompts": {
+    "summarizePage": "Veuillez résumer la page actuelle"
   }
 }

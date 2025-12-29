@@ -1,8 +1,8 @@
 {
-  "settings": "設定",
-  "settings_section": {
+  "settings": {
+    "title": "設定",
     "aiProvider": "AIプロバイダー",
-    "apiToken": "API Token",
+    "apiToken": "APIトークン",
     "model": "モデル",
     "language": "言語",
     "save": "保存",
@@ -10,7 +10,7 @@
     "themeSystem": "自動",
     "themeLight": "ライト",
     "themeDark": "ダーク",
-    "autoFill": "空欄の場合はデフォルトURLを使用"
+    "autoFill": "デフォルトのURLを使用するには空のままにしてください"
   },
   "messages": {
     "enterApiToken": "API Tokenを入力してください",
@@ -24,13 +24,12 @@
   },
   "buttons": {
     "chatWithPage": "ページを要約",
-    "summarizePage": "現在のページを要約してください",
     "clearContext": "コンテキストをクリア",
     "copy": "コピー",
     "copied": "コピーしました",
     "expand": "展開",
     "collapse": "折りたたむ",
-    "clear_chat": "チャットをクリア",
+    "clearChat": "チャットをクリア",
     "edit": "編集",
     "regenerate": "再生成",
     "stopGenerating": "生成を停止",
@@ -38,7 +37,8 @@
     "cancel": "キャンセル",
     "search": "検索",
     "close": "閉じる",
-    "confirm": "確認"
+    "confirm": "確認",
+    "send": "送信"
   },
   "labels": {
     "chat": "チャット",
@@ -61,8 +61,10 @@
     "yesterday": "昨日",
     "daysAgo": "日前"
   },
-  "send": "送信",
   "languagePrompts": {
     "answerInLanguage": "日本語で回答してください"
+  },
+  "prompts": {
+    "summarizePage": "現在のページを要約してください"
   }
 }
