@@ -15,24 +15,41 @@
   "messages": {
     "enterApiToken": "Пожалуйста, введите токен API",
     "selectModelFirst": "Пожалуйста, сначала выберите модель",
-    "apiKeyNotFound": "Ключ API не найден"
+    "apiKeyNotFound": "Ключ API не найден",
+    "loadingModels": "Загрузка моделей...",
+    "noMatchingModels": "Нет совпадающих моделей",
+    "loading": "Загрузка...",
+    "confirmClear": "Подтвердить удаление?"
   },
   "buttons": {
-    "chatWithPage": "Чат с страницей",
+    "chatWithPage": "Сделать резюме страницы",
     "clearContext": "Очистить контекст",
     "copy": "Копировать",
+    "copied": "Скопировано",
     "expand": "Развернуть",
     "collapse": "Свернуть",
-    "clear_chat": "Очистить чат"
+    "clear_chat": "Очистить чат",
+    "edit": "Редактировать",
+    "regenerate": "Сгенерировать заново",
+    "stopGenerating": "Остановить генерацию",
+    "save": "Сохранить & Отправить",
+    "cancel": "Отменить",
+    "search": "Поиск",
+    "close": "Закрыть",
+    "confirm": "Подтвердить"
   },
   "labels": {
     "chat": "Чат",
     "context": "Контекст",
     "model": "Модель",
     "language": "Язык",
-    "prompt": "Запрос"
+    "prompt": "Запрос",
+    "matches": "совпадений"
   },
   "placeholders": {
-    "enterMessage": "Введите сообщение..."
-  }
+    "enterMessage": "Введите сообщение...",
+    "enterCustomBaseUrl": "Введите пользовательский базовый URL",
+    "search": "Поиск сообщений..."
+  },
+  "send": "Отправить"
 }

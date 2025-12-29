@@ -15,24 +15,41 @@
   "messages": {
     "enterApiToken": "Bitte geben Sie Ihren API-Token ein",
     "selectModelFirst": "Bitte wählen Sie zuerst ein Modell aus",
-    "apiKeyNotFound": "API-Schlüssel nicht gefunden"
+    "apiKeyNotFound": "API-Schlüssel nicht gefunden",
+    "loadingModels": "Lade Modelle...",
+    "noMatchingModels": "Keine passenden Modelle gefunden",
+    "loading": "Laden...",
+    "confirmClear": "Bestätigen Sie die Löschung?"
   },
   "buttons": {
-    "chatWithPage": "Mit Seite chatten",
+    "chatWithPage": "Seite zusammenfassen",
     "clearContext": "Kontext löschen",
     "copy": "Kopieren",
+    "copied": "Kopiert",
     "expand": "Erweitern",
     "collapse": "Einklappen",
-    "clear_chat": "Chat löschen"
+    "clear_chat": "Chat löschen",
+    "edit": "Bearbeiten",
+    "regenerate": "Neu generieren",
+    "stopGenerating": "Generierung stoppen",
+    "save": "Speichern & Senden",
+    "cancel": "Abbrechen",
+    "search": "Suchen",
+    "close": "Schließen",
+    "confirm": "Bestätigen"
   },
   "labels": {
     "chat": "Chat",
     "context": "Kontext",
     "model": "Modell",
     "language": "Sprache",
-    "prompt": "Prompt"
+    "prompt": "Prompt",
+    "matches": "Übereinstimmungen"
   },
   "placeholders": {
-    "enterMessage": "Geben Sie eine Nachricht ein..."
-  }
+    "enterMessage": "Geben Sie eine Nachricht ein...",
+    "enterCustomBaseUrl": "Geben Sie die benutzerdefinierte Basis-URL ein",
+    "search": "Nachrichten suchen..."
+  },
+  "send": "Senden"
 }

@@ -15,24 +15,41 @@
   "messages": {
     "enterApiToken": "Veuillez entrer votre jeton API",
     "selectModelFirst": "Veuillez d'abord sélectionner un modèle",
-    "apiKeyNotFound": "Clé API non trouvée"
+    "apiKeyNotFound": "Clé API non trouvée",
+    "loadingModels": "Chargement des modèles...",
+    "noMatchingModels": "Aucun modèle correspondant trouvé",
+    "loading": "Chargement...",
+    "confirmClear": "Confirmer la suppression?"
   },
   "buttons": {
     "chatWithPage": "Résumer la page",
     "clearContext": "Effacer le contexte",
     "copy": "Copier",
+    "copied": "Copié",
     "expand": "Développer",
     "collapse": "Réduire",
-    "clear_chat": "Effacer le chat"
+    "clear_chat": "Effacer le chat",
+    "edit": "Modifier",
+    "regenerate": "Régénérer",
+    "stopGenerating": "Arrêter la génération",
+    "save": "Enregistrer & Envoyer",
+    "cancel": "Annuler",
+    "search": "Rechercher",
+    "close": "Fermer",
+    "confirm": "Confirmer"
   },
   "labels": {
     "chat": "Chat",
     "context": "Contexte",
     "model": "Modèle",
     "language": "Langue",
-    "prompt": "Invite"
+    "prompt": "Invite",
+    "matches": "correspondances"
   },
   "placeholders": {
-    "enterMessage": "Entrez un message..."
-  }
+    "enterMessage": "Entrez un message...",
+    "enterCustomBaseUrl": "Entrez l'URL de base personnalisée",
+    "search": "Rechercher des messages..."
+  },
+  "send": "Envoyer"
 }

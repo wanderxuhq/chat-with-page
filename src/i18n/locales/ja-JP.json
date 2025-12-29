@@ -18,26 +18,38 @@
     "apiKeyNotFound": "API Keyが見つかりません",
     "loadingModels": "モデルを読み込み中...",
     "noMatchingModels": "一致するモデルが見つかりません",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "confirmClear": "確認してください？"
   },
   "buttons": {
     "chatWithPage": "ページを要約",
     "clearContext": "コンテキストをクリア",
     "copy": "コピー",
+    "copied": "コピーしました",
     "expand": "展開",
     "collapse": "折りたたむ",
-    "clear_chat": "チャットをクリア"
+    "clear_chat": "チャットをクリア",
+    "edit": "編集",
+    "regenerate": "再生成",
+    "stopGenerating": "生成を停止",
+    "save": "保存して送信",
+    "cancel": "キャンセル",
+    "search": "検索",
+    "close": "閉じる",
+    "confirm": "確認"
   },
   "labels": {
     "chat": "チャット",
     "context": "コンテキスト",
     "model": "モデル",
     "language": "言語",
-    "prompt": "プロンプト"
+    "prompt": "プロンプト",
+    "matches": "件の一致"
   },
   "placeholders": {
     "enterMessage": "メッセージを入力してください...",
-    "enterCustomBaseUrl": "カスタムBase URLを入力してください"
+    "enterCustomBaseUrl": "カスタムBase URLを入力してください",
+    "search": "メッセージを検索..."
   },
   "send": "送信"
 }
