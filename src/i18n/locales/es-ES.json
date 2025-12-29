@@ -24,6 +24,7 @@
   },
   "buttons": {
     "chatWithPage": "Resumir página",
+    "summarizePage": "Por favor, resuma la página actual",
     "clearContext": "Limpiar contexto",
     "copy": "Copiar",
     "copied": "Copiado",

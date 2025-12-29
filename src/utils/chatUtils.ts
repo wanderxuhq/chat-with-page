@@ -1,32 +1,32 @@
-// 聊天工具函数
+// Chat utility functions
 import type { Message } from '../types/index';
 import * as browser from "webextension-polyfill"
 import { ReadabilityParser } from '../ReadabilityParser';
 import i18n from '../i18n';
 
-// 当前活跃的端口，用于停止生成
+// Currently active port for stopping generation
 let currentPort: browser.Runtime.Port | null = null;
 
-// 停止生成函数
+// Stop generation function
 export const stopGeneration = () => {
   if (currentPort) {
     try {
       currentPort.postMessage({ action: "stop" });
       currentPort.disconnect();
     } catch (e) {
-      // 忽略错误
+      // Ignore error
     }
     currentPort = null;
   }
 };
 
-// 处理AI输出的内容，将引用转换为可点击的链接
+// Process AI output content, converting references to clickable links
 export const processAIOutput = (rawContent: string) => {
   let refCounter = 1;
   const refIdToNumber: Record<string, number> = {};
   const allRefIds: string[] = [];
 
-  // 辅助函数：处理单个引用ID并返回HTML
+  // Helper function: process single reference ID and return HTML
   const processSingleRef = (refId: string) => {
     if (refIdToNumber[refId] === undefined) {
       refIdToNumber[refId] = refCounter++;
@@ -35,12 +35,12 @@ export const processAIOutput = (rawContent: string) => {
     return `<a href="#" class="summary-link" data-ref-id="${refId}"><sup>[${refNumber}]</sup></a>`;
   };
 
-  // 移除反引号
+  // Remove backticks
   let content = rawContent.replace(/`\[(.*?)\]`/g, '[$1]');
 
-  // 收集所有需要处理的引用ID（保持出现顺序）
+  // Collect all reference IDs to process (preserve order)
   const collectRefIds = (text: string) => {
-    // 处理[REFx]-[REFy]格式的范围引用
+    // Process range references in [REFx]-[REFy] format
     const separateRangePattern = /\[(REF(\d+))\]-\[(REF(\d+))\]/g;
     let match;
     while ((match = separateRangePattern.exec(text)) !== null) {
@@ -56,7 +56,7 @@ export const processAIOutput = (rawContent: string) => {
       }
     }
 
-    // 处理所有引用格式
+    // Process all reference formats
     const refPattern = /\[(REF[\d,REF\s-]+)\]/g;
     while ((match = refPattern.exec(text)) !== null) {
       const refsStr = match[1];
@@ -81,7 +81,7 @@ export const processAIOutput = (rawContent: string) => {
             }
           }
         }
-        // 单个引用
+        // Single reference
         const refId = part.replace('REF', '');
         if (!allRefIds.includes(refId)) {
           allRefIds.push(refId);
@@ -90,17 +90,17 @@ export const processAIOutput = (rawContent: string) => {
     }
   };
 
-  // 先收集所有引用ID
+  // First collect all reference IDs
   collectRefIds(content);
 
-  // 按照出现顺序为每个引用ID分配序号
+  // Assign sequence numbers to each reference ID by appearance order
   allRefIds.forEach(refId => {
     if (refIdToNumber[refId] === undefined) {
       refIdToNumber[refId] = refCounter++;
     }
   });
 
-  // 处理[REFx]-[REFy]格式的范围引用
+  // Process range references in [REFx]-[REFy] format
   const separateRangePattern = /\[(REF(\d+))\]-\[(REF(\d+))\]/g;
   content = content.replace(separateRangePattern, (match, startRef, startId, endRef, endId) => {
     let processedRefs = '';
@@ -108,7 +108,7 @@ export const processAIOutput = (rawContent: string) => {
     const end = parseInt(endId);
 
     if (!isNaN(start) && !isNaN(end)) {
-      // 生成范围内的所有引用
+      // Generate all references in the range
       for (let i = start; i <= end; i++) {
         processedRefs += processSingleRef(i.toString());
       }
@@ -118,13 +118,13 @@ export const processAIOutput = (rawContent: string) => {
     return match;
   });
 
-  // 处理所有引用格式
-  // 首先找到所有的引用组（允许空格）
+  // Process all reference formats
+  // First find all reference groups (allowing spaces)
   const refPattern = /\[(REF[\d,REF\s-]+)\]/g;
   let match;
   const matches: Array<{ fullMatch: string; refsStr: string; index: number }> = [];
   
-  // 先收集所有匹配项
+  // First collect all matches
   while ((match = refPattern.exec(content)) !== null) {
     matches.push({
       fullMatch: match[0],
@@ -133,18 +133,18 @@ export const processAIOutput = (rawContent: string) => {
     });
   }
   
-  // 从后往前替换，避免索引偏移
+  // Replace from end to beginning to avoid index shifts
   for (let i = matches.length - 1; i >= 0; i--) {
     const { fullMatch, refsStr } = matches[i];
     let processedRefs = '';
 
-    // 处理范围引用和逗号分隔引用
+    // Process range and comma-separated references
     const parts = refsStr.split(',');
 
     parts.forEach(part => {
       part = part.trim();
       
-      // 检查是否是范围引用
+      // Check if it's a range reference
       if (part.includes('-')) {
         const rangeParts = part.split('-');
         if (rangeParts.length === 2) {
@@ -155,7 +155,7 @@ export const processAIOutput = (rawContent: string) => {
           const end = parseInt(endStr);
           
           if (!isNaN(start) && !isNaN(end)) {
-            // 生成范围内的所有引用
+            // Generate all references in the range
             for (let j = start; j <= end; j++) {
               processedRefs += processSingleRef(j.toString());
             }
@@ -164,19 +164,19 @@ export const processAIOutput = (rawContent: string) => {
         }
       }
       
-      // 单个引用
+      // Single reference
       const refId = part.replace('REF', '');
       processedRefs += processSingleRef(refId);
     });
 
-    // 替换原引用组
+    // Replace original reference group
     content = content.replace(fullMatch, processedRefs);
   }
   
   return content;
 };
 
-// 保存选择的模型到localStorage
+// Save selected model to localStorage
 export const saveSelectedModel = (modelId: string, models: any[], apiEndpoint: string, setSelectedModel: (modelId: string) => void, setShowModelList: (show: boolean) => void) => {
   setSelectedModel(modelId);
   localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
@@ -184,10 +184,10 @@ export const saveSelectedModel = (modelId: string, models: any[], apiEndpoint: s
     selectedModel: modelId,
     timestamp: Date.now()
   }));
-  setShowModelList(false); // 选择后隐藏列表
+  setShowModelList(false); // Hide list after selection
 };
 
-// 滚动到原始文本位置
+// Scroll to original text position
 export const scrollToOriginalText = async (refId: string) => {
   try {
     const tabs = await browser.tabs.query({
@@ -219,7 +219,7 @@ export const scrollToOriginalText = async (refId: string) => {
   }
 };
 
-// 页面总结函数
+// Page summary function
 export const summarizePage = async (setLoading: (loading: boolean) => void, setMessages: (messages: Message[] | ((prevMessages: Message[]) => Message[])) => void, selectedModel: string, selectedLanguage: string, messages: Message[], setHighlightMap: (highlightMap: Record<string, string>) => void) => {
   setLoading(true);
   try {
@@ -289,7 +289,7 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
                           elementIndex = candidate.getAttribute(
                             "data-summary-ref-id"
                           ) || "";
-                          // 确保elementIndex是字符串类型，防止null值
+                          // Ensure elementIndex is string type to prevent null values
                         }
                         markedTexts.push({
                           text: elInfo.text,
@@ -319,13 +319,13 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
           if (!markedTexts || markedTexts.length === 0) {
             setMessages([
               ...messages,
-              { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "assistant", content: "无法提取页面关键内容", timestamp: Date.now() }
+              { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "assistant", content: "Failed to extract key page content", timestamp: Date.now() }
             ]);
             setLoading(false);
             return;
           }
           if (!selectedModel) {
-            alert("请先选择一个模型");
+            alert("Please select a model first");
             setLoading(false);
             return;
           }
@@ -340,8 +340,8 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
 
           setHighlightMap(newHighlightMap);
 
-          const userMessageContent = "请总结当前页面";
-          // 根据选择的语言添加提示
+          const userMessageContent = i18n.t("buttons.summarizePage");
+          // Add prompt based on selected language
           i18n.changeLanguage(selectedLanguage || i18n.language);
           const languagePrompt = i18n.t("languagePrompts.answerInLanguage");
           
@@ -413,19 +413,19 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
         } else {
           setMessages([
             ...messages,
-            { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "assistant", content: "无法提取页面内容", timestamp: Date.now() }
+            { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "assistant", content: "Failed to extract page content", timestamp: Date.now() }
           ]);
         }
       }
     }
   } catch (error) {
     console.error("Error summarizing page:", error);
-    setMessages([...messages, { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "assistant", content: "无法总结页面", timestamp: Date.now() }]);
+    setMessages([...messages, { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "assistant", content: "Failed to summarize page", timestamp: Date.now() }]);
     setLoading(false);
   }
 };
 
-// 检测页面是否有文章内容，并返回页面上下文
+// Detect if page has article content and return page context
 export const getPageContext = async (setHighlightMap?: (highlightMap: Record<string, string>) => void): Promise<{
   hasArticle: boolean;
   context: string;
@@ -442,7 +442,7 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
       return { hasArticle: false, context: '', highlightMap: {} };
     }
 
-    // 获取页面HTML
+    // Get page HTML
     const results = await browser.scripting.executeScript({
       target: { tabId: activeTab.id },
       func: () => document.documentElement.outerHTML
@@ -457,7 +457,7 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
     const readability = new ReadabilityParser(doc, { debug: false });
     const parseResult = readability.parse();
 
-    // 如果解析成功且有足够的文章内容
+    // If parsing successful and has sufficient article content
     if (parseResult && parseResult.textContent && parseResult.textContent.length > 200) {
       const articleBody = parseResult.node;
       const keyElements = Array.from(
@@ -479,7 +479,7 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
         })
         .filter((el): el is { tagName: string; text: string } => el !== null);
 
-      // 在页面上标记元素
+      // Mark elements on the page
       const markedElementsResults = await browser.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: (elements: { tagName: string; text: string }[]) => {
@@ -537,11 +537,11 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
       }
     }
 
-    // 没有文章内容，返回整个页面HTML
-    // 截取body内容，限制长度
+    // No article content, return full page HTML
+    // Extract body content, limit length
     const bodyContent = doc.body?.innerHTML || pageHtml;
     const truncatedHtml = bodyContent.length > 50000
-      ? bodyContent.substring(0, 50000) + '...(内容已截断)'
+      ? bodyContent.substring(0, 50000) + '...(content truncated)'
       : bodyContent;
 
     return {
@@ -555,7 +555,7 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
   }
 };
 
-// 发送消息函数
+// Send message function
 export const sendMessage = async (
   userMessageContent: string,
   messages: Message[],
@@ -573,16 +573,16 @@ export const sendMessage = async (
   }
   if (!selectedModel) {
     console.log('sendMessage: no model selected');
-    alert("请先选择一个模型");
+    alert("Please select a model first");
     return;
   }
   setLoading(true);
 
-  // 根据选择的语言添加提示
+  // Add prompt based on selected language
   i18n.changeLanguage(selectedLanguage || i18n.language);
   const languagePrompt = i18n.t("languagePrompts.answerInLanguage");
 
-  // 构建消息
+  // Build messages
   const newMessagesForUI: Message[] = [
     ...messages,
     { id: Date.now().toString() + Math.random().toString(36).substr(2, 9), type: "user", content: userMessageContent, timestamp: Date.now() },
@@ -590,40 +590,40 @@ export const sendMessage = async (
   ];
   setMessages(newMessagesForUI);
 
-  // 自动检测页面内容并构建上下文
+  // Automatically detect page content and build context
   let aiInputText = `${languagePrompt}${userMessageContent}`;
-  let shouldProcessRefs = false; // 是否需要处理 REF 引用
+  let shouldProcessRefs = false; // Whether to process REF references
 
-  // 如果已有highlightMap，使用它；否则自动检测页面内容
+  // Use highlightMap if exists; otherwise automatically detect page content
   if (Object.keys(highlightMap).length > 0) {
-    aiInputText += "\n\n参考内容：\n";
+    aiInputText += "\n\nReference content:\n";
     Object.entries(highlightMap).forEach(([refId, text]) => {
       aiInputText += `[REF${refId}] ${text}\n`;
     });
     shouldProcessRefs = true;
   } else {
-    // 自动获取页面上下文
+    // Automatically get page context
     const pageContext = await getPageContext(setHighlightMap);
     if (pageContext.context) {
       if (pageContext.hasArticle) {
-        // 有文章时使用 REF 格式
-        aiInputText += "\n\n页面文章内容：\n" + pageContext.context;
+        // Use REF format when article exists
+        aiInputText += "\n\nPage article content:\n" + pageContext.context;
         shouldProcessRefs = true;
       } else {
-        // 没有文章时直接使用 HTML，不需要 REF 处理
-        aiInputText += "\n\n页面HTML内容：\n" + pageContext.context;
+        // Use HTML directly when no article, no need for REF processing
+        aiInputText += "\n\nPage HTML content:\n" + pageContext.context;
         shouldProcessRefs = false;
       }
     }
   }
 
-  // 添加到消息历史
+  // Add to message history
   const messagesForAI: any[] = [
     ...messages.map(msg => ({ role: msg.type === "user" ? "user" : "assistant", content: msg.content })),
     { role: "user", content: aiInputText }
   ];
 
-  // 发送到AI并处理响应
+  // Send to AI and process response
   const port = browser.runtime.connect({ name: "chat" });
   currentPort = port;
   port.postMessage({ messages: messagesForAI, model: selectedModel, language: selectedLanguage });
@@ -669,7 +669,7 @@ export const sendMessage = async (
     setMessages((prevMessages: Message[]) => {
       const lastMessage = prevMessages[prevMessages.length - 1];
       if (lastMessage.type === "assistant") {
-        // 只有当有文章时才处理 REF 引用
+        // Process REF references only when article exists
         const processedContent = shouldProcessRefs
           ? processAIOutput(lastMessage.content)
           : lastMessage.content;
@@ -683,7 +683,7 @@ export const sendMessage = async (
   });
 };
 
-// 清除聊天记录
+// Clear chat history
 export const clearChatHistory = (setMessages: (messages: Message[]) => void, currentPageUrl: string) => {
   setMessages([]);
   if (currentPageUrl) {
@@ -691,7 +691,7 @@ export const clearChatHistory = (setMessages: (messages: Message[]) => void, cur
   }
 };
 
-// 重新生成消息
+// Regenerate message
 export const regenerateMessage = async (
   messageIndex: number,
   messages: Message[],
@@ -702,7 +702,7 @@ export const regenerateMessage = async (
   setLoading: (loading: boolean) => void,
   setHighlightMap?: (highlightMap: Record<string, string>) => void
 ) => {
-  // 找到对应的用户消息（assistant消息之前的user消息）
+  // Find corresponding user message (user message before assistant message)
   if (messageIndex <= 0 || messages[messageIndex].type !== 'assistant') return;
 
   const userMessageIndex = messageIndex - 1;
@@ -710,11 +710,11 @@ export const regenerateMessage = async (
 
   const userMessage = messages[userMessageIndex];
 
-  // 删除从用户消息开始的所有后续消息
+  // Delete all messages after the user message
   const newMessages = messages.slice(0, userMessageIndex);
   setMessages(newMessages);
 
-  // 重新发送消息
+  // Resend message
   await sendMessage(
     userMessage.content,
     newMessages,
@@ -727,7 +727,7 @@ export const regenerateMessage = async (
   );
 };
 
-// 编辑消息并重新发送
+// Edit message and resend
 export const editAndResendMessage = async (
   messageIndex: number,
   newContent: string,
@@ -741,11 +741,11 @@ export const editAndResendMessage = async (
 ) => {
   if (messages[messageIndex].type !== 'user') return;
 
-  // 删除从该消息开始的所有后续消息
+  // Delete all messages after this message
   const newMessages = messages.slice(0, messageIndex);
   setMessages(newMessages);
 
-  // 重新发送编辑后的消息
+  // Resend edited message
   await sendMessage(
     newContent,
     newMessages,
@@ -758,7 +758,7 @@ export const editAndResendMessage = async (
   );
 };
 
-// 复制消息内容到剪贴板
+// Copy message content to clipboard
 export const copyMessageToClipboard = async (content: string): Promise<boolean> => {
   try {
     await navigator.clipboard.writeText(content);
@@ -769,7 +769,7 @@ export const copyMessageToClipboard = async (content: string): Promise<boolean> 
   }
 };
 
-// 重新标记页面元素
+// Relabel page elements
 export const relinkPageElements = async (highlightMap: Record<string, string>) => {
   if (!Object.keys(highlightMap).length) return;
 
@@ -784,20 +784,20 @@ export const relinkPageElements = async (highlightMap: Record<string, string>) =
       await browser.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: (map: Record<string, string>) => {
-          // 将highlightMap转换为数组以便处理
+          // Convert highlightMap to array for processing
           const elementsToRelink = Object.entries(map)
             .map(([index, text]) => ({ index, text }))
             .filter(el => el.text && el.text.length > 10);
 
           if (elementsToRelink.length > 0) {
             for (const elInfo of elementsToRelink) {
-              // 查找所有可能的标签类型
+              // Find all possible tag types
               const possibleTags = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "blockquote", "pre"];
               for (const tag of possibleTags) {
                 const candidates = document.querySelectorAll(tag);
                 for (const candidate of Array.from(candidates)) {
                   if ((candidate as HTMLElement).innerText?.trim() === elInfo.text) {
-                    // 只在没有标记时添加
+                    // Only add when not already marked
                     if (!candidate.hasAttribute("data-summary-ref-id")) {
                       candidate.setAttribute(
                         "data-summary-ref-id",

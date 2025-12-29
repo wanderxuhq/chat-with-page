@@ -10,18 +10,18 @@ export const useProviderConfig = () => {
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
   const [apiEndpointInput, setApiEndpointInput] = useState<string>('');
 
-  // 加载设置
+  // Load settings
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const savedProvider = await browser.storage.local.get('selectedProvider');
         const providerToLoad = (savedProvider.selectedProvider as string) || 'openai';
         
-        // 加载提供商特定的API配置
+        // Load provider-specific API configuration
         const savedApiKey = await browser.storage.local.get(`${providerToLoad}ApiKey`);
         const savedApiEndpoint = await browser.storage.local.get(`${providerToLoad}ApiEndpoint`);
         
-        // 加载通用API配置作为备选
+        // Load generic API configuration as fallback
         const savedGenericApiKey = await browser.storage.local.get('apiKey');
         const savedGenericApiEndpoint = await browser.storage.local.get('apiEndpoint');
         
@@ -29,12 +29,12 @@ export const useProviderConfig = () => {
 
         setSelectedProvider(providerToLoad);
         
-        // 使用提供商特定的配置，如果没有则使用通用配置
+        // Use provider-specific configuration, fallback to generic if not available
         const apiKeyToUse = (savedApiKey[`${providerToLoad}ApiKey`] as string) || 
                           (savedGenericApiKey.apiKey as string) || 
                           '';
         
-        // 获取默认端点
+        // Get default endpoint
         const getDefaultEndpoint = (provider: string) => {
           switch (provider) {
             case 'openai':
@@ -74,10 +74,10 @@ export const useProviderConfig = () => {
   const handleProviderChange = async (provider: string) => {
     setSelectedProvider(provider);
 
-    // 保存新提供商
+    // Save new provider
     await browser.storage.local.set({ selectedProvider: provider });
 
-    // 根据新提供商加载相应的API Key和Endpoint
+    // Load corresponding API Key and Endpoint based on new provider
     const savedApiKey = await browser.storage.local.get(`${provider}ApiKey`);
     const savedApiEndpoint = await browser.storage.local.get(`${provider}ApiEndpoint`);
 
@@ -93,7 +93,7 @@ export const useProviderConfig = () => {
       setApiEndpoint(savedApiEndpoint[`${provider}ApiEndpoint`] as string);
       setApiEndpointInput(savedApiEndpoint[`${provider}ApiEndpoint`] as string);
     } else {
-      // 默认端点
+      // Default endpoint
       let defaultEndpoint = '';
       switch (provider) {
         case 'openai':
@@ -121,7 +121,7 @@ export const useProviderConfig = () => {
 
   const saveSettings = async (selectedLanguage?: string) => {
     try {
-      // 保存当前提供商的API Key和Endpoint
+      // Save current provider's API Key and Endpoint
       await browser.storage.local.set({
         selectedProvider,
         apiKey: apiKeyInput,
@@ -133,11 +133,11 @@ export const useProviderConfig = () => {
       setApiKey(apiKeyInput);
       setApiEndpoint(apiEndpointInput);
 
-      // 保存语言设置
+      // Save language settings
       const languageToSave = selectedLanguage || i18n.language;
       await browser.storage.local.set({ language: languageToSave });
       
-      // 更新i18n语言
+      // Update i18n language
       i18n.changeLanguage(languageToSave);
     } catch (error) {
       console.error('Error saving settings:', error);

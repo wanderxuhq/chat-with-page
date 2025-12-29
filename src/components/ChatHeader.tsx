@@ -111,7 +111,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
 
   return (
     <div style={styles.container}>
-      {/* 搜索栏 */}
+      {/* Search bar */}
       {showSearch && setShowSearch && setSearchTerm ? (
         <div style={styles.searchBar}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textDisabled} strokeWidth="2">
@@ -154,7 +154,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           </button>
         </div>
       ) : showClearConfirm ? (
-        /* 清除确认栏 */
+        /* Clear confirmation bar */
         <div style={styles.confirmBar}>
           <span style={styles.confirmText}>{t('messages.confirmClear') || '确认清除?'}</span>
           <button
@@ -235,7 +235,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </svg>
       </button>
 
-      {/* 历史记录按钮 */}
+      {/* History button */}
       {setShowHistory && (
         <button
           onClick={() => setShowHistory(true)}

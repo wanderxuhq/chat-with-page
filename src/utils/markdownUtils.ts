@@ -1,7 +1,7 @@
 import { marked } from "marked";
 import { escape } from "../../escape";
 
-// 配置marked渲染器
+// Configure marked renderer
 marked.use({
   renderer: {
     codespan: function ({ text }) {

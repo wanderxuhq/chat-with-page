@@ -5,7 +5,7 @@ import * as browser from "webextension-polyfill";
 export const useLanguageManagement = () => {
   const { t, i18n } = useTranslation();
   
-  // 支持的语言列表
+  // Supported languages list
   const languages = [
     { code: "en-US", name: "English" },
     { code: "zh-CN", name: "中文" },
@@ -19,7 +19,7 @@ export const useLanguageManagement = () => {
   
   const [selectedLanguage, setSelectedLanguage] = useState<string>(i18n.language);
 
-  // 加载语言设置
+  // Load language settings
   useEffect(() => {
     const loadLanguage = async () => {
       try {
@@ -28,7 +28,7 @@ export const useLanguageManagement = () => {
           setSelectedLanguage(savedLanguage.selectedLanguage as string);
           i18n.changeLanguage(savedLanguage.selectedLanguage as string);
         } else {
-          // 使用i18n检测到的浏览器语言作为默认语言
+          // Use browser language detected by i18n as default language
           setSelectedLanguage(i18n.language);
         }
       } catch (error) {
@@ -39,7 +39,7 @@ export const useLanguageManagement = () => {
     loadLanguage();
   }, [i18n]);
 
-  // 保存语言设置
+  // Save language settings
   const saveLanguage = async (languageCode: string) => {
     try {
       setSelectedLanguage(languageCode);

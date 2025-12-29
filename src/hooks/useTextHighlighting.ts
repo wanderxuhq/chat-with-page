@@ -5,7 +5,7 @@ import type { Message } from '../types/index';
 export const useTextHighlighting = (messages: Message[]) => {
   const [highlightMap, setHighlightMap] = useState<Record<string, string>>({});
 
-  // 滚动到原始文本位置
+  // Scroll to original text position
   const scrollToOriginalText = useCallback(async (refId: string) => {
     try {
       const tabs = await browser.tabs.query({
@@ -37,7 +37,7 @@ export const useTextHighlighting = (messages: Message[]) => {
     }
   }, []);
 
-  // 重新标记页面元素
+  // Relabel page elements
   const relinkPageElements = useCallback(async () => {
     if (!Object.keys(highlightMap).length) return;
 
@@ -52,20 +52,20 @@ export const useTextHighlighting = (messages: Message[]) => {
         await browser.scripting.executeScript({
           target: { tabId: activeTab.id },
           func: (map: Record<string, string>) => {
-            // 将highlightMap转换为数组以便处理
+            // Convert highlightMap to array for processing
             const elementsToRelink = Object.entries(map)
               .map(([index, text]) => ({ index, text }))
               .filter(el => el.text && el.text.length > 10);
 
             if (elementsToRelink.length > 0) {
               for (const elInfo of elementsToRelink) {
-                // 查找所有可能的标签类型
+                // Find all possible tag types
                 const possibleTags = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "blockquote", "pre"];
                 for (const tag of possibleTags) {
                   const candidates = document.querySelectorAll(tag);
                   for (const candidate of Array.from(candidates)) {
                     if ((candidate as HTMLElement).innerText?.trim() === elInfo.text) {
-                      // 只在没有标记时添加
+                      // Only add when not already marked
                       if (!candidate.hasAttribute("data-summary-ref-id")) {
                         candidate.setAttribute(
                           "data-summary-ref-id",
@@ -87,7 +87,7 @@ export const useTextHighlighting = (messages: Message[]) => {
     }
   }, [highlightMap]);
 
-  // 添加点击事件监听器，处理链接点击
+  // Add click event listener for link clicks
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -108,10 +108,10 @@ export const useTextHighlighting = (messages: Message[]) => {
     return () => document.removeEventListener("click", handleClick);
   }, [scrollToOriginalText]);
 
-  // 当聊天记录加载时重新标记页面元素
+  // Relabel page elements when chat history loads
   useEffect(() => {
     if (messages.length > 0) {
-      // 延迟执行，确保页面已经加载完成
+      // Delay execution to ensure page is loaded
       const timer = setTimeout(() => {
         relinkPageElements();
       }, 1000);
@@ -119,7 +119,7 @@ export const useTextHighlighting = (messages: Message[]) => {
     }
   }, [messages, highlightMap, relinkPageElements]);
 
-  // 清理页面元素引用属性
+  // Cleanup page element reference attributes
   useEffect(() => {
     const removeAttributes = async () => {
       try {

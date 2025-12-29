@@ -47,7 +47,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
       setConfirmDelete(null);
     } else {
       setConfirmDelete(urlHash);
-      // 3秒后自动取消确认状态
+      // Auto cancel confirmation after 3 seconds
       setTimeout(() => setConfirmDelete(null), 3000);
     }
   };
@@ -81,7 +81,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
         }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* 头部 */}
+        {/* Header */}
         <div
           style={{
             padding: '16px 20px',
@@ -116,7 +116,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
           </button>
         </div>
 
-        {/* 列表 */}
+        {/* List */}
         <div
           style={{
             flex: 1,
@@ -159,7 +159,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
-                    {/* 标题 */}
+                    {/* Title */}
                     <div
                       style={{
                         color: colors.textPrimary,
@@ -174,7 +174,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                     >
                       {session.title}
                     </div>
-                    {/* 最后一条消息预览 */}
+                    {/* Last message preview */}
                     {session.lastMessage && (
                       <div
                         style={{
@@ -190,7 +190,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {/* 时间和消息数 */}
+                    {/* Time and message count */}
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ color: colors.textMuted, fontSize: 11 }}>
                         {formatTime(session.lastActive)}
@@ -199,7 +199,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                         {session.messageCount} {t('history.messages')}
                       </div>
                     </div>
-                    {/* 删除按钮 */}
+                    {/* Delete button */}
                     <button
                       onClick={(e) => handleDelete(e, session.urlHash)}
                       style={{

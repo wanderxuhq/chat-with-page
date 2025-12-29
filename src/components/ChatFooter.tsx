@@ -97,9 +97,9 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
 
   return (
     <div style={styles.container}>
-      {/* 输入行 */}
+      {/* Input row */}
       <div style={styles.inputRow}>
-        {/* 模型选择器 - 点击按钮展开/收起 */}
+        {/* Model selector - Click button to expand/collapse */}
         {showModelSelector ? (
           <div style={{
             position: 'relative',
@@ -256,7 +256,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           </button>
         )}
 
-        {/* 总结页面按钮 - 无文章时禁用 */}
+        {/* Summarize page button - Disabled when no article */}
         <button
           onClick={summarizePage}
           style={{
@@ -287,7 +287,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           </svg>
         </button>
 
-        {/* 输入框 */}
+        {/* Input box */}
         <input
           type="text"
           value={input}
@@ -309,7 +309,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           placeholder={t('placeholders.enterMessage')}
         />
 
-        {/* 发送按钮 */}
+        {/* Send button */}
         <button
           onClick={sendMessage}
           style={styles.sendButton}

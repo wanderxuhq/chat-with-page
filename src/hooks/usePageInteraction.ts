@@ -13,7 +13,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
   const [pageChunks, setPageChunks] = useState<Chunk[]>([]);
   const previousUrlRef = useRef<string>('');
 
-  // 获取当前页面URL
+  // Get current page URL
   useEffect(() => {
     const getCurrentPageUrl = async () => {
       try {
@@ -21,7 +21,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
         if (tabs[0]?.url) {
           const newUrl = tabs[0].url;
           if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
-            // 标签页切换了
+            // Tab switched
             onTabChange?.(newUrl, previousUrlRef.current);
           }
           previousUrlRef.current = newUrl;
@@ -34,12 +34,12 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
 
     getCurrentPageUrl();
 
-    // 监听标签页更新（URL改变）
+    // Listen for tab updates (URL changes)
     const onTabUpdated = async (tabId: number, changeInfo: any, tab: any) => {
       if (changeInfo.status === 'complete' && tab.active) {
         const newUrl = tab.url || '';
         if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
-          // 标签页切换了
+          // Tab switched
           onTabChange?.(newUrl, previousUrlRef.current);
         }
         previousUrlRef.current = newUrl;
@@ -47,14 +47,14 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
       }
     };
 
-    // 监听标签页激活（切换到另一个标签）
+    // Listen for tab activation (switching to another tab)
     const onTabActivated = async (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
       try {
         const tab = await browser.tabs.get(activeInfo.tabId);
         if (tab?.url) {
           const newUrl = tab.url;
           if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
-            // 标签页切换了
+            // Tab switched
             onTabChange?.(newUrl, previousUrlRef.current);
           }
           previousUrlRef.current = newUrl;
@@ -74,13 +74,13 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     };
   }, [onTabChange]);
 
-  // 清除页面元素引用属性
+  // Clear page element reference attributes
   useEffect(() => {
     const removeAttributes = async () => {
       try {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         
-        // 添加详细的错误检查
+        // Add detailed error checking
         if (!tabs || tabs.length === 0) {
           console.log('No active tabs found');
           return;
@@ -124,28 +124,28 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     };
   }, []);
 
-  // 滚动到原始文本位置
+  // Scroll to original text position
   const scrollToOriginalText = useCallback((element: HTMLElement | undefined) => {
     if (!element) return;
 
     try {
-      // 移除所有现有高亮
+      // Remove all existing highlights
       const existingHighlights = document.querySelectorAll('.chat-with-page-highlight');
       existingHighlights.forEach(highlight => {
         highlight.classList.remove('chat-with-page-highlight');
       });
 
-      // 高亮目标元素
+      // Highlight target element
       element.classList.add('chat-with-page-highlight');
 
-      // 滚动到目标元素
+      // Scroll to target element
       element.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
         inline: 'center'
       });
 
-      // 3秒后移除高亮
+      // Remove highlight after 3 seconds
       setTimeout(() => {
         element.classList.remove('chat-with-page-highlight');
       }, 3000);
@@ -154,7 +154,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     }
   }, []);
 
-  // 重新标记页面元素
+  // Relabel page elements
   const relinkPageElements = useCallback(async () => {
     try {
       if (messages.length === 0) return;
@@ -166,7 +166,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
       await browser.scripting.executeScript({
         target: { tabId, allFrames: true },
         func: () => {
-          // 移除所有现有标记
+          // Remove all existing labels
           const elements = document.querySelectorAll('[data-chat-with-page-id]');
           elements.forEach(element => {
             element.removeAttribute('data-chat-with-page-id');
@@ -174,7 +174,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
         }
       });
 
-      // 为每个消息中的引用重新标记元素
+      // Relabel elements for references in each message
       for (const message of messages) {
         if (message.references && Array.isArray(message.references)) {
           for (const reference of message.references) {
@@ -203,7 +203,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     }
   }, [messages]);
 
-  // 当消息列表变化时，重新标记页面元素
+  // Relabel page elements when message list changes
   useEffect(() => {
     const delayRelink = setTimeout(() => {
       relinkPageElements();
@@ -212,7 +212,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     return () => clearTimeout(delayRelink);
   }, [messages, relinkPageElements]);
 
-  // 获取页面内容
+  // Get page content
   const getPageContent = useCallback(async () => {
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });
@@ -237,7 +237,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     }
   }, []);
 
-  // 获取页面分块内容
+  // Get page content in chunks
   const getPageChunks = useCallback(async () => {
     try {
       const [tab] = await browser.tabs.query({ active: true, currentWindow: true });

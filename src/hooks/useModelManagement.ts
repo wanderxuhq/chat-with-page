@@ -8,21 +8,21 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
   const [showModelList, setShowModelList] = useState<boolean>(false);
   const [fetchingModels, setFetchingModels] = useState<boolean>(false);
 
-  // 获取模型列表，使用useCallback确保引用稳定性
+  // Get model list, use useCallback to ensure reference stability
   const fetchModels = useCallback(async () => {
     if (!apiKey || !apiEndpoint) {
-      console.log('跳过获取模型：API Key或Endpoint为空');
+      console.log('Skipping model fetch: API Key or Endpoint is empty');
       return;
     }
     
     setFetchingModels(true);
-    console.log('开始获取模型列表，API端点：', apiEndpoint);
+    console.log('Starting to get model list, API endpoint:', apiEndpoint);
     
     try {
-      // 清除缓存以确保每次都发送API请求
+      // Clear cache to ensure API request is sent every time
       localStorage.removeItem(`models_${apiEndpoint}`);
       
-      // 尝试从缓存获取模型列表（暂时禁用，用于调试）
+      // Try to get model list from cache (temporarily disabled for debugging)
       /* const cachedModels = localStorage.getItem(`models_${apiEndpoint}`)
       if (cachedModels) {
         const parsedModels = JSON.parse(cachedModels)
@@ -30,12 +30,12 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
         if (parsedModels.selectedModel) {
           setSelectedModel(parsedModels.selectedModel)
         }
-        console.log('使用缓存的模型列表');
+        console.log('Using cached model list');
         return
       } */
       
-      // 从API获取模型列表
-      console.log('发送API请求获取模型列表：', `${apiEndpoint}/models`);
+      // Get model list from API
+      console.log('Sending API request to get model list:', `${apiEndpoint}/models`);
       const response = await fetch(`${apiEndpoint}/models`, {
         headers: {
           "Authorization": `Bearer ${apiKey}`,
@@ -43,59 +43,59 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
         }
       })
       
-      console.log('API响应状态：', response.status);
+      console.log('API response status:', response.status);
       if (response.ok) {
         const data = await response.json()
-        console.log('API响应数据：', data);
+        console.log('API response data:', data);
         const modelNames = data.data.map((model: any) => model.id)
         
-        console.log('获取到的模型列表：', modelNames);
+        console.log('Retrieved model list:', modelNames);
         setModels(modelNames)
         
-        // 缓存模型列表到localStorage
+        // Cache model list to localStorage
         localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
           models: modelNames,
           timestamp: Date.now()
         }))
       } else {
-        console.error('获取模型列表失败，响应状态：', response.status);
-        // 尝试解析错误响应
+        console.error('Failed to get model list, response status:', response.status);
+        // Try to parse error response
         try {
           const errorData = await response.json();
-          console.error('错误响应数据：', errorData);
+          console.error('Error response data:', errorData);
         } catch (parseError) {
-          console.error('无法解析错误响应：', parseError);
+          console.error('Unable to parse error response:', parseError);
         }
       }
     } catch (error) {
-      console.error("获取模型列表失败:", error)
+      console.error("Failed to get model list:", error)
     } finally {
       setFetchingModels(false);
     }
   }, [apiKey, apiEndpoint]);
 
-  // 当API Key、Endpoint或提供商变化时，获取模型列表
+  // Get model list when API Key, Endpoint or provider changes
   useEffect(() => {
-    console.log('useModelManagement: 依赖项变化，触发fetchModels');
-    console.log('当前API Key:', apiKey ? '已设置' : '未设置');
-    console.log('当前API Endpoint:', apiEndpoint);
-    console.log('当前提供商:', selectedProvider);
+    console.log('useModelManagement: Dependencies changed, triggering fetchModels');
+    console.log('Current API Key:', apiKey ? 'Set' : 'Not set');
+    console.log('Current API Endpoint:', apiEndpoint);
+    console.log('Current provider:', selectedProvider);
     fetchModels();
   }, [apiKey, apiEndpoint, selectedProvider, fetchModels]);
 
-  // 加载默认模型
+  // Load default model
   useEffect(() => {
     const loadDefaultModel = async () => {
       try {
-        // 优先从 browser.storage.local 获取当前提供商的上次选择模型
+        // Prioritize getting the last selected model for the current provider from browser.storage.local
         const savedProviderModel = await browser.storage.local.get(`${selectedProvider}SelectedModel`);
         if (savedProviderModel[`${selectedProvider}SelectedModel`]) {
           setSelectedModel(savedProviderModel[`${selectedProvider}SelectedModel`] as string);
           return;
         }
-        // 当用户第一次使用某个提供商时，模型选择为空，需要用户手动选择
+        // When a user uses a provider for the first time, model selection is empty and requires manual selection
         setSelectedModel('');
-        // 同时更新搜索词，保持一致
+        // Also update search term to maintain consistency
         setModelSearchTerm('');
       } catch (error) {
         console.error('Error loading default model:', error);
@@ -105,7 +105,7 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
     loadDefaultModel();
   }, [selectedProvider, apiEndpoint]);
 
-  // 当selectedModel变化时更新搜索词
+  // Update search term when selectedModel changes
   useEffect(() => {
     if (selectedModel) {
       setModelSearchTerm(selectedModel);
@@ -115,15 +115,15 @@ export const useModelManagement = (apiKey: string, apiEndpoint: string, selected
   const saveSelectedModel = (modelId: string) => {
     setSelectedModel(modelId)
     
-    // 保存到 browser.storage.local，确保插件重新打开时能记住选择
-    // 同时按提供商保存模型，以便切换提供商时能恢复上次选择
+    // Save to browser.storage.local to ensure the selection is remembered when the extension is reopened
+    // Also save model by provider to restore last selection when switching providers
     browser.storage.local.set({ 
       selectedModel: modelId,
       [`${selectedProvider}SelectedModel`]: modelId 
     })
       .catch(error => console.error('Error saving model to storage:', error));
     
-    setShowModelList(false); // 选择后隐藏列表
+    setShowModelList(false); // Hide list after selection
   };
 
   return {

@@ -24,6 +24,7 @@
   },
   "buttons": {
     "chatWithPage": "페이지 요약",
+    "summarizePage": "현재 페이지를 요약해 주세요",
     "clearContext": "컨텍스트 지우기",
     "copy": "복사",
     "copied": "복사됨",

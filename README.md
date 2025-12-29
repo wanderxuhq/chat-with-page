@@ -1,135 +1,173 @@
-# Chat with Page - 网页内容交互插件
+# Chat with Page - Web Content Interaction Plugin
 
-这是一个基于 [Plasmo](https://docs.plasmo.com/) 框架开发的浏览器插件，允许您与网页内容进行智能交互，支持多种AI提供商和多语言界面。
+This is a browser extension developed based on the [Plasmo](https://docs.plasmo.com/) framework that allows you to interact intelligently with web page content, supporting multiple AI providers and a multilingual interface.
 
-## 🚀 主要功能
+## 🚀 Main Features
 
-- **智能内容交互**：与网页内容进行对话式交互，获取信息、摘要或解释
-- **多语言支持**：自动检测浏览器语言，支持中文、英文、日文、韩文、法文、德文、西班牙文、俄文等多种语言
-- **多AI提供商**：支持 OpenAI、Anthropic、Ollama 等多种AI服务提供商
-- **个性化设置**：可自定义API密钥、端点和模型
-- **侧边栏集成**：在浏览器侧边栏中便捷使用
+- **Intelligent Content Interaction**: Engage in conversational interactions with web page content to obtain information, summaries, or explanations
+- **Multi-language Support**: Automatically detects browser language, supporting Chinese, English, Japanese, Korean, French, German, Spanish, Russian, and other languages
+- **Multiple AI Providers**: Supports OpenAI, Anthropic, Ollama, and other AI service providers
+- **Personalized Settings**: Customizable API keys, endpoints, and models
+- **Sidebar Integration**: Convenient use in browser sidebar
 
-## 🌐 支持的语言
+## 🌐 Supported Languages
 
-- 中文 (zh-CN)
-- 英文 (en-US)
-- 日文 (ja-JP)
-- 韩文 (ko-KR)
-- 法文 (fr-FR)
-- 德文 (de-DE)
-- 西班牙文 (es-ES)
-- 俄文 (ru-RU)
+- Chinese (zh-CN)
+- English (en-US)
+- Japanese (ja-JP)
+- Korean (ko-KR)
+- French (fr-FR)
+- German (de-DE)
+- Spanish (es-ES)
+- Russian (ru-RU)
 
-插件会自动检测您的浏览器语言并使用相应的界面语言，如无对应语言支持则默认使用英文。
+The extension automatically detects your browser language and uses the corresponding interface language. If no corresponding language is supported, English is used by default.
 
-## 🤖 支持的AI提供商
+### Internationalization Implementation
 
-- **OpenAI**：支持 GPT-3.5, GPT-4 等模型
-- **Anthropic**：支持 Claude 系列模型
-- **Ollama**：支持本地部署的 AI 模型
+The extension uses [i18next](https://www.i18next.com/) and [react-i18next](https://react.i18next.com/) for internationalization support. All interface text is centralized in JSON files under the `src/i18n/locales/` directory for unified management and translation.
 
-## 📦 安装
+#### Translation File Structure
 
-### 开发版本
+Each language has an independent JSON file, example structure:
 
-1. 克隆仓库：
+```json
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "settings": {
+    "title": "Settings",
+    "apiKey": "API Key"
+  }
+}
+```
+
+#### Adding New Languages
+
+To add support for a new language, simply:
+1. Create a new language file in the `src/i18n/locales/` directory (e.g., `fr-FR.json`)
+2. Import the new language file in `src/i18n/index.ts`
+3. Add to the supported languages list
+
+#### Customizing Translations
+
+You can modify or extend the translation files as needed to meet specific localization requirements.
+
+## 🤖 Supported AI Providers
+
+- **OpenAI**: Supports GPT-3.5, GPT-4, and other models
+- **Anthropic**: Supports Claude series models
+- **Ollama**: Supports locally deployed AI models
+
+## 📦 Installation
+
+### Development Version
+
+1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/chat-with-page.git
    cd chat-with-page
    ```
 
-2. 安装依赖：
+2. Install dependencies:
    ```bash
    pnpm install
-   # 或
+   # or
    npm install
    ```
 
-3. 启动开发服务器：
+3. Start the development server:
    ```bash
    pnpm dev
-   # 或
+   # or
    npm run dev
    ```
 
-4. 在浏览器中加载扩展：
-   - Chrome/Edge：打开 `chrome://extensions/`，启用开发者模式，点击「加载已解压的扩展程序」，选择 `build/chrome-mv3-dev` 目录
-   - Firefox：打开 `about:debugging#/runtime/this-firefox`，点击「临时载入附加组件」，选择 `build/firefox-mv3-dev` 目录
+4. Load the extension in your browser:
+   - Chrome/Edge: Open `chrome://extensions/`, enable Developer mode, click "Load unpacked extension", select the `build/chrome-mv3-dev` directory
+   - Firefox: Open `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", select the `build/firefox-mv3-dev` directory
 
-### 生产版本
+### Production Version
 
-1. 构建生产版本：
+1. Build the production version:
    ```bash
    pnpm build
-   # 或
+   # or
    npm run build
    ```
 
-2. 构建完成后，扩展文件将生成在 `build` 目录中，可用于发布到浏览器应用商店。
+2. After building, the extension files will be generated in the `build` directory, which can be used for publishing to browser app stores.
 
-## 🎯 使用方法
+## 🎯 Usage
 
-1. 安装插件后，点击浏览器工具栏中的插件图标打开侧边栏
-2. 在侧边栏中选择AI提供商并配置API密钥
-3. 开始与当前网页内容进行交互
+1. After installing the extension, click the extension icon in the browser toolbar to open the sidebar
+2. Select an AI provider and configure API keys in the sidebar
+3. Start interacting with the current web page content
 
-## ⚙️ 配置
+## ⚙️ Configuration
 
-插件支持以下配置项：
+The extension supports the following configuration options:
 
-- **AI提供商**：选择要使用的AI服务提供商
-- **API密钥**：输入您的AI服务API密钥
-- **API端点**：自定义API请求端点（可选）
-- **模型**：选择要使用的AI模型
-- **语言**：手动选择界面语言
+- **AI Provider**: Select the AI service provider to use
+- **API Key**: Enter your AI service API key
+- **API Endpoint**: Custom API request endpoint (optional)
+- **Model**: Select the AI model to use
+- **Language**: Manually select the interface language
 
-## 🛠️ 开发
+## 🛠️ Development
 
-### 项目结构
+### Project Structure
 
 ```
 ├── src/
-│   ├── IndexSidePanel.tsx       # 侧边栏主组件
-│   ├── background/              # 后台脚本
-│   ├── i18n/                    # 国际化配置
-│   ├── main.tsx                 # 主入口
-│   └── sidepanel.tsx            # 侧边栏入口
-├── tsconfig.json                # TypeScript 配置
-├── package.json                 # 项目配置
-└── README.md                    # 项目说明
+│   ├── components/              # React components
+│   ├── background/              # Background scripts
+│   ├── hooks/                   # Custom hooks
+│   ├── i18n/                    # Internationalization configuration
+│   │   ├── locales/             # Multi-language translation files
+│   │   │   ├── zh-CN.json       # Chinese translation
+│   │   │   ├── en-US.json       # English translation
+│   │   │   └── ...              # Other language translations
+│   │   └── index.ts             # i18n initialization
+│   ├── utils/                   # Utility functions
+│   └── main.tsx                 # Main entry point
+├── tsconfig.json                # TypeScript configuration
+├── package.json                 # Project configuration
+└── README-zh.md                 # Project documentation (Chinese)
 ```
 
-### 技术栈
+### Technology Stack
 
-- **React**：UI 框架
-- **TypeScript**：类型系统
-- **Plasmo**：浏览器扩展开发框架
-- **i18next**：国际化支持
-- **OpenAI SDK**：AI API 客户端
+- **React**: UI framework
+- **TypeScript**: Type system
+- **Plasmo**: Browser extension development framework
+- **i18next**: Internationalization support
+- **OpenAI SDK**: AI API client
 
-## 📝 贡献
+## 📝 Contribution
 
-欢迎提交 Issues 和 Pull Requests！
+Welcome to submit Issues and Pull Requests!
 
-### 贡献指南
+### Contribution Guidelines
 
-1. Fork 仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 打开 Pull Request
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## 📄 许可证
+## 📄 License
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情。
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 致谢
+## 🙏 Acknowledgments
 
-- [Plasmo](https://docs.plasmo.com/)：浏览器扩展开发框架
-- [Readability.js](https://github.com/mozilla/readability)：网页内容解析
-- [i18next](https://www.i18next.com/)：国际化支持
+- [Plasmo](https://docs.plasmo.com/): Browser extension development framework
+- [Readability.js](https://github.com/mozilla/readability): Web page content parsing
+- [i18next](https://www.i18next.com/): Internationalization support
 
-## 📞 联系方式
+## 📞 Contact
 
-如有问题或建议，欢迎提交 [Issue](https://github.com/yourusername/chat-with-page/issues)。
+If you have any questions or suggestions, please submit an [Issue](https://github.com/yourusername/chat-with-page/issues).

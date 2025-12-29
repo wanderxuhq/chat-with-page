@@ -179,7 +179,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
     <div style={styles.container}>
       <h2 style={styles.header}>{t('settings')}</h2>
 
-      {/* 主题选择 */}
+      {/* Theme selection */}
       <div style={styles.formGroup}>
         <label style={styles.label}>{t('settings_section.theme') || '主题'}</label>
         <div style={styles.themeSelector}>

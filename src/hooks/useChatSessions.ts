@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from 'react';
 import * as browser from "webextension-polyfill";
 import type { Message } from '../types/index';
 
-// 生成页面URL的哈希值
+// Generate hash for page URL
 const getPageHash = (url: string): string => {
   return `page_${url.split('://').join('_').split('.').join('_').split('/').join('_').split('?').join('_').split('&').join('_').split('#').join('_')}`;
 };
 
-// 获取URL的显示标题（取域名+路径）
+// Get display title for URL (domain + path)
 const getUrlDisplayTitle = (url: string): string => {
   try {
     const urlObj = new URL(url);
@@ -38,14 +38,14 @@ export const useChatSessions = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 加载所有会话索引
+  // Load all session indices
   const loadSessionsIndex = useCallback(async () => {
     try {
       setLoading(true);
       const result = await browser.storage.local.get(SESSIONS_INDEX_KEY);
       if (result[SESSIONS_INDEX_KEY]) {
         const savedSessions = JSON.parse(result[SESSIONS_INDEX_KEY] as string) as ChatSession[];
-        // 按最后活动时间排序
+        // Sort by last active time
         savedSessions.sort((a, b) => b.lastActive - a.lastActive);
         setSessions(savedSessions);
       }
@@ -56,7 +56,7 @@ export const useChatSessions = () => {
     }
   }, []);
 
-  // 保存会话索引
+  // Save session indices
   const saveSessionsIndex = useCallback(async (newSessions: ChatSession[]) => {
     try {
       await browser.storage.local.set({
@@ -67,7 +67,7 @@ export const useChatSessions = () => {
     }
   }, []);
 
-  // 更新或添加会话到索引
+  // Update or add session to indices
   const updateSessionIndex = useCallback(async (url: string, messages: Message[]) => {
     if (!url || messages.length === 0) return;
 
@@ -88,25 +88,25 @@ export const useChatSessions = () => {
       let newSessions: ChatSession[];
 
       if (existingIndex >= 0) {
-        // 更新现有会话
+        // Update existing session
         newSessions = [...prev];
         newSessions[existingIndex] = newSession;
       } else {
-        // 添加新会话
+        // Add new session
         newSessions = [newSession, ...prev];
       }
 
-      // 按最后活动时间排序
+      // Sort by last active time
       newSessions.sort((a, b) => b.lastActive - a.lastActive);
 
-      // 保存到存储
+      // Save to storage
       saveSessionsIndex(newSessions);
 
       return newSessions;
     });
   }, [saveSessionsIndex]);
 
-  // 从索引中移除会话
+  // Remove session from indices
   const removeSessionFromIndex = useCallback(async (urlHash: string) => {
     setSessions(prev => {
       const newSessions = prev.filter(s => s.urlHash !== urlHash);
@@ -115,19 +115,19 @@ export const useChatSessions = () => {
     });
   }, [saveSessionsIndex]);
 
-  // 删除会话（同时删除聊天数据和索引）
+  // Delete session (chat data and indices)
   const deleteSession = useCallback(async (urlHash: string) => {
     try {
-      // 删除聊天数据
+      // Delete chat data
       await browser.storage.local.remove(urlHash);
-      // 从索引中移除
+      // Remove from indices
       await removeSessionFromIndex(urlHash);
     } catch (error) {
       console.error('Error deleting session:', error);
     }
   }, [removeSessionFromIndex]);
 
-  // 获取指定URL的聊天历史
+  // Get chat history for specified URL
   const getSessionMessages = useCallback(async (urlHash: string): Promise<Message[]> => {
     try {
       const result = await browser.storage.local.get(urlHash);
@@ -141,14 +141,14 @@ export const useChatSessions = () => {
     return [];
   }, []);
 
-  // 清除所有历史记录
+  // Clear all history
   const clearAllSessions = useCallback(async () => {
     try {
-      // 删除所有会话数据
+      // Delete all session data
       for (const session of sessions) {
         await browser.storage.local.remove(session.urlHash);
       }
-      // 清空索引
+      // Clear indices
       await browser.storage.local.remove(SESSIONS_INDEX_KEY);
       setSessions([]);
     } catch (error) {
@@ -156,7 +156,7 @@ export const useChatSessions = () => {
     }
   }, [sessions]);
 
-  // 初始加载
+  // Initial load
   useEffect(() => {
     loadSessionsIndex();
   }, [loadSessionsIndex]);

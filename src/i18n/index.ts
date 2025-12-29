@@ -10,31 +10,31 @@ import translationDeDE from './locales/de-DE.json';
 import translationEsES from './locales/es-ES.json';
 import translationRuRU from './locales/ru-RU.json';
 
-// 获取浏览器语言，支持的语言列表
+// Get browser language, supported languages list
 const supportedLanguages = ['zh-CN', 'en-US', 'ja-JP', 'ko-KR', 'fr-FR', 'de-DE', 'es-ES', 'ru-RU'];
 
-// 获取浏览器语言，返回支持的语言或默认语言
+// Get browser language, return supported language or default
 const getBrowserLanguage = () => {
   try {
-    // 获取浏览器语言
+    // Get browser language
     const browserLang = navigator.language || navigator.languages?.[0] || 'en-US';
     
-    // 标准化语言代码格式
+    // Normalize language code format
     const normalizedLang = browserLang.replace('_', '-').toLowerCase();
     
-    // 检查是否直接支持浏览器语言
+    // Check if browser language is directly supported
     if (supportedLanguages.includes(browserLang)) {
       return browserLang;
     }
     
-    // 检查标准化后的语言是否匹配
+    // Check if normalized language matches
     for (const lang of supportedLanguages) {
       if (lang.toLowerCase() === normalizedLang) {
         return lang;
       }
     }
     
-    // 检查是否支持语言的主要部分（如en-US -> en）
+    // Check if main language part is supported (e.g., en-US -> en)
     const langPrefix = normalizedLang.split('-')[0];
     
     const matchingLang = supportedLanguages.find(lang => 
@@ -45,7 +45,7 @@ const getBrowserLanguage = () => {
       return matchingLang;
     }
     
-    // 特殊处理中文相关语言
+    // Special handling for Chinese-related languages
     if (langPrefix === 'zh') {
       return 'zh-CN';
     }
@@ -57,7 +57,7 @@ const getBrowserLanguage = () => {
   }
 };
 
-// 获取本地存储的语言设置，如果没有则使用浏览器语言
+// Get locally stored language setting, use browser language if not available
 const getInitialLanguage = () => {
   try {
     const savedLanguage = localStorage.getItem('selectedLanguage');
@@ -68,7 +68,7 @@ const getInitialLanguage = () => {
   }
 };
 
-// 定义翻译资源
+// Define translation resources
 const resources = {
   'zh-CN': {
     translation: translationZhCN
@@ -96,9 +96,9 @@ const resources = {
   }
 };
 
-// 初始化i18next
+// Initialize i18next
 i18n
-  .use(initReactI18next) // 传入react-i18next
+  .use(initReactI18next) // Pass react-i18next
   .init({
     resources,
     lng: getInitialLanguage(), // 设置默认语言

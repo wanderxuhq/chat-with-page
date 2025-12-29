@@ -14,7 +14,7 @@ interface PortMessage {
   action?: string
 }
 
-// 存储活跃的流以便可以中断
+// Store active streams for interruption
 const activeStreams = new Map<string, AbortController>()
 
 const waitForAPI = () => {
@@ -30,7 +30,7 @@ const waitForAPI = () => {
   })
 }
 
-// 使用等待后的 API  
+// Use the waited API
 waitForAPI().then((browser) => {
 
   // Manifest V3 (Chrome/Edge)  
@@ -51,7 +51,7 @@ waitForAPI().then((browser) => {
       const portId = `${port.name}_${Date.now()}`
 
       port.onMessage.addListener(async (msg: PortMessage) => {
-        // 处理停止请求
+        // Handle stop request
         if (msg.action === "stop") {
           const controller = activeStreams.get(portId)
           if (controller) {
@@ -62,19 +62,19 @@ waitForAPI().then((browser) => {
         }
 
         try {
-          // 获取当前选择的提供商
+          // Get currently selected provider
           const selectedProviderData = await browser.storage.local.get("selectedProvider")
           const selectedProvider = (selectedProviderData.selectedProvider as string) || "openai"
 
-          // 获取提供商特定的API配置
+          // Get provider-specific API configuration
           const apiKeyData = await browser.storage.local.get(`${selectedProvider}ApiKey`)
           const apiEndpointData = await browser.storage.local.get(`${selectedProvider}ApiEndpoint`)
 
-          // 获取通用API配置作为备选
+          // Get generic API configuration as fallback
           const genericApiKeyData = await browser.storage.local.get("apiKey")
           const genericApiEndpointData = await browser.storage.local.get("apiEndpoint")
 
-          // 使用提供商特定的配置，如果没有则使用通用配置
+          // Use provider-specific configuration, fallback to generic if not available
           const apiKey = (apiKeyData[`${selectedProvider}ApiKey`] as string) ||
                         (genericApiKeyData.apiKey as string)
 
@@ -93,16 +93,16 @@ waitForAPI().then((browser) => {
             dangerouslyAllowBrowser: true
           })
 
-          // 根据用户选择的语言设置系统提示语
+          // Set system prompt based on user-selected language
           i18n.changeLanguage(msg.language || i18n.language);
           const languagePrompt = i18n.t("languagePrompts.answerInLanguage");
 
-          // 根据端口类型使用不同的系统提示
+          // Use different system prompts based on port type
           const systemPrompt = port.name === "summarize"
             ? `你是一个善于总结的专家。你需要对用户提供的文本进行总结，${languagePrompt}。输入文本中包含 [REF***] 格式的标记，在引用原文时，必须将对应标记原封不动地紧跟在引用句的末尾。`
             : `你是一个智能助手，${languagePrompt}。如果用户提供了包含 [REF***] 格式标记的参考内容，在引用时请保留对应标记。`
 
-          // 创建 AbortController 以便可以中断流
+          // Create AbortController for stream interruption
           const abortController = new AbortController()
           activeStreams.set(portId, abortController)
 

@@ -3,11 +3,11 @@ import type { ThemeColors } from './useTheme';
 
 export const useGlobalStyles = (colors: ThemeColors) => {
   useEffect(() => {
-    // 创建style元素
+    // Create style element
     const style = document.createElement('style');
     style.id = 'global-theme-styles';
     style.textContent = `
-      /* 隐藏侧边栏全局滚动条 */
+      /* Hide sidebar global scrollbar */
       body {
         overflow: hidden !important;
         margin: 0 !important;
@@ -16,7 +16,7 @@ export const useGlobalStyles = (colors: ThemeColors) => {
         color: ${colors.textPrimary} !important;
         transition: background-color 0.2s, color 0.2s;
       }
-      /* 自定义对话记录区域滚动条 */
+      /* Custom chat history scrollbar */
       div::-webkit-scrollbar {
         width: 6px;
       }
@@ -33,23 +33,23 @@ export const useGlobalStyles = (colors: ThemeColors) => {
       }
     `;
 
-    // 移除旧的样式元素（如果存在）
+    // Remove old style element if exists
     const existingStyle = document.getElementById('global-theme-styles');
     if (existingStyle) {
       existingStyle.remove();
     }
 
-    // 添加到head
+    // Add to head
     document.head.appendChild(style);
 
-    // 直接设置body样式
+    // Set body styles directly
     document.body.style.overflow = "hidden";
     document.body.style.margin = "0";
     document.body.style.padding = "0";
     document.body.style.backgroundColor = colors.bgPrimary;
     document.body.style.color = colors.textPrimary;
 
-    // 清理函数
+    // Cleanup function
     return () => {
       const styleEl = document.getElementById('global-theme-styles');
       if (styleEl) {

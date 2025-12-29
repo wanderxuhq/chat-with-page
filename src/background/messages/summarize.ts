@@ -6,19 +6,19 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   try {
     const messages = req.body.messages
 
-    // 获取当前选择的提供商
+    // Get currently selected provider
     const selectedProviderData = await browser.storage.local.get("selectedProvider")
     const selectedProvider = (selectedProviderData.selectedProvider as string) || "openai"
     
-    // 获取提供商特定的API配置
+    // Get provider-specific API configuration
     const apiKeyData = await browser.storage.local.get(`${selectedProvider}ApiKey`)
     const apiEndpointData = await browser.storage.local.get(`${selectedProvider}ApiEndpoint`)
     
-    // 获取通用API配置作为备选
+    // Get generic API configuration as fallback
     const genericApiKeyData = await browser.storage.local.get("apiKey")
     const genericApiEndpointData = await browser.storage.local.get("apiEndpoint")
 
-    // 使用提供商特定的配置，如果没有则使用通用配置
+    // Use provider-specific configuration, fallback to generic if not available
     const apiKey = (apiKeyData[`${selectedProvider}ApiKey`] as string) || 
                   (genericApiKeyData.apiKey as string)
 
@@ -31,18 +31,18 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
       return
     }
     
-    // 只使用前端传递的模型参数
+    // Only use model parameter passed from frontend
     const modelToUse = req.body.model
     
-    // 如果没有传递模型参数，返回错误
+    // Return error if no model parameter provided
     if (!modelToUse) {
       res.send({ error: "Model not provided" })
       return
     }
 
-    // 根据提供商创建不同的客户端
+    // Create different clients based on provider
     if (selectedProvider === "anthropic") {
-      // 处理 Anthropic API
+      // Handle Anthropic API
       const anthropic = new OpenAI({
         baseURL: baseURL || "https://api.anthropic.com/v1",
         apiKey: apiKey as string,
@@ -59,7 +59,7 @@ const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
         res.send(chunk)
       }
     } else {
-      // 默认使用 OpenAI 兼容的 API
+      // Default to OpenAI-compatible API
       const openai = new OpenAI({
         baseURL: baseURL,
         apiKey: apiKey as string,

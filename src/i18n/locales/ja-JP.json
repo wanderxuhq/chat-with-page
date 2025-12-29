@@ -24,6 +24,7 @@
   },
   "buttons": {
     "chatWithPage": "ページを要約",
+    "summarizePage": "現在のページを要約してください",
     "clearContext": "コンテキストをクリア",
     "copy": "コピー",
     "copied": "コピーしました",

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react"
 import type { Message } from '../types/index';
 import { sendMessage, summarizePage, stopGeneration, regenerateMessage, editAndResendMessage, copyMessageToClipboard, getPageContext } from '../utils/chatUtils';
 
-// 导入hooks
+// Import hooks
 import { useChatHistory } from '../hooks/useChatHistory';
 import { useModelManagement } from '../hooks/useModelManagement';
 import { useProviderConfig } from '../hooks/useProviderConfig';
@@ -13,7 +13,7 @@ import { useGlobalStyles } from '../hooks/useGlobalStyles';
 import { useTheme } from '../hooks/useTheme';
 import { useChatSessions } from '../hooks/useChatSessions';
 
-// 导入组件
+// Import components
 import { SettingsPanel, MessageList, ModelSelector, InputPanel } from "./index";
 import ChatHeader from './ChatHeader';
 import ChatBody from './ChatBody';
@@ -22,15 +22,15 @@ import ChatHistoryList from './ChatHistoryList';
 
 function ChatApp() {
   // ======================================
-  // 1. 状态管理与Hooks
+  // 1. State Management and Hooks
   // ======================================
-  // 使用主题hook
+  // Use theme hook
   const { themeMode, setThemeMode, isDark, colors } = useTheme();
 
-  // 使用全局样式hook（传入主题颜色）
+  // Use global styles hook (pass theme colors)
   useGlobalStyles(colors);
 
-  // 组件内部状态
+  // Component internal state
   const [loading, setLoading] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
@@ -38,7 +38,7 @@ function ChatApp() {
   const [hasArticle, setHasArticle] = useState<boolean | null>(null);
   const [showHistory, setShowHistory] = useState(false);
 
-  // 聊天会话管理
+  // Chat session management
   const {
     sessions,
     updateSessionIndex,
@@ -47,13 +47,13 @@ function ChatApp() {
     getPageHash
   } = useChatSessions();
 
-  // 标签页切换处理
+  // Tab change handling
   const handleTabChange = useCallback((newUrl: string, oldUrl: string) => {
     console.log('Tab changed from', oldUrl, 'to', newUrl);
-    // 当标签切换时，useChatHistory 会自动根据 currentPageUrl 加载对应的聊天记录
+    // When tab changes, useChatHistory automatically loads corresponding chat history based on currentPageUrl
   }, []);
 
-  // 外部hooks - 注意 usePageInteraction 现在接受 onTabChange 回调
+  // External hooks - Note: usePageInteraction now accepts onTabChange callback
   const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
   const { currentPageUrl } = usePageInteraction([], handleTabChange);
   const { messages, setMessages, input, setInput, clearChatHistory } = useChatHistory(currentPageUrl);
@@ -61,46 +61,46 @@ function ChatApp() {
   const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
   const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
 
-  // 计算搜索匹配数量
+  // Calculate search match count
   const matchCount = searchTerm.trim()
     ? messages.filter(msg => msg.content.toLowerCase().includes(searchTerm.toLowerCase())).length
     : 0;
 
-  // 当前URL的哈希值
+  // Current URL hash
   const currentUrlHash = currentPageUrl ? getPageHash(currentPageUrl) : '';
 
   // ======================================
-  // 2. 常量定义
+  // 2. Constant Definitions
   // ======================================
-  // 主流AI提供商预置配置
+  // Mainstream AI provider preset configurations
   const aiProviders = [
     { id: "openai", name: "OpenAI", baseUrl: "https://api.openai.com/v1" },
     { id: "anthropic", name: "Anthropic", baseUrl: "https://api.anthropic.com/v1" },
     { id: "google", name: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
     { id: "openrouter", name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1" },
     { id: "ollama", name: "Ollama", baseUrl: "http://localhost:11434/v1/" },
-    { id: "custom", name: "自定义", baseUrl: "" }
+    { id: "custom", name: "Custom", baseUrl: "" }
   ];
 
   // ======================================
-  // 3. 副作用处理
+  // 3. Side Effects Handling
   // ======================================
-  // 当apiKey、apiEndpoint或selectedProvider变化时获取模型列表
+  // Fetch model list when apiKey, apiEndpoint, or selectedProvider changes
   useEffect(() => {
     if (apiKey && apiEndpoint) {
       fetchModels();
     }
   }, [apiKey, apiEndpoint, selectedProvider, fetchModels]);
 
-  // 当selectedModel变化时，更新modelSearchTerm
+  // Update modelSearchTerm when selectedModel changes
   useEffect(() => {
     setModelSearchTerm(selectedModel);
   }, [selectedModel]);
 
-  // 当聊天记录加载时重新标记页面元素
+  // Relabel page elements when chat history loads
   useEffect(() => {
     if (messages.length > 0) {
-      // 延迟执行，确保页面已经加载完成
+      // Delay execution to ensure page is loaded
       const timer = setTimeout(() => {
         relinkPageElements();
       }, 1000);
@@ -108,7 +108,7 @@ function ChatApp() {
     }
   }, [messages, relinkPageElements]);
 
-  // 检测页面是否有文章内容
+  // Detect if page has article content
   useEffect(() => {
     const checkArticle = async () => {
       try {
@@ -123,7 +123,7 @@ function ChatApp() {
     checkArticle();
   }, [currentPageUrl]);
 
-  // 当消息变化时更新会话索引
+  // Update session index when messages change
   useEffect(() => {
     if (currentPageUrl && messages.length > 0) {
       updateSessionIndex(currentPageUrl, messages);
@@ -131,11 +131,11 @@ function ChatApp() {
   }, [messages, currentPageUrl, updateSessionIndex]);
 
   // ======================================
-  // 4. 事件处理函数 (使用 useCallback 优化)
+  // 4. Event Handling Functions (optimized with useCallback)
   // ======================================
-  // 处理选择历史会话
+  // Handle selecting historical session
   const handleSelectSession = useCallback(async (session: { url: string; urlHash: string }) => {
-    // 在新标签页中打开选择的URL，这样会自动触发标签切换并加载对应的聊天记录
+    // Open selected URL in new tab, which will automatically trigger tab change and load corresponding chat history
     try {
       await chrome.tabs.create({ url: session.url, active: true });
       setShowHistory(false);
@@ -144,18 +144,18 @@ function ChatApp() {
     }
   }, []);
 
-  // 处理删除会话
+  // Handle deleting session
   const handleDeleteSession = useCallback(async (urlHash: string) => {
     await deleteSession(urlHash);
   }, [deleteSession]);
 
-  // 保存设置
+  // Save settings
   const saveSettings = useCallback(async () => {
     try {
-      // 保存提供商配置
+      // Save provider configuration
       await saveProviderSettings(selectedLanguage);
 
-      // 保存语言设置
+      // Save language settings
       await saveLanguage(selectedLanguage);
 
       setShowSettings(false);
@@ -164,12 +164,12 @@ function ChatApp() {
     }
   }, [saveProviderSettings, selectedLanguage, saveLanguage, setShowSettings]);
 
-  // 处理页面总结
+  // Handle page summary
   const handleSummarizePage = useCallback(async () => {
     await summarizePage(setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap);
   }, [setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap, summarizePage]);
 
-  // 处理消息发送
+  // Handle message sending
   const handleSendMessage = useCallback(() => {
     console.log('handleSendMessage called', { input, selectedModel, modelSearchTerm });
     if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
@@ -179,11 +179,11 @@ function ChatApp() {
     setInput("");
   }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput, setHighlightMap]);
 
-  // 处理停止生成
+  // Handle stop generation
   const handleStopGeneration = useCallback(() => {
     stopGeneration();
     setLoading(false);
-    // 标记最后一条消息为已完成
+    // Mark last message as completed
     setMessages((prevMessages: Message[]) => {
       if (prevMessages.length > 0) {
         const lastMessage = prevMessages[prevMessages.length - 1];
@@ -198,12 +198,12 @@ function ChatApp() {
     });
   }, [setLoading, setMessages]);
 
-  // 处理复制消息
+  // Handle copy message
   const handleCopyMessage = useCallback(async (content: string) => {
     await copyMessageToClipboard(content);
   }, []);
 
-  // 处理编辑消息
+  // Handle edit message
   const handleEditMessage = useCallback(async (index: number, newContent: string) => {
     await editAndResendMessage(
       index,
@@ -218,7 +218,7 @@ function ChatApp() {
     );
   }, [messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap]);
 
-  // 处理重新生成
+  // Handle regenerate
   const handleRegenerateMessage = useCallback(async (index: number) => {
     await regenerateMessage(
       index,
@@ -270,7 +270,7 @@ function ChatApp() {
         transition: 'background-color 0.2s',
       }}
     >
-      {/* 设置按钮 */}
+      {/* Settings button */}
       {showSettings ? (
         <SettingsPanel
           selectedProvider={selectedProvider}
@@ -292,7 +292,7 @@ function ChatApp() {
         />
       ) : (
         <>
-          {/* 聊天头部 */}
+          {/* Chat header */}
           <ChatHeader
             showSettings={showSettings}
             setShowSettings={setShowSettings}
@@ -309,7 +309,7 @@ function ChatApp() {
             hasHistory={sessions.length > 0}
           />
 
-          {/* 消息列表 */}
+          {/* Message list */}
           <ChatBody
             messages={messages}
             loading={loading}
@@ -322,7 +322,7 @@ function ChatApp() {
             colors={colors}
           />
 
-          {/* 聊天底部 */}
+          {/* Chat footer */}
           <ChatFooter
             models={models}
             selectedModel={selectedModel}
@@ -341,7 +341,7 @@ function ChatApp() {
             hasArticle={hasArticle}
           />
 
-          {/* 聊天历史弹窗 */}
+          {/* Chat history popup */}
           {showHistory && (
             <ChatHistoryList
               sessions={sessions}

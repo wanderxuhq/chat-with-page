@@ -28,7 +28,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // 当消息变化或加载状态变化时，滚动到底部
+  // Scroll to bottom when messages or loading state change
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -70,7 +70,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
 
   return (
     <div style={styles.container}>
-      {/* 消息列表 */}
+      {/* Message list */}
       <div ref={containerRef} style={styles.messageContainer}>
         <MessageList
           messages={messages}
@@ -84,7 +84,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
         />
       </div>
 
-      {/* 停止生成按钮 */}
+      {/* Stop generating button */}
       {loading && onStopGeneration && (
         <div style={styles.stopButton}>
           <button

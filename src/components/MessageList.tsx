@@ -38,7 +38,7 @@ const MessageList: React.FC<MessageListProps> = ({
     },
     messageWrapper: (isUser: boolean) => ({
       marginBottom: '12px',
-      textAlign: (isUser ? 'right' : 'left') as const,
+      textAlign: isUser ? 'right' as const : 'left' as const,
       display: 'flex',
       flexDirection: 'column' as const,
       alignItems: isUser ? 'flex-end' : 'flex-start',
@@ -231,11 +231,11 @@ const MessageList: React.FC<MessageListProps> = ({
                     : marked.parse(msg.content) as string
                 }}
               ></div>
-              {/* 预留固定空间防止抖动 */}
+              {/* Reserved fixed space to prevent jitter */}
               {!msg.isGenerating && (
                 hoveredIndex === index ? (
                   <div style={styles.actionBar}>
-                    {/* 复制按钮 */}
+                    {/* Copy button */}
                     <button
                       className="action-button"
                       style={styles.actionButton}
@@ -254,7 +254,7 @@ const MessageList: React.FC<MessageListProps> = ({
                       )}
                     </button>
 
-                    {/* 编辑按钮 - 仅用户消息 */}
+                    {/* Edit button - User messages only */}
                     {msg.type === 'user' && onEdit && (
                       <button
                         className="action-button"
@@ -269,7 +269,7 @@ const MessageList: React.FC<MessageListProps> = ({
                       </button>
                     )}
 
-                    {/* 重新生成按钮 - 仅 AI 消息 */}
+                    {/* Regenerate button - AI messages only */}
                     {msg.type === 'assistant' && onRegenerate && (
                       <button
                         className="action-button"

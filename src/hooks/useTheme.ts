@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface ThemeColors {
-  // 背景色
+  // Background colors
   bgPrimary: string;
   bgSecondary: string;
   bgTertiary: string;
@@ -18,7 +18,7 @@ export interface ThemeColors {
   bgConfirm: string;
   bgConfirmBorder: string;
 
-  // 文本色
+  // Text colors
   textPrimary: string;
   textSecondary: string;
   textMuted: string;
@@ -26,18 +26,18 @@ export interface ThemeColors {
   textUserMessage: string;
   textConfirm: string;
 
-  // 边框色
+  // Border colors
   borderPrimary: string;
   borderSecondary: string;
   borderInput: string;
   borderFocus: string;
 
-  // 主题色
+  // Theme colors
   primary: string;
   primaryHover: string;
   primaryLight: string;
 
-  // 功能色
+  // Functional colors
   danger: string;
   dangerHover: string;
   dangerLight: string;
@@ -50,18 +50,18 @@ export interface ThemeColors {
   infoHover: string;
   infoLight: string;
 
-  // 滚动条
+  // Scrollbar
   scrollbarTrack: string;
   scrollbarThumb: string;
   scrollbarThumbHover: string;
 
-  // 阴影
+  // Shadow
   shadowLight: string;
   shadowMedium: string;
 }
 
 const lightTheme: ThemeColors = {
-  // 背景色
+  // Background colors
   bgPrimary: '#ffffff',
   bgSecondary: '#f9fafb',
   bgTertiary: '#f3f4f6',
@@ -76,7 +76,7 @@ const lightTheme: ThemeColors = {
   bgConfirm: '#fef2f2',
   bgConfirmBorder: '#fecaca',
 
-  // 文本色
+  // Text colors
   textPrimary: '#1f2937',
   textSecondary: '#374151',
   textMuted: '#6b7280',
@@ -84,18 +84,18 @@ const lightTheme: ThemeColors = {
   textUserMessage: '#ffffff',
   textConfirm: '#dc2626',
 
-  // 边框色
+  // Border colors
   borderPrimary: '#d1d5db',
   borderSecondary: '#e5e7eb',
   borderInput: '#d1d5db',
   borderFocus: '#9333ea',
 
-  // 主题色 - 紫色
+  // Theme colors - Purple
   primary: '#9333ea',
   primaryHover: '#7c3aed',
   primaryLight: 'rgba(147, 51, 234, 0.1)',
 
-  // 功能色
+  // Functional colors
   danger: '#ef4444',
   dangerHover: '#dc2626',
   dangerLight: '#fef2f2',
@@ -108,18 +108,18 @@ const lightTheme: ThemeColors = {
   infoHover: '#6d28d9',
   infoLight: '#ede9fe',
 
-  // 滚动条
+  // Scrollbar
   scrollbarTrack: '#f1f1f1',
   scrollbarThumb: '#888',
   scrollbarThumbHover: '#555',
 
-  // 阴影
+  // Shadow
   shadowLight: 'rgba(0, 0, 0, 0.1)',
   shadowMedium: 'rgba(0, 0, 0, 0.15)',
 };
 
 const darkTheme: ThemeColors = {
-  // 背景色
+  // Background colors
   bgPrimary: '#1a1a1a',
   bgSecondary: '#242424',
   bgTertiary: '#2d2d2d',
@@ -134,7 +134,7 @@ const darkTheme: ThemeColors = {
   bgConfirm: '#2d1a1a',
   bgConfirmBorder: '#5c2626',
 
-  // 文本色
+  // Text colors
   textPrimary: '#f3f4f6',
   textSecondary: '#d1d5db',
   textMuted: '#9ca3af',
@@ -142,18 +142,18 @@ const darkTheme: ThemeColors = {
   textUserMessage: '#ffffff',
   textConfirm: '#f87171',
 
-  // 边框色
+  // Border colors
   borderPrimary: '#4b5563',
   borderSecondary: '#374151',
   borderInput: '#4b5563',
   borderFocus: '#a855f7',
 
-  // 主题色 - 紫色
+  // Theme colors - Purple
   primary: '#a855f7',
   primaryHover: '#c084fc',
   primaryLight: 'rgba(168, 85, 247, 0.2)',
 
-  // 功能色
+  // Functional colors
   danger: '#f87171',
   dangerHover: '#ef4444',
   dangerLight: '#2d1a1a',
@@ -166,12 +166,12 @@ const darkTheme: ThemeColors = {
   infoHover: '#a78bfa',
   infoLight: '#2d1f3d',
 
-  // 滚动条
+  // Scrollbar
   scrollbarTrack: '#2d2d2d',
   scrollbarThumb: '#555',
   scrollbarThumbHover: '#777',
 
-  // 阴影
+  // Shadow
   shadowLight: 'rgba(0, 0, 0, 0.3)',
   shadowMedium: 'rgba(0, 0, 0, 0.4)',
 };
@@ -182,7 +182,7 @@ export const useTheme = () => {
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [isDark, setIsDark] = useState(false);
 
-  // 获取系统主题偏好
+  // Get system theme preference
   const getSystemPreference = useCallback((): boolean => {
     if (typeof window !== 'undefined' && window.matchMedia) {
       return window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -190,7 +190,7 @@ export const useTheme = () => {
     return false;
   }, []);
 
-  // 根据主题模式计算实际是否为深色
+  // Calculate actual dark mode based on theme mode
   const computeIsDark = useCallback((mode: ThemeMode): boolean => {
     if (mode === 'system') {
       return getSystemPreference();
@@ -198,11 +198,11 @@ export const useTheme = () => {
     return mode === 'dark';
   }, [getSystemPreference]);
 
-  // 初始化主题
+  // Initialize theme
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        // 优先从 chrome.storage 加载
+        // Load from chrome.storage first
         if (typeof chrome !== 'undefined' && chrome.storage?.local) {
           const result = await chrome.storage.local.get(THEME_STORAGE_KEY);
           if (result[THEME_STORAGE_KEY]) {
@@ -212,13 +212,13 @@ export const useTheme = () => {
             return;
           }
         }
-        // 备用：从 localStorage 加载
+        // Fallback: load from localStorage
         const savedMode = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
         if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
           setThemeMode(savedMode);
           setIsDark(computeIsDark(savedMode));
         } else {
-          // 默认自动检测
+          // Default: auto-detect
           setIsDark(getSystemPreference());
         }
       } catch (error) {
@@ -229,7 +229,7 @@ export const useTheme = () => {
     loadTheme();
   }, [computeIsDark, getSystemPreference]);
 
-  // 监听系统主题变化
+  // Listen for system theme changes
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return;
 
@@ -244,24 +244,24 @@ export const useTheme = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [themeMode]);
 
-  // 保存并设置主题
+  // Save and set theme
   const saveTheme = useCallback(async (mode: ThemeMode) => {
     setThemeMode(mode);
     setIsDark(computeIsDark(mode));
 
     try {
-      // 保存到 chrome.storage
+      // Save to chrome.storage
       if (typeof chrome !== 'undefined' && chrome.storage?.local) {
         await chrome.storage.local.set({ [THEME_STORAGE_KEY]: mode });
       }
-      // 同时保存到 localStorage 作为备用
+      // Also save to localStorage as fallback
       localStorage.setItem(THEME_STORAGE_KEY, mode);
     } catch (error) {
       console.error('Error saving theme:', error);
     }
   }, [computeIsDark]);
 
-  // 获取当前主题颜色
+  // Get current theme colors
   const colors: ThemeColors = isDark ? darkTheme : lightTheme;
 
   return {
