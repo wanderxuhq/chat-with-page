@@ -125,10 +125,16 @@ function ChatApp() {
 
   // Update session index when messages change
   useEffect(() => {
-    // Only update session index when URL and messages are synced to prevent
-    // old messages being saved to new URL during tab switch
+    // Only update session index when:
+    // 1. We have a valid URL
+    // 2. There are messages to save
+    // 3. Messages are synced with the current URL (not from a previous tab)
     if (currentPageUrl && messages.length > 0 && isUrlSynced) {
-      updateSessionIndex(currentPageUrl, messages, currentPageTitle);
+      // Use a small delay to ensure state is stable after tab switch
+      const timer = setTimeout(() => {
+        updateSessionIndex(currentPageUrl, messages, currentPageTitle);
+      }, 100);
+      return () => clearTimeout(timer);
     }
   }, [messages, currentPageUrl, currentPageTitle, updateSessionIndex, isUrlSynced]);
 

@@ -16,16 +16,18 @@ export const useChatHistory = (currentPageUrl: string = '') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [currentUrl, setCurrentUrl] = useState<string>(currentPageUrl);
-  const [isUrlSynced, setIsUrlSynced] = useState<boolean>(true); // Track if messages are synced with current URL
+  const [isUrlSynced, setIsUrlSynced] = useState<boolean>(false); // Track if messages are synced with current URL - start as false
   const previousUrlRef = useRef<string>('');
   const isLoadingRef = useRef<boolean>(false);
+  const syncedUrlRef = useRef<string>(''); // Track which URL the messages are actually synced to
 
   // Update the current URL and clear messages immediately when URL changes
   useEffect(() => {
     if (currentPageUrl && currentPageUrl !== previousUrlRef.current) {
       // URL changed, mark as not synced and clear messages first
+      setIsUrlSynced(false);
+      syncedUrlRef.current = '';
       if (previousUrlRef.current) {
-        setIsUrlSynced(false);
         setMessages([]);
       }
       previousUrlRef.current = currentPageUrl;
@@ -40,10 +42,16 @@ export const useChatHistory = (currentPageUrl: string = '') => {
 
       isLoadingRef.current = true;
       setIsUrlSynced(false);
+      syncedUrlRef.current = '';
 
       try {
         const pageHash = getPageHash(currentUrl);
         const savedHistory = await browser.storage.local.get(pageHash);
+
+        // Check if URL changed during async operation
+        if (currentUrl !== previousUrlRef.current) {
+          return; // URL changed, don't update messages
+        }
 
         if (savedHistory[pageHash]) {
           try {
@@ -64,23 +72,29 @@ export const useChatHistory = (currentPageUrl: string = '') => {
           // Ensure messages are empty if current page has no chat history
           setMessages([]);
         }
+
+        // Mark as synced only for this specific URL
+        syncedUrlRef.current = currentUrl;
+        setIsUrlSynced(true);
       } catch (error) {
         console.error('Error loading chat history:', error);
         setMessages([]);
       } finally {
         isLoadingRef.current = false;
-        setIsUrlSynced(true);
       }
     };
 
     loadChatHistory();
   }, [currentUrl]);
 
-  // Save chat history
+  // Save chat history - only save when URL is synced
   useEffect(() => {
     const saveChatHistory = async () => {
-      // Don't save during loading
-      if (!currentUrl || isLoadingRef.current) return;
+      // Don't save during loading or if URL is not synced
+      if (!currentUrl || isLoadingRef.current || !isUrlSynced) return;
+
+      // Additional check: only save if the synced URL matches current URL
+      if (syncedUrlRef.current !== currentUrl) return;
 
       try {
         const serializableMessages = messages.map(msg => ({
@@ -108,7 +122,7 @@ export const useChatHistory = (currentPageUrl: string = '') => {
     if (messages.length > 0) {
       saveChatHistory();
     }
-  }, [messages, currentUrl]);
+  }, [messages, currentUrl, isUrlSynced]);
 
   const clearChatHistory = async () => {
     if (!currentUrl) return;
