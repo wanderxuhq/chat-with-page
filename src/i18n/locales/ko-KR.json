@@ -52,5 +52,13 @@
     "enterCustomBaseUrl": "사용자 정의 Base URL을 입력하세요",
     "search": "메시지를 검색..."
   },
+  "history": {
+    "title": "채팅 기록",
+    "empty": "채팅 기록이 없습니다",
+    "messages": "개 메시지",
+    "delete": "삭제",
+    "yesterday": "어제",
+    "daysAgo": "일 전"
+  },
   "send": "보내기"
 }

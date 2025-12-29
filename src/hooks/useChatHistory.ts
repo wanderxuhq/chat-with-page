@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as browser from "webextension-polyfill";
 import type { Message } from '../types/index';
 
@@ -16,10 +16,17 @@ export const useChatHistory = (currentPageUrl: string = '') => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
   const [currentUrl, setCurrentUrl] = useState<string>(currentPageUrl);
+  const previousUrlRef = useRef<string>('');
+  const isLoadingRef = useRef<boolean>(false);
 
-  // 更新当前URL
+  // 更新当前URL，并在URL变化时立即清空消息
   useEffect(() => {
-    if (currentPageUrl) {
+    if (currentPageUrl && currentPageUrl !== previousUrlRef.current) {
+      // URL变化了，先清空消息
+      if (previousUrlRef.current) {
+        setMessages([]);
+      }
+      previousUrlRef.current = currentPageUrl;
       setCurrentUrl(currentPageUrl);
     }
   }, [currentPageUrl]);
@@ -28,11 +35,13 @@ export const useChatHistory = (currentPageUrl: string = '') => {
   useEffect(() => {
     const loadChatHistory = async () => {
       if (!currentUrl) return;
-      
+
+      isLoadingRef.current = true;
+
       try {
         const pageHash = getPageHash(currentUrl);
         const savedHistory = await browser.storage.local.get(pageHash);
-        
+
         if (savedHistory[pageHash]) {
           try {
             const parsedHistory = JSON.parse(savedHistory[pageHash] as string) as ChatHistoryData;
@@ -41,19 +50,22 @@ export const useChatHistory = (currentPageUrl: string = '') => {
               setMessages(parsedHistory.messages);
             } else {
               console.error('Error parsing chat history: messages is not an array');
-              await clearChatHistory();
+              setMessages([]);
             }
           } catch (parseError) {
             console.error('Error parsing chat history:', parseError);
             // 如果解析失败，清除损坏的历史记录
-            await clearChatHistory();
+            setMessages([]);
           }
         } else {
-          // 如果当前页面没有聊天记录，清空消息
+          // 如果当前页面没有聊天记录，确保消息为空
           setMessages([]);
         }
       } catch (error) {
         console.error('Error loading chat history:', error);
+        setMessages([]);
+      } finally {
+        isLoadingRef.current = false;
       }
     };
 
@@ -63,8 +75,9 @@ export const useChatHistory = (currentPageUrl: string = '') => {
   // 保存聊天历史
   useEffect(() => {
     const saveChatHistory = async () => {
-      if (!currentUrl) return;
-      
+      // 加载过程中不保存
+      if (!currentUrl || isLoadingRef.current) return;
+
       try {
         const serializableMessages = messages.map(msg => ({
           ...msg,
@@ -73,13 +86,13 @@ export const useChatHistory = (currentPageUrl: string = '') => {
             htmlElement: undefined // 移除DOM元素引用
           }))
         }));
-        
+
         const pageHash = getPageHash(currentUrl);
         const historyData: ChatHistoryData = {
           messages: serializableMessages,
           lastActive: Date.now()
         };
-        
+
         await browser.storage.local.set({
           [pageHash]: JSON.stringify(historyData)
         });

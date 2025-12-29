@@ -52,5 +52,13 @@
     "enterCustomBaseUrl": "Enter custom Base URL",
     "search": "Search messages..."
   },
+  "history": {
+    "title": "Chat History",
+    "empty": "No chat history",
+    "messages": "messages",
+    "delete": "Delete",
+    "yesterday": "Yesterday",
+    "daysAgo": "days ago"
+  },
   "send": "Send"
 }

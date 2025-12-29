@@ -52,5 +52,13 @@
     "enterCustomBaseUrl": "Geben Sie die benutzerdefinierte Basis-URL ein",
     "search": "Nachrichten suchen..."
   },
+  "history": {
+    "title": "Chat-Verlauf",
+    "empty": "Kein Chat-Verlauf",
+    "messages": "Nachrichten",
+    "delete": "Löschen",
+    "yesterday": "Gestern",
+    "daysAgo": "Tage"
+  },
   "send": "Senden"
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import * as browser from "webextension-polyfill";
 import type { Message } from '../types/index';
 
@@ -7,10 +7,11 @@ export interface Chunk {
   html: string;
 }
 
-export const usePageInteraction = (messages: Message[]) => {
+export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: string, oldUrl: string) => void) => {
   const [currentPageUrl, setCurrentPageUrl] = useState<string>('');
   const [pageContent, setPageContent] = useState<string>('');
   const [pageChunks, setPageChunks] = useState<Chunk[]>([]);
+  const previousUrlRef = useRef<string>('');
 
   // 获取当前页面URL
   useEffect(() => {
@@ -18,7 +19,13 @@ export const usePageInteraction = (messages: Message[]) => {
       try {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         if (tabs[0]?.url) {
-          setCurrentPageUrl(tabs[0].url);
+          const newUrl = tabs[0].url;
+          if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
+            // 标签页切换了
+            onTabChange?.(newUrl, previousUrlRef.current);
+          }
+          previousUrlRef.current = newUrl;
+          setCurrentPageUrl(newUrl);
         }
       } catch (error) {
         console.error('Error getting current page URL:', error);
@@ -27,19 +34,45 @@ export const usePageInteraction = (messages: Message[]) => {
 
     getCurrentPageUrl();
 
-    // 监听标签页变化
+    // 监听标签页更新（URL改变）
     const onTabUpdated = async (tabId: number, changeInfo: any, tab: any) => {
       if (changeInfo.status === 'complete' && tab.active) {
-        setCurrentPageUrl(tab.url || '');
+        const newUrl = tab.url || '';
+        if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
+          // 标签页切换了
+          onTabChange?.(newUrl, previousUrlRef.current);
+        }
+        previousUrlRef.current = newUrl;
+        setCurrentPageUrl(newUrl);
+      }
+    };
+
+    // 监听标签页激活（切换到另一个标签）
+    const onTabActivated = async (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
+      try {
+        const tab = await browser.tabs.get(activeInfo.tabId);
+        if (tab?.url) {
+          const newUrl = tab.url;
+          if (previousUrlRef.current && previousUrlRef.current !== newUrl) {
+            // 标签页切换了
+            onTabChange?.(newUrl, previousUrlRef.current);
+          }
+          previousUrlRef.current = newUrl;
+          setCurrentPageUrl(newUrl);
+        }
+      } catch (error) {
+        console.error('Error getting activated tab:', error);
       }
     };
 
     browser.tabs.onUpdated.addListener(onTabUpdated);
+    browser.tabs.onActivated.addListener(onTabActivated);
 
     return () => {
       browser.tabs.onUpdated.removeListener(onTabUpdated);
+      browser.tabs.onActivated.removeListener(onTabActivated);
     };
-  }, []);
+  }, [onTabChange]);
 
   // 清除页面元素引用属性
   useEffect(() => {

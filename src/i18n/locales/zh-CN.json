@@ -52,5 +52,13 @@
     "enterCustomBaseUrl": "输入自定义 Base URL",
     "search": "搜索消息..."
   },
+  "history": {
+    "title": "聊天历史",
+    "empty": "暂无聊天历史",
+    "messages": "条消息",
+    "delete": "删除",
+    "yesterday": "昨天",
+    "daysAgo": "天前"
+  },
   "send": "发送"
 }

@@ -12,6 +12,9 @@ interface ChatHeaderProps {
   setSearchTerm?: (term: string) => void;
   matchCount?: number;
   colors: ThemeColors;
+  showHistory?: boolean;
+  setShowHistory?: (show: boolean) => void;
+  hasHistory?: boolean;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -23,7 +26,10 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   searchTerm = '',
   setSearchTerm,
   matchCount = 0,
-  colors
+  colors,
+  showHistory = false,
+  setShowHistory,
+  hasHistory = false
 }) => {
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
@@ -228,6 +234,45 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
         </svg>
       </button>
+
+      {/* 历史记录按钮 */}
+      {setShowHistory && (
+        <button
+          onClick={() => setShowHistory(true)}
+          style={{
+            ...styles.iconButton,
+            position: 'relative',
+          }}
+          title={t('history.title') || '聊天历史'}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = colors.bgTertiary;
+            e.currentTarget.style.color = colors.textSecondary;
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = 'transparent';
+            e.currentTarget.style.color = colors.textMuted;
+          }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          {hasHistory && (
+            <span
+              style={{
+                position: 'absolute',
+                top: '4px',
+                right: '4px',
+                width: '6px',
+                height: '6px',
+                backgroundColor: colors.primary,
+                borderRadius: '50%',
+              }}
+            />
+          )}
+        </button>
+      )}
+
       <button
         onClick={() => setShowSettings(true)}
         style={styles.iconButton}

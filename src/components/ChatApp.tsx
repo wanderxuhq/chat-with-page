@@ -11,12 +11,14 @@ import { usePageInteraction } from '../hooks/usePageInteraction';
 import { useTextHighlighting } from '../hooks/useTextHighlighting';
 import { useGlobalStyles } from '../hooks/useGlobalStyles';
 import { useTheme } from '../hooks/useTheme';
+import { useChatSessions } from '../hooks/useChatSessions';
 
 // 导入组件
 import { SettingsPanel, MessageList, ModelSelector, InputPanel } from "./index";
 import ChatHeader from './ChatHeader';
 import ChatBody from './ChatBody';
 import ChatFooter from './ChatFooter';
+import ChatHistoryList from './ChatHistoryList';
 
 function ChatApp() {
   // ======================================
@@ -34,19 +36,38 @@ function ChatApp() {
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [hasArticle, setHasArticle] = useState<boolean | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // 聊天会话管理
+  const {
+    sessions,
+    updateSessionIndex,
+    deleteSession,
+    getSessionMessages,
+    getPageHash
+  } = useChatSessions();
+
+  // 标签页切换处理
+  const handleTabChange = useCallback((newUrl: string, oldUrl: string) => {
+    console.log('Tab changed from', oldUrl, 'to', newUrl);
+    // 当标签切换时，useChatHistory 会自动根据 currentPageUrl 加载对应的聊天记录
+  }, []);
+
+  // 外部hooks - 注意 usePageInteraction 现在接受 onTabChange 回调
+  const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
+  const { currentPageUrl } = usePageInteraction([], handleTabChange);
+  const { messages, setMessages, input, setInput, clearChatHistory } = useChatHistory(currentPageUrl);
+  const { selectedProvider, setSelectedProvider, apiKey, setApiKey, apiEndpoint, setApiEndpoint, apiKeyInput, setApiKeyInput, apiEndpointInput, setApiEndpointInput, handleProviderChange, saveSettings: saveProviderSettings } = useProviderConfig();
+  const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
+  const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
 
   // 计算搜索匹配数量
   const matchCount = searchTerm.trim()
     ? messages.filter(msg => msg.content.toLowerCase().includes(searchTerm.toLowerCase())).length
     : 0;
 
-  // 外部hooks
-  const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
-  const { currentPageUrl } = usePageInteraction([]);
-  const { messages, setMessages, input, setInput, clearChatHistory } = useChatHistory(currentPageUrl);
-  const { selectedProvider, setSelectedProvider, apiKey, setApiKey, apiEndpoint, setApiEndpoint, apiKeyInput, setApiKeyInput, apiEndpointInput, setApiEndpointInput, handleProviderChange, saveSettings: saveProviderSettings } = useProviderConfig();
-  const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
-  const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
+  // 当前URL的哈希值
+  const currentUrlHash = currentPageUrl ? getPageHash(currentPageUrl) : '';
 
   // ======================================
   // 2. 常量定义
@@ -102,9 +123,32 @@ function ChatApp() {
     checkArticle();
   }, [currentPageUrl]);
 
+  // 当消息变化时更新会话索引
+  useEffect(() => {
+    if (currentPageUrl && messages.length > 0) {
+      updateSessionIndex(currentPageUrl, messages);
+    }
+  }, [messages, currentPageUrl, updateSessionIndex]);
+
   // ======================================
   // 4. 事件处理函数 (使用 useCallback 优化)
   // ======================================
+  // 处理选择历史会话
+  const handleSelectSession = useCallback(async (session: { url: string; urlHash: string }) => {
+    // 在新标签页中打开选择的URL，这样会自动触发标签切换并加载对应的聊天记录
+    try {
+      await chrome.tabs.create({ url: session.url, active: true });
+      setShowHistory(false);
+    } catch (error) {
+      console.error('Error opening session URL:', error);
+    }
+  }, []);
+
+  // 处理删除会话
+  const handleDeleteSession = useCallback(async (urlHash: string) => {
+    await deleteSession(urlHash);
+  }, [deleteSession]);
+
   // 保存设置
   const saveSettings = useCallback(async () => {
     try {
@@ -260,6 +304,9 @@ function ChatApp() {
             setSearchTerm={setSearchTerm}
             matchCount={matchCount}
             colors={colors}
+            showHistory={showHistory}
+            setShowHistory={setShowHistory}
+            hasHistory={sessions.length > 0}
           />
 
           {/* 消息列表 */}
@@ -293,6 +340,19 @@ function ChatApp() {
             colors={colors}
             hasArticle={hasArticle}
           />
+
+          {/* 聊天历史弹窗 */}
+          {showHistory && (
+            <ChatHistoryList
+              sessions={sessions}
+              currentUrlHash={currentUrlHash}
+              onSelectSession={handleSelectSession}
+              onDeleteSession={handleDeleteSession}
+              onClose={() => setShowHistory(false)}
+              t={t}
+              colors={colors}
+            />
+          )}
         </>
       )}
     </div>
