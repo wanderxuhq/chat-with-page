@@ -66,5 +66,19 @@
   },
   "prompts": {
     "summarizePage": "请总结当前页面"
+  },
+  "permission": {
+    "title": "开始使用 Chat with Page",
+    "subtitle": "只需一步即可开始",
+    "description": "为了让扩展能够正常工作，我们需要您授予以下权限：",
+    "permissionType": "网页访问权限",
+    "features": {
+      "read": "读取当前页面的文章内容",
+      "analyze": "使用 AI 分析和总结页面",
+      "chat": "基于页面内容进行智能对话"
+    },
+    "privacy": "您的数据安全：页面内容仅发送至您配置的 AI 服务，我们不会收集或存储任何数据。",
+    "grant": "授予权限并继续",
+    "requesting": "请在弹窗中确认..."
   }
 }

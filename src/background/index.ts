@@ -34,10 +34,12 @@ const waitForAPI = () => {
 // Use the waited API
 waitForAPI().then((browser) => {
 
-  // Manifest V3 (Chrome/Edge)  
+  // Manifest V3 (Chrome/Edge) - click to open side panel
   chrome.action.onClicked.addListener(async (tab) => {
-    await chrome.sidePanel.open({ tabId: tab.id })
-  })
+    if (tab.id) {
+      await chrome.sidePanel.open({ tabId: tab.id });
+    }
+  });
 
   /*
   // Manifest V2/V3 (Firefox)  

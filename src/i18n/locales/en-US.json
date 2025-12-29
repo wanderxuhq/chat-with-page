@@ -66,5 +66,19 @@
   },
   "prompts": {
     "summarizePage": "Please summarize the current page"
+  },
+  "permission": {
+    "title": "Welcome to Chat with Page",
+    "subtitle": "One step to get started",
+    "description": "To make the extension work properly, we need your permission for:",
+    "permissionType": "Web Page Access",
+    "features": {
+      "read": "Read article content from current page",
+      "analyze": "Analyze and summarize pages with AI",
+      "chat": "Have intelligent conversations about page content"
+    },
+    "privacy": "Your data is safe: Page content is only sent to the AI service you configure. We do not collect or store any data.",
+    "grant": "Grant Permission & Continue",
+    "requesting": "Please confirm in the popup..."
   }
 }
