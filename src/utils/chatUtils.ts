@@ -575,16 +575,54 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
       }
     }
 
-    // No article content, return full page HTML
-    // Extract body content, limit length
-    const bodyContent = doc.body?.innerHTML || pageHtml;
-    const truncatedHtml = bodyContent.length > 50000
-      ? bodyContent.substring(0, 50000) + '...(content truncated)'
-      : bodyContent;
+    // No article content, extract meaningful text content
+    // Clone body to avoid modifying the original
+    const bodyClone = doc.body?.cloneNode(true) as HTMLElement;
+    if (!bodyClone) {
+      return { hasArticle: false, context: '', highlightMap: {} };
+    }
+
+    // Remove elements that LLM cannot understand
+    const elementsToRemove = bodyClone.querySelectorAll(
+      'script, style, noscript, iframe, object, embed, svg, canvas, video, audio, map, picture, source'
+    );
+    elementsToRemove.forEach(el => el.remove());
+
+    // Process images: replace with alt text or remove
+    const images = bodyClone.querySelectorAll('img');
+    images.forEach(img => {
+      const alt = img.getAttribute('alt')?.trim();
+      if (alt) {
+        const textNode = doc.createTextNode(`[Image: ${alt}]`);
+        img.parentNode?.replaceChild(textNode, img);
+      } else {
+        img.remove();
+      }
+    });
+
+    // Remove hidden elements
+    const allElements = bodyClone.querySelectorAll('*');
+    allElements.forEach(el => {
+      const style = (el as HTMLElement).style;
+      if (style?.display === 'none' || style?.visibility === 'hidden') {
+        el.remove();
+      }
+    });
+
+    // Extract text content and clean up whitespace
+    const textContent = bodyClone.innerText || bodyClone.textContent || '';
+    const cleanedContent = textContent
+      .replace(/\n{3,}/g, '\n\n')  // Reduce multiple newlines
+      .replace(/[ \t]+/g, ' ')     // Reduce multiple spaces
+      .trim();
+
+    const truncatedContent = cleanedContent.length > 50000
+      ? cleanedContent.substring(0, 50000) + '...(content truncated)'
+      : cleanedContent;
 
     return {
       hasArticle: false,
-      context: truncatedHtml,
+      context: truncatedContent,
       highlightMap: {}
     };
   } catch (error) {
