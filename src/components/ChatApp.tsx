@@ -190,8 +190,9 @@ function ChatApp() {
   }, [saveProviderSettings, selectedLanguage, saveLanguage, setShowSettings]);
 
   // Handle page summary
-  const handleSummarizePage = useCallback(async () => {
-    await summarizePage(setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap, () => {
+  const handleSummarizePage = useCallback(async (overrideModel?: string) => {
+    const modelToUse = overrideModel || selectedModel;
+    await summarizePage(setLoading, setMessages, modelToUse, selectedLanguage, messages, setHighlightMap, () => {
       setNeedsModelSelection(true);
       // Reset after a delay
       setTimeout(() => setNeedsModelSelection(false), 100);
@@ -199,17 +200,30 @@ function ChatApp() {
   }, [setLoading, setMessages, selectedModel, selectedLanguage, messages, setHighlightMap, summarizePage]);
 
   // Handle message sending
-  const handleSendMessage = useCallback(() => {
-    if (modelSearchTerm.trim() && modelSearchTerm.trim() !== selectedModel) {
+  const handleSendMessage = useCallback((overrideModel?: string) => {
+    const modelToUse = overrideModel || selectedModel;
+    if (modelSearchTerm.trim() && modelSearchTerm.trim() !== modelToUse && !overrideModel) {
       saveSelectedModel(modelSearchTerm.trim());
     }
-    sendMessage(input, messages, setMessages, selectedModel, selectedLanguage, highlightMap, setLoading, setHighlightMap, () => {
+    sendMessage(input, messages, setMessages, modelToUse, selectedLanguage, highlightMap, setLoading, setHighlightMap, () => {
       setNeedsModelSelection(true);
       // Reset after a delay
       setTimeout(() => setNeedsModelSelection(false), 100);
     });
     setInput("");
   }, [modelSearchTerm, selectedModel, saveSelectedModel, input, messages, setMessages, selectedLanguage, highlightMap, setLoading, setInput, setHighlightMap]);
+
+  // Handle model selection with pending action
+  const handleModelSelectedWithPendingAction = useCallback((model: string, action: 'send' | 'summarize') => {
+    // Use setTimeout to ensure model state is updated before executing action
+    setTimeout(() => {
+      if (action === 'send') {
+        handleSendMessage(model);
+      } else if (action === 'summarize') {
+        handleSummarizePage(model);
+      }
+    }, 100);
+  }, [handleSendMessage, handleSummarizePage]);
 
   // Handle stop generation
   const handleStopGeneration = useCallback(() => {
@@ -489,6 +503,7 @@ function ChatApp() {
             colors={colors}
             hasArticle={hasArticle}
             needsModelSelection={needsModelSelection}
+            onModelSelectedWithPendingAction={handleModelSelectedWithPendingAction}
           />
 
           {/* Chat history popup */}

@@ -18,6 +18,7 @@ interface ChatFooterProps {
   colors: ThemeColors;
   hasArticle: boolean | null;
   needsModelSelection?: boolean; // Flag to indicate model selection is required
+  onModelSelectedWithPendingAction?: (model: string, action: 'send' | 'summarize') => void;
 }
 
 const ChatFooter: React.FC<ChatFooterProps> = ({
@@ -36,10 +37,12 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
   summarizePage,
   colors,
   hasArticle,
-  needsModelSelection = false
+  needsModelSelection = false,
+  onModelSelectedWithPendingAction
 }) => {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [highlightModelButton, setHighlightModelButton] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'send' | 'summarize' | null>(null);
   const modelInputRef = useRef<HTMLInputElement>(null);
 
   // When needsModelSelection changes to true, open the model selector and highlight
@@ -58,6 +61,37 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
       }, 2000);
     }
   }, [needsModelSelection, selectedModel, setShowModelList]);
+
+  // Handle model selection and execute pending action
+  const handleModelSelect = (model: string) => {
+    saveSelectedModel(model);
+    setModelSearchTerm(model);
+    setShowModelSelector(false);
+
+    // Execute pending action after model is selected via callback
+    if (pendingAction && onModelSelectedWithPendingAction) {
+      const action = pendingAction;
+      setPendingAction(null);
+      // Use callback to notify parent component with selected model
+      onModelSelectedWithPendingAction(model, action);
+    }
+  };
+
+  // Handle send with pending action
+  const handleSendMessage = () => {
+    if (!selectedModel) {
+      setPendingAction('send');
+    }
+    sendMessage();
+  };
+
+  // Handle summarize with pending action
+  const handleSummarizePage = () => {
+    if (!selectedModel) {
+      setPendingAction('summarize');
+    }
+    summarizePage();
+  };
 
   const styles = {
     container: {
@@ -208,11 +242,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
                         filteredModels.map(model => (
                           <li
                             key={model}
-                            onClick={() => {
-                              saveSelectedModel(model);
-                              setModelSearchTerm(model);
-                              setShowModelSelector(false);
-                            }}
+                            onClick={() => handleModelSelect(model)}
                             style={{
                               padding: '10px 14px',
                               cursor: 'pointer',
@@ -288,7 +318,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
 
         {/* Summarize page button - Disabled when no article */}
         <button
-          onClick={summarizePage}
+          onClick={handleSummarizePage}
           style={{
             ...styles.iconButton,
             opacity: hasArticle === false ? 0.5 : 1,
@@ -324,7 +354,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => {
             if (e.key === "Enter") {
-              sendMessage();
+              handleSendMessage();
             }
           }}
           onFocus={(e) => {
@@ -341,7 +371,7 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
 
         {/* Send button */}
         <button
-          onClick={sendMessage}
+          onClick={handleSendMessage}
           style={styles.sendButton}
           title={t('send')}
           onMouseOver={(e) => {
