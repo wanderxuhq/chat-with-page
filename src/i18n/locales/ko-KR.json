@@ -66,5 +66,19 @@
   },
   "prompts": {
     "summarizePage": "현재 페이지를 요약해 주세요"
+  },
+  "permission": {
+    "title": "Chat with Page에 오신 것을 환영합니다",
+    "subtitle": "시작하는 한 단계",
+    "description": "확장 프로그램이 제대로 작동하려면 다음에 대한 권한이 필요합니다:",
+    "permissionType": "웹페이지 액세스",
+    "features": {
+      "read": "현재 페이지의 기사 내용 읽기",
+      "analyze": "AI로 페이지 분석 및 요약",
+      "chat": "페이지 내용에 대한 지능적인 대화 나누기"
+    },
+    "privacy": "데이터는 안전합니다: 페이지 내용은 구성한 AI 서비스로만 전송됩니다. 우리는 어떤 데이터도 수집하거나 저장하지 않습니다.",
+    "grant": "권한 부여 및 계속하기",
+    "requesting": "팝업에서 확인해 주세요..."
   }
 }

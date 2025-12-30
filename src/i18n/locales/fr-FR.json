@@ -66,5 +66,19 @@
   },
   "prompts": {
     "summarizePage": "Veuillez résumer la page actuelle"
+  },
+  "permission": {
+    "title": "Bienvenue dans Chat with Page",
+    "subtitle": "Une étape pour commencer",
+    "description": "Pour que l'extension fonctionne correctement, nous avons besoin de votre permission pour:",
+    "permissionType": "Accès aux pages web",
+    "features": {
+      "read": "Lire le contenu de l'article de la page actuelle",
+      "analyze": "Analyser et résumer les pages avec l'IA",
+      "chat": "Avoir des conversations intelligentes sur le contenu de la page"
+    },
+    "privacy": "Vos données sont en sécurité: Le contenu de la page n'est envoyé qu'au service IA que vous configurez. Nous ne collectons ni ne stockons aucune donnée.",
+    "grant": "Accorder la permission et continuer",
+    "requesting": "Veuillez confirmer dans la fenêtre contextuelle..."
   }
 }

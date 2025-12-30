@@ -66,5 +66,19 @@
   },
   "prompts": {
     "summarizePage": "Bitte fassen Sie die aktuelle Seite zusammen"
+  },
+  "permission": {
+    "title": "Willkommen bei Chat with Page",
+    "subtitle": "Ein Schritt zum Starten",
+    "description": "Damit die Erweiterung ordnungsgemäß funktioniert, benötigen wir Ihre Erlaubnis für:",
+    "permissionType": "Zugriff auf Webseiten",
+    "features": {
+      "read": "Artikelinhalt von der aktuellen Seite lesen",
+      "analyze": "Seiten mit KI analysieren und zusammenfassen",
+      "chat": "Intelligente Gespräche über den Seiteninhalt führen"
+    },
+    "privacy": "Ihre Daten sind sicher: Der Seiteninhalt wird nur an den von Ihnen konfigurierten KI-Dienst gesendet. Wir sammeln oder speichern keine Daten.",
+    "grant": "Berechtigung erteilen und fortfahren",
+    "requesting": "Bitte bestätigen Sie im Popup..."
   }
 }

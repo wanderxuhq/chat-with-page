@@ -66,5 +66,19 @@
   },
   "prompts": {
     "summarizePage": "現在のページを要約してください"
+  },
+  "permission": {
+    "title": "Chat with Pageへようこそ",
+    "subtitle": "始めるための1ステップ",
+    "description": "拡張機能が正常に動作するには、以下の権限が必要です:",
+    "permissionType": "Webページアクセス",
+    "features": {
+      "read": "現在のページの記事コンテンツを読み取る",
+      "analyze": "AIでページを分析・要約する",
+      "chat": "ページコンテンツについて知的な会話を行う"
+    },
+    "privacy": "データは安全です: ページコンテンツは設定したAIサービスにのみ送信されます。データを収集・保存しません。",
+    "grant": "権限を付与して続行",
+    "requesting": "ポップアップで確認してください..."
   }
 }
