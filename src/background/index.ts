@@ -21,21 +21,22 @@ const activeStreams = new Map<string, AbortController>()
 // Use the waited API
 waitForBrowser().then((browser) => {
 
-  // Manifest V3 (Chrome/Edge) - click to open side panel
-  browser.action.onClicked.addListener(async (tab) => {
-    if (tab.id) {
-      await (browser as any).sidePanel.open({ tabId: tab.id });
-    }
-  });
+  // Detect if running in Firefox
+  const isFirefox = navigator.userAgent.includes("Firefox")
 
-  /*
-  // Manifest V2/V3 (Firefox)  
-  if (typeof browser !== "undefined") {  
-    browser.browserAction.onClicked.addListener(async (tab) => {  
-      await browser.sidebarAction.open()  
-    })  
+  if (isFirefox) {
+    // Firefox - use sidebarAction
+    browser.action.onClicked.addListener(async () => {
+      await (browser as any).sidebarAction.toggle()
+    })
+  } else {
+    // Chrome/Edge - use sidePanel
+    browser.action.onClicked.addListener(async (tab) => {
+      if (tab.id) {
+        await (browser as any).sidePanel.open({ tabId: tab.id })
+      }
+    })
   }
-  */
   browser.runtime.onConnect.addListener((port) => {
     if (port.name === "summarize" || port.name === "chat") {
       const portId = `${port.name}_${Date.now()}`
