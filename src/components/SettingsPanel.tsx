@@ -21,6 +21,7 @@ interface SettingsPanelProps {
   setApiKeyInput: (key: string) => void;
   setSelectedLanguage: (language: string) => void;
   saveSettings: () => void;
+  onCancel?: () => void;
   i18n: {
     changeLanguage: (language: string) => void;
   };
@@ -42,6 +43,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
   setApiKeyInput,
   setSelectedLanguage,
   saveSettings,
+  onCancel,
   i18n,
   colors,
   themeMode,
@@ -137,8 +139,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       justifyContent: 'center',
       color: colors.textMuted,
     },
+    buttonGroup: {
+      display: 'flex',
+      gap: '10px',
+      marginTop: '8px',
+    },
     saveButton: {
-      width: '100%',
+      flex: 1,
       padding: '14px 20px',
       backgroundColor: colors.primary,
       color: 'white',
@@ -148,7 +155,18 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
       fontSize: '15px',
       fontWeight: 500,
       transition: 'background-color 0.2s, transform 0.1s',
-      marginTop: '8px',
+    },
+    cancelButton: {
+      flex: 1,
+      padding: '14px 20px',
+      backgroundColor: colors.bgInput,
+      color: colors.textSecondary,
+      border: `1px solid ${colors.borderPrimary}`,
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontSize: '15px',
+      fontWeight: 500,
+      transition: 'background-color 0.2s, transform 0.1s',
     },
     hint: {
       fontSize: '12px',
@@ -286,18 +304,32 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         </select>
       </div>
 
-      <button
-        onClick={saveSettings}
-        style={styles.saveButton}
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = colors.primaryHover;
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = colors.primary;
-        }}
-      >
-        {t('settings.save')}
-      </button>
+      <div style={styles.buttonGroup}>
+        <button
+          onClick={saveSettings}
+          style={onCancel ? styles.saveButton : { ...styles.saveButton, width: '100%' }}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = colors.primaryHover;
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = colors.primary;
+          }}
+        >
+          {t('settings.save')}
+        </button>
+        <button
+            onClick={onCancel}
+            style={styles.cancelButton}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = colors.bgHover;
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = colors.bgInput;
+            }}
+          >
+            {t('buttons.cancel')}
+          </button>
+      </div>
     </div>
   );
 };

@@ -433,6 +433,7 @@ function ChatApp() {
           setApiKeyInput={setApiKeyInput}
           setSelectedLanguage={saveLanguage}
           saveSettings={saveSettings}
+          onCancel={() => setShowSettings(false)}
           i18n={i18n}
           colors={colors}
           themeMode={themeMode}
