@@ -23,7 +23,9 @@ export const useTextHighlighting = (messages: Message[]) => {
             if (element) {
               element.scrollIntoView({ behavior: "smooth", block: "center" });
               const originalColor = element.style.backgroundColor;
-              element.style.backgroundColor = "yellow";
+              // Use a softer highlight color based on system theme
+              const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+              element.style.backgroundColor = isDarkMode ? '#7c3aed' : '#fef08a';
               setTimeout(() => {
                 element.style.backgroundColor = originalColor;
               }, 2000);
