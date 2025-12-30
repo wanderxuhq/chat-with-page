@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { browser } from '../utils/browserApi';
 import { useTranslation } from 'react-i18next';
-import { encryptValue, decryptValue, migrateToEncrypted } from '../utils/crypto';
+import { encryptValue, decryptValue } from '../utils/crypto';
+import { getDefaultBaseUrl } from '../config/aiProviders';
 
 export const useProviderConfig = () => {
   const { i18n } = useTranslation();
@@ -37,27 +38,9 @@ export const useProviderConfig = () => {
                             '';
         const apiKeyToUse = encryptedKey ? await decryptValue(encryptedKey) : '';
         
-        // Get default endpoint
-        const getDefaultEndpoint = (provider: string) => {
-          switch (provider) {
-            case 'openai':
-              return 'https://api.openai.com/v1';
-            case 'anthropic':
-              return 'https://api.anthropic.com/v1';
-            case 'google':
-              return 'https://generativelanguage.googleapis.com/v1beta/openai';
-            case 'openrouter':
-              return 'https://openrouter.ai/api/v1';
-            case 'ollama':
-              return 'http://localhost:11434/v1/';
-            default:
-              return '';
-          }
-        };
-
         const apiEndpointToUse = (savedApiEndpoint[`${providerToLoad}ApiEndpoint`] as string) ||
                                 (savedGenericApiEndpoint.apiEndpoint as string) ||
-                                getDefaultEndpoint(providerToLoad);
+                                getDefaultBaseUrl(providerToLoad);
         
         setApiKey(apiKeyToUse);
         setApiKeyInput(apiKeyToUse);
@@ -98,27 +81,8 @@ export const useProviderConfig = () => {
       setApiEndpoint(savedApiEndpoint[`${provider}ApiEndpoint`] as string);
       setApiEndpointInput(savedApiEndpoint[`${provider}ApiEndpoint`] as string);
     } else {
-      // Default endpoint
-      let defaultEndpoint = '';
-      switch (provider) {
-        case 'openai':
-          defaultEndpoint = 'https://api.openai.com/v1';
-          break;
-        case 'anthropic':
-          defaultEndpoint = 'https://api.anthropic.com/v1';
-          break;
-        case 'google':
-          defaultEndpoint = 'https://generativelanguage.googleapis.com/v1beta/openai';
-          break;
-        case 'openrouter':
-          defaultEndpoint = 'https://openrouter.ai/api/v1';
-          break;
-        case 'ollama':
-          defaultEndpoint = 'http://localhost:11434/v1/';
-          break;
-        default:
-          defaultEndpoint = '';
-      }
+      // Use default endpoint from centralized config
+      const defaultEndpoint = getDefaultBaseUrl(provider);
       setApiEndpoint(defaultEndpoint);
       setApiEndpointInput(defaultEndpoint);
     }

@@ -73,20 +73,7 @@ function ChatApp() {
   const currentUrlHash = currentPageUrl ? getPageHash(currentPageUrl) : '';
 
   // ======================================
-  // 2. Constant Definitions
-  // ======================================
-  // Mainstream AI provider preset configurations
-  const aiProviders = [
-    { id: "openai", name: "OpenAI", baseUrl: "https://api.openai.com/v1" },
-    { id: "anthropic", name: "Anthropic", baseUrl: "https://api.anthropic.com/v1" },
-    { id: "google", name: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
-    { id: "openrouter", name: "OpenRouter", baseUrl: "https://openrouter.ai/api/v1" },
-    { id: "ollama", name: "Ollama", baseUrl: "http://localhost:11434/v1/" },
-    { id: "custom", name: "Custom", baseUrl: "" }
-  ];
-
-  // ======================================
-  // 3. Side Effects Handling
+  // 2. Side Effects Handling
   // ======================================
   // Fetch model list when apiKey, apiEndpoint, or selectedProvider changes
   useEffect(() => {
@@ -398,7 +385,6 @@ function ChatApp() {
     return (
       <SettingsPanel
         selectedProvider={selectedProvider}
-        aiProviders={aiProviders}
         apiEndpointInput={apiEndpointInput}
         apiKeyInput={apiKeyInput}
         selectedLanguage={selectedLanguage}
@@ -436,7 +422,6 @@ function ChatApp() {
       {showSettings ? (
         <SettingsPanel
           selectedProvider={selectedProvider}
-          aiProviders={aiProviders}
           apiEndpointInput={apiEndpointInput}
           apiKeyInput={apiKeyInput}
           selectedLanguage={selectedLanguage}

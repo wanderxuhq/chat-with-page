@@ -1,13 +1,9 @@
 import React, { useState } from 'react';
 import type { ThemeColors, ThemeMode } from '../hooks/useTheme';
+import { aiProviders, getDefaultBaseUrl } from '../config/aiProviders';
 
 interface SettingsPanelProps {
   selectedProvider: string;
-  aiProviders: Array<{
-    id: string;
-    name: string;
-    baseUrl: string;
-  }>;
   apiEndpointInput: string;
   apiKeyInput: string;
   selectedLanguage: string;
@@ -32,7 +28,6 @@ interface SettingsPanelProps {
 
 const SettingsPanel: React.FC<SettingsPanelProps> = ({
   selectedProvider,
-  aiProviders,
   apiEndpointInput,
   apiKeyInput,
   selectedLanguage,
@@ -244,7 +239,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           type="text"
           onChange={(e) => setApiEndpointInput(e.target.value)}
           value={apiEndpointInput}
-          placeholder={selectedProvider === "custom" ? t('placeholders.enterCustomBaseUrl') : `${aiProviders.find(p => p.id === selectedProvider)?.baseUrl || ''}`}
+          placeholder={selectedProvider === "custom" ? t('placeholders.enterCustomBaseUrl') : getDefaultBaseUrl(selectedProvider)}
           style={styles.input}
         />
         {selectedProvider !== "custom" && (
