@@ -1,5 +1,5 @@
 import OpenAI from "openai"
-import * as browser from "webextension-polyfill"
+import { waitForBrowser } from "../utils/browserApi"
 import i18n from "../i18n"
 import { decryptValue } from "../utils/crypto"
 
@@ -18,26 +18,13 @@ interface PortMessage {
 // Store active streams for interruption
 const activeStreams = new Map<string, AbortController>()
 
-const waitForAPI = () => {
-  return new Promise<typeof browser>((resolve) => {
-    const checkAPI = () => {
-      if (browser && browser.runtime) {
-        resolve(browser)
-      } else {
-        setTimeout(checkAPI, 10)
-      }
-    }
-    checkAPI()
-  })
-}
-
 // Use the waited API
-waitForAPI().then((browser) => {
+waitForBrowser().then((browser) => {
 
   // Manifest V3 (Chrome/Edge) - click to open side panel
-  chrome.action.onClicked.addListener(async (tab) => {
+  browser.action.onClicked.addListener(async (tab) => {
     if (tab.id) {
-      await chrome.sidePanel.open({ tabId: tab.id });
+      await (browser as any).sidePanel.open({ tabId: tab.id });
     }
   });
 

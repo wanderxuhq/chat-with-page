@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { browser, waitForBrowser } from '../utils/browserApi';
+import type { Permissions } from 'webextension-polyfill';
 
 export const useHostPermission = () => {
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
@@ -7,7 +9,8 @@ export const useHostPermission = () => {
   // Check if we already have host permissions
   const checkPermission = useCallback(async () => {
     try {
-      const result = await chrome.permissions.contains({
+      const browser = await waitForBrowser();
+      const result = await browser.permissions.contains({
         origins: ['https://*/*', 'http://*/*']
       });
       setHasPermission(result);
@@ -23,7 +26,8 @@ export const useHostPermission = () => {
   const requestPermission = useCallback(async () => {
     setIsRequesting(true);
     try {
-      const granted = await chrome.permissions.request({
+      const browser = await waitForBrowser();
+      const granted = await browser.permissions.request({
         origins: ['https://*/*', 'http://*/*']
       });
       setHasPermission(granted);
@@ -43,7 +47,7 @@ export const useHostPermission = () => {
 
   // Listen for permission changes
   useEffect(() => {
-    const handleAdded = (permissions: chrome.permissions.Permissions) => {
+    const handleAdded = (permissions: Permissions.Permissions) => {
       if (permissions.origins?.some(origin =>
         origin === 'https://*/*' || origin === 'http://*/*' || origin === '<all_urls>'
       )) {
@@ -51,7 +55,7 @@ export const useHostPermission = () => {
       }
     };
 
-    const handleRemoved = (permissions: chrome.permissions.Permissions) => {
+    const handleRemoved = (permissions: Permissions.Permissions) => {
       if (permissions.origins?.some(origin =>
         origin === 'https://*/*' || origin === 'http://*/*' || origin === '<all_urls>'
       )) {
@@ -59,12 +63,12 @@ export const useHostPermission = () => {
       }
     };
 
-    chrome.permissions.onAdded.addListener(handleAdded);
-    chrome.permissions.onRemoved.addListener(handleRemoved);
+    browser.permissions.onAdded.addListener(handleAdded);
+    browser.permissions.onRemoved.addListener(handleRemoved);
 
     return () => {
-      chrome.permissions.onAdded.removeListener(handleAdded);
-      chrome.permissions.onRemoved.removeListener(handleRemoved);
+      browser.permissions.onAdded.removeListener(handleAdded);
+      browser.permissions.onRemoved.removeListener(handleRemoved);
     };
   }, [checkPermission]);
 

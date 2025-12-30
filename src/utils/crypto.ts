@@ -1,6 +1,8 @@
 // Encryption utility for secure API Key storage
 // Uses Web Crypto API with AES-GCM encryption
 
+import { browser } from './browserApi';
+
 const ENCRYPTION_KEY_NAME = 'chat-with-page-encryption-key';
 const ALGORITHM = 'AES-GCM';
 
@@ -8,7 +10,7 @@ const ALGORITHM = 'AES-GCM';
 const getDeviceSalt = async (): Promise<Uint8Array> => {
   const encoder = new TextEncoder();
   // Use extension ID and a fixed string as salt base
-  const saltBase = `chat-with-page-${chrome.runtime.id || 'extension'}-salt`;
+  const saltBase = `chat-with-page-${browser.runtime?.id || 'extension'}-salt`;
   const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(saltBase));
   return new Uint8Array(hashBuffer.slice(0, 16));
 };
@@ -17,7 +19,7 @@ const getDeviceSalt = async (): Promise<Uint8Array> => {
 const deriveKey = async (): Promise<CryptoKey> => {
   const encoder = new TextEncoder();
   // Use extension ID as base passphrase (unique per installation)
-  const passphrase = `chat-with-page-secure-${chrome.runtime.id || 'default'}`;
+  const passphrase = `chat-with-page-secure-${browser.runtime?.id || 'default'}`;
   const salt = await getDeviceSalt();
 
   const keyMaterial = await crypto.subtle.importKey(

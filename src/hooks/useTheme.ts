@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { waitForBrowser } from '../utils/browserApi';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -202,25 +203,19 @@ export const useTheme = () => {
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        // Load from chrome.storage first
-        if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-          const result = await chrome.storage.local.get(THEME_STORAGE_KEY);
-          if (result[THEME_STORAGE_KEY]) {
-            const savedMode = result[THEME_STORAGE_KEY] as ThemeMode;
+        // Load from browser.storage.local
+        const browser = await waitForBrowser();
+        const result = await browser.storage.local.get(THEME_STORAGE_KEY);
+        if (result[THEME_STORAGE_KEY]) {
+          const savedMode = result[THEME_STORAGE_KEY] as ThemeMode;
+          if (['light', 'dark', 'system'].includes(savedMode)) {
             setThemeMode(savedMode);
             setIsDark(computeIsDark(savedMode));
             return;
           }
         }
-        // Fallback: load from localStorage
-        const savedMode = localStorage.getItem(THEME_STORAGE_KEY) as ThemeMode | null;
-        if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
-          setThemeMode(savedMode);
-          setIsDark(computeIsDark(savedMode));
-        } else {
-          // Default: auto-detect
-          setIsDark(getSystemPreference());
-        }
+        // Default: auto-detect
+        setIsDark(getSystemPreference());
       } catch (error) {
         console.error('Error loading theme:', error);
         setIsDark(getSystemPreference());
@@ -250,12 +245,9 @@ export const useTheme = () => {
     setIsDark(computeIsDark(mode));
 
     try {
-      // Save to chrome.storage
-      if (typeof chrome !== 'undefined' && chrome.storage?.local) {
-        await chrome.storage.local.set({ [THEME_STORAGE_KEY]: mode });
-      }
-      // Also save to localStorage as fallback
-      localStorage.setItem(THEME_STORAGE_KEY, mode);
+      // Save to browser.storage.local
+      const browser = await waitForBrowser();
+      await browser.storage.local.set({ [THEME_STORAGE_KEY]: mode });
     } catch (error) {
       console.error('Error saving theme:', error);
     }

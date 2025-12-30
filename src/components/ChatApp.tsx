@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react"
 import type { Message } from '../types/index';
 import { sendMessage, summarizePage, stopGeneration, regenerateMessage, editAndResendMessage, copyMessageToClipboard, getPageContext } from '../utils/chatUtils';
+import { waitForBrowser } from '../utils/browserApi';
 
 // Import hooks
 import { useChatHistory } from '../hooks/useChatHistory';
@@ -146,20 +147,21 @@ function ChatApp() {
   // Handle selecting historical session
   const handleSelectSession = useCallback(async (session: { url: string; urlHash: string }) => {
     try {
+      const browser = await waitForBrowser();
       // First, try to find an existing tab with the same URL
-      const tabs = await chrome.tabs.query({});
+      const tabs = await browser.tabs.query({});
       const existingTab = tabs.find(tab => tab.url === session.url);
 
       if (existingTab && existingTab.id) {
         // Found existing tab, switch to it
-        await chrome.tabs.update(existingTab.id, { active: true });
+        await browser.tabs.update(existingTab.id, { active: true });
         // Also switch to the window containing this tab
         if (existingTab.windowId) {
-          await chrome.windows.update(existingTab.windowId, { focused: true });
+          await browser.windows.update(existingTab.windowId, { focused: true });
         }
       } else {
         // No existing tab found, open in new tab
-        await chrome.tabs.create({ url: session.url, active: true });
+        await browser.tabs.create({ url: session.url, active: true });
       }
       setShowHistory(false);
     } catch (error) {

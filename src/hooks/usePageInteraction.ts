@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import * as browser from "webextension-polyfill";
+import type { Tabs } from 'webextension-polyfill';
+import { browser } from '../utils/browserApi';
 import type { Message } from '../types/index';
 
 export interface Chunk {
@@ -53,7 +54,7 @@ export const usePageInteraction = (messages: Message[], onTabChange?: (newUrl: s
     };
 
     // Listen for tab activation (switching to another tab)
-    const onTabActivated = async (activeInfo: browser.Tabs.OnActivatedActiveInfoType) => {
+    const onTabActivated = async (activeInfo: Tabs.OnActivatedActiveInfoType) => {
       try {
         const tab = await browser.tabs.get(activeInfo.tabId);
         if (tab?.url) {

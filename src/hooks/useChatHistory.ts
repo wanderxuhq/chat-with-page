@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import * as browser from "webextension-polyfill";
+import { browser } from '../utils/browserApi';
 import type { Message } from '../types/index';
 
 // Generate a hash for the page URL to avoid special characters in storage keys

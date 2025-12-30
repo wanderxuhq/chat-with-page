@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import * as browser from "webextension-polyfill";
+import { browser } from '../utils/browserApi';
 import type { Message } from '../types/index';
 
 export const useTextHighlighting = (messages: Message[]) => {

@@ -1,6 +1,6 @@
 import type { PlasmoMessaging } from "@plasmohq/messaging"
 import OpenAI from "openai"
-import * as browser from "webextension-polyfill"
+import { browser } from "../../utils/browserApi"
 
 const handler: PlasmoMessaging.MessageHandler = async (req, res) => {
   try {

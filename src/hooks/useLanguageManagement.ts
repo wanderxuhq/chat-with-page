@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import * as browser from "webextension-polyfill";
+import { browser } from '../utils/browserApi';
 
 export const useLanguageManagement = () => {
   const { t, i18n } = useTranslation();

@@ -12,8 +12,8 @@ This is a browser extension developed based on the [Plasmo](https://docs.plasmo.
 
 ## 🌐 Supported Languages
 
-- Chinese (zh-CN)
 - English (en-US)
+- Chinese (zh-CN)
 - Japanese (ja-JP)
 - Korean (ko-KR)
 - French (fr-FR)

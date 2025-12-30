@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import * as browser from "webextension-polyfill";
+import { browser } from '../utils/browserApi';
 import { useTranslation } from 'react-i18next';
 import { encryptValue, decryptValue, migrateToEncrypted } from '../utils/crypto';
 

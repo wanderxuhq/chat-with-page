@@ -1,23 +1,14 @@
 // Chat utility functions
 import type { Message } from '../types/index';
-import * as browser from "webextension-polyfill"
+import type { Runtime } from 'webextension-polyfill';
+import { browser, waitForBrowser } from './browserApi';
 import { ReadabilityParser } from '../ReadabilityParser';
+import { escape } from '../../escape';
 import i18n from '../i18n';
 
 // Currently active port for stopping generation
-let currentPort: browser.Runtime.Port | null = null;
+let currentPort: Runtime.Port | null = null;
 
-// Escape HTML special characters to prevent XSS
-const escapeHtml = (str: string): string => {
-  const htmlEscapes: Record<string, string> = {
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  };
-  return str.replace(/[&<>"']/g, char => htmlEscapes[char]);
-};
 
 // Stop generation function
 export const stopGeneration = () => {
@@ -50,7 +41,7 @@ export const processAIOutput = (rawContent: string) => {
       refIdToNumber[sanitizedRefId] = refCounter++;
     }
     const refNumber = refIdToNumber[sanitizedRefId];
-    return `<a href="#" class="summary-link" data-ref-id="${escapeHtml(sanitizedRefId)}"><sup>[${refNumber}]</sup></a>`;
+    return `<a href="#" class="summary-link" data-ref-id="${escape(sanitizedRefId, true)}"><sup>[${refNumber}]</sup></a>`;
   };
 
   // Remove backticks
@@ -194,14 +185,21 @@ export const processAIOutput = (rawContent: string) => {
   return content;
 };
 
-// Save selected model to localStorage
-export const saveSelectedModel = (modelId: string, models: any[], apiEndpoint: string, setSelectedModel: (modelId: string) => void, setShowModelList: (show: boolean) => void) => {
+// Save selected model to browser.storage.local
+export const saveSelectedModel = async (modelId: string, models: any[], apiEndpoint: string, setSelectedModel: (modelId: string) => void, setShowModelList: (show: boolean) => void) => {
   setSelectedModel(modelId);
-  localStorage.setItem(`models_${apiEndpoint}`, JSON.stringify({
-    models: models,
-    selectedModel: modelId,
-    timestamp: Date.now()
-  }));
+  try {
+    const browser = await waitForBrowser();
+    await browser.storage.local.set({
+      [`models_${apiEndpoint}`]: JSON.stringify({
+        models: models,
+        selectedModel: modelId,
+        timestamp: Date.now()
+      })
+    });
+  } catch (error) {
+    console.error('Error saving selected model:', error);
+  }
   setShowModelList(false); // Hide list after selection
 };
 
@@ -213,7 +211,7 @@ export const scrollToOriginalText = async (refId: string) => {
       currentWindow: true
     });
     const activeTab = tabs[0];
-    if (activeTab && activeTab.id) {
+    if (activeTab && activeTab.id && isAccessibleUrl(activeTab.url)) {
       await browser.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: (id: string) => {
@@ -247,7 +245,7 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
     });
     const activeTab = tabs[0];
 
-    if (activeTab && activeTab.id) {
+    if (activeTab && activeTab.id && isAccessibleUrl(activeTab.url)) {
       const results = await browser.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: () => document.documentElement.outerHTML
@@ -443,6 +441,23 @@ export const summarizePage = async (setLoading: (loading: boolean) => void, setM
   }
 };
 
+// Check if a URL is accessible by the extension
+const isAccessibleUrl = (url: string | undefined): boolean => {
+  if (!url) return false;
+  // chrome://, edge://, about:, chrome-extension://, moz-extension:// etc. are not accessible
+  const inaccessibleProtocols = [
+    'chrome://',
+    'chrome-extension://',
+    'edge://',
+    'about:',
+    'moz-extension://',
+    'opera://',
+    'brave://',
+    'vivaldi://'
+  ];
+  return !inaccessibleProtocols.some(protocol => url.startsWith(protocol));
+};
+
 // Detect if page has article content and return page context
 export const getPageContext = async (setHighlightMap?: (highlightMap: Record<string, string>) => void): Promise<{
   hasArticle: boolean;
@@ -457,6 +472,11 @@ export const getPageContext = async (setHighlightMap?: (highlightMap: Record<str
     const activeTab = tabs[0];
 
     if (!activeTab || !activeTab.id) {
+      return { hasArticle: false, context: '', highlightMap: {} };
+    }
+
+    // Check if the URL is accessible
+    if (!isAccessibleUrl(activeTab.url)) {
       return { hasArticle: false, context: '', highlightMap: {} };
     }
 
@@ -700,10 +720,15 @@ export const sendMessage = async (
 };
 
 // Clear chat history
-export const clearChatHistory = (setMessages: (messages: Message[]) => void, currentPageUrl: string) => {
+export const clearChatHistory = async (setMessages: (messages: Message[]) => void, currentPageUrl: string) => {
   setMessages([]);
   if (currentPageUrl) {
-    localStorage.removeItem(`chat_history_${currentPageUrl}`);
+    try {
+      const browser = await waitForBrowser();
+      await browser.storage.local.remove(`chat_history_${currentPageUrl}`);
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+    }
   }
 };
 
@@ -796,7 +821,7 @@ export const relinkPageElements = async (highlightMap: Record<string, string>) =
     });
     const activeTab = tabs[0];
 
-    if (activeTab && activeTab.id) {
+    if (activeTab && activeTab.id && isAccessibleUrl(activeTab.url)) {
       await browser.scripting.executeScript({
         target: { tabId: activeTab.id },
         func: (map: Record<string, string>) => {
