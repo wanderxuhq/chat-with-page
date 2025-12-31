@@ -62,7 +62,7 @@ function ChatApp() {
   const { messages, setMessages, input, setInput, clearChatHistory, isUrlSynced } = useChatHistory(currentPageUrl);
   const { selectedProvider, setSelectedProvider, apiKey, setApiKey, apiEndpoint, setApiEndpoint, apiKeyInput, setApiKeyInput, apiEndpointInput, setApiEndpointInput, handleProviderChange, saveSettings: saveProviderSettings } = useProviderConfig();
   const { models, selectedModel, setSelectedModel, modelSearchTerm, setModelSearchTerm, showModelList, setShowModelList, fetchingModels, saveSelectedModel, fetchModels } = useModelManagement(apiKey, apiEndpoint, selectedProvider);
-  const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages);
+  const { highlightMap, setHighlightMap, scrollToOriginalText, relinkPageElements } = useTextHighlighting(messages, currentPageUrl);
 
   // Calculate search match count
   const matchCount = searchTerm.trim()

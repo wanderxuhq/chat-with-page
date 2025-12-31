@@ -1,9 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { browser } from '../utils/browserApi';
 import type { Message } from '../types/index';
 
-export const useTextHighlighting = (messages: Message[]) => {
+export const useTextHighlighting = (messages: Message[], currentPageUrl?: string) => {
   const [highlightMap, setHighlightMap] = useState<Record<string, string>>({});
+  const previousUrlRef = useRef<string>('');
+
+  // Clear highlightMap when URL changes
+  useEffect(() => {
+    if (currentPageUrl && currentPageUrl !== previousUrlRef.current) {
+      if (previousUrlRef.current) {
+        // URL changed, clear the highlight map
+        setHighlightMap({});
+      }
+      previousUrlRef.current = currentPageUrl;
+    }
+  }, [currentPageUrl]);
 
   // Scroll to original text position
   const scrollToOriginalText = useCallback(async (refId: string) => {
