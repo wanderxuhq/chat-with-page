@@ -1,5 +1,5 @@
 import { marked } from "marked";
-import { escape } from "../../escape";
+import { escape } from "./escape";
 
 // Configure marked renderer
 marked.use({

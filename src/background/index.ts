@@ -97,8 +97,8 @@ waitForBrowser().then((browser) => {
 
           // Use different system prompts based on port type
           const systemPrompt = port.name === "summarize"
-            ? `你是一个善于总结的专家。你需要对用户提供的文本进行总结，${languagePrompt}。输入文本中包含 [REF***] 格式的标记，在引用原文时，必须将对应标记原封不动地紧跟在引用句的末尾。`
-            : `你是一个智能助手，${languagePrompt}。如果用户提供了包含 [REF***] 格式标记的参考内容，在引用时请保留对应标记。`
+            ? `You are an expert in summarization. You need to summarize the text provided by the user, ${languagePrompt}. The input text contains markers in the format [REF***]. When quoting the original text, you must keep the corresponding marker exactly as it is immediately after the quoted sentence.`
+            : `You are an intelligent assistant, ${languagePrompt}.`
 
           // Create AbortController for stream interruption
           const abortController = new AbortController()

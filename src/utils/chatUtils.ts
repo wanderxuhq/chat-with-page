@@ -3,7 +3,7 @@ import type { Message } from '../types/index';
 import type { Runtime } from 'webextension-polyfill';
 import { browser, waitForBrowser } from './browserApi';
 import { ReadabilityParser } from '../ReadabilityParser';
-import { escape } from '../../escape';
+import { escape } from './escape';
 import i18n from '../i18n';
 
 // Currently active port for stopping generation
