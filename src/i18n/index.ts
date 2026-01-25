@@ -1,6 +1,6 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import { waitForBrowser } from '../utils/browserApi';
+import { getSetting } from '../db/settings';
 
 import translationZhCN from './locales/zh-CN.json';
 import translationEnUS from './locales/en-US.json';
@@ -58,13 +58,12 @@ const getBrowserLanguage = () => {
   }
 };
 
-// Load saved language from browser.storage.local asynchronously
+// Load saved language from settings asynchronously
 const loadSavedLanguage = async () => {
   try {
-    const browser = await waitForBrowser();
-    const result = await browser.storage.local.get('selectedLanguage');
-    if (result.selectedLanguage && result.selectedLanguage !== i18n.language) {
-      i18n.changeLanguage(result.selectedLanguage as string);
+    const selectedLanguage = await getSetting<string>('selectedLanguage');
+    if (selectedLanguage && selectedLanguage !== i18n.language) {
+      i18n.changeLanguage(selectedLanguage);
     }
   } catch (error) {
     console.error('Error loading saved language:', error);
@@ -105,9 +104,9 @@ i18n
   .init({
     resources,
     lng: getBrowserLanguage(), // Use browser language as default
-    fallbackLng: 'en-US', // 如果当前语言的翻译不存在，使用英语
+    fallbackLng: 'en-US', // Use English if translation for current language doesn't exist
     interpolation: {
-      escapeValue: false // React已经转义了，所以不需要i18next再转义
+      escapeValue: false // React already escapes, so i18next doesn't need to
     }
   });
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { browser } from '../utils/browserApi';
+import { getSetting, setSetting } from '../db/settings';
 
 export const useLanguageManagement = () => {
   const { t, i18n } = useTranslation();
@@ -8,13 +8,13 @@ export const useLanguageManagement = () => {
   // Supported languages list
   const languages = [
     { code: "en-US", name: "English" },
-    { code: "zh-CN", name: "中文" },
-    { code: "ja-JP", name: "日本語" },
-    { code: "ko-KR", name: "한국어" },
-    { code: "fr-FR", name: "Français" },
-    { code: "de-DE", name: "Deutsch" },
-    { code: "es-ES", name: "Español" },
-    { code: "ru-RU", name: "Русский" }
+    { code: "zh-CN", name: "Chinese" },
+    { code: "ja-JP", name: "Japanese" },
+    { code: "ko-KR", name: "Korean" },
+    { code: "fr-FR", name: "French" },
+    { code: "de-DE", name: "German" },
+    { code: "es-ES", name: "Spanish" },
+    { code: "ru-RU", name: "Russian" }
   ];
   
   const [selectedLanguage, setSelectedLanguage] = useState<string>(i18n.language);
@@ -23,10 +23,10 @@ export const useLanguageManagement = () => {
   useEffect(() => {
     const loadLanguage = async () => {
       try {
-        const savedLanguage = await browser.storage.local.get('selectedLanguage');
-        if (savedLanguage.selectedLanguage) {
-          setSelectedLanguage(savedLanguage.selectedLanguage as string);
-          i18n.changeLanguage(savedLanguage.selectedLanguage as string);
+        const savedLanguage = await getSetting<string>('selectedLanguage');
+        if (savedLanguage) {
+          setSelectedLanguage(savedLanguage);
+          i18n.changeLanguage(savedLanguage);
         } else {
           // Use browser language detected by i18n as default language
           setSelectedLanguage(i18n.language);
@@ -43,7 +43,7 @@ export const useLanguageManagement = () => {
   const saveLanguage = async (languageCode: string) => {
     try {
       setSelectedLanguage(languageCode);
-      await browser.storage.local.set({ selectedLanguage: languageCode });
+      await setSetting('selectedLanguage', languageCode);
       i18n.changeLanguage(languageCode);
     } catch (error) {
       console.error('Error saving language settings:', error);

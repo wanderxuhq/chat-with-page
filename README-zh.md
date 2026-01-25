@@ -1,6 +1,6 @@
 # Chat with Page - 网页内容交互插件
 
-这是一个基于 [Plasmo](https://docs.plasmo.com/) 框架开发的浏览器插件，允许您与网页内容进行智能交互，支持多种AI提供商和多语言界面。
+这是一个基于 [WXT](https://wxt.dev/) 框架开发的浏览器插件，允许您与网页内容进行智能交互，支持多种AI提供商和多语言界面。
 
 ## 🚀 主要功能
 
@@ -67,7 +67,7 @@
 
 1. 克隆仓库：
    ```bash
-   git clone https://github.com/yourusername/chat-with-page.git
+   git clone https://github.com/wanderxuhq/chat-with-page.git
    cd chat-with-page
    ```
 
@@ -86,8 +86,8 @@
    ```
 
 4. 在浏览器中加载扩展：
-   - Chrome/Edge：打开 `chrome://extensions/`，启用开发者模式，点击「加载已解压的扩展程序」，选择 `build/chrome-mv3-dev` 目录
-   - Firefox：打开 `about:debugging#/runtime/this-firefox`，点击「临时载入附加组件」，选择 `build/firefox-mv3-dev` 目录
+   - Chrome/Edge：打开 `chrome://extensions/`，启用开发者模式，点击「加载已解压的扩展程序」，选择 `dist/chrome-mv3-dev` 目录
+   - Firefox：打开 `about:debugging#/runtime/this-firefox`，点击「临时载入附加组件」，选择 `dist/firefox-mv3-dev` 目录
 
 ### 生产版本
 
@@ -98,7 +98,7 @@
    npm run build
    ```
 
-2. 构建完成后，扩展文件将生成在 `build` 目录中，可用于发布到浏览器应用商店。
+2. 构建完成后，扩展文件将生成在 `dist` 目录中，可用于发布到浏览器应用商店。
 
 ## 🎯 使用方法
 
@@ -116,33 +116,11 @@
 - **模型**：选择要使用的AI模型
 - **语言**：手动选择界面语言
 
-## 🛠️ 开发
-
-### 项目结构
-
-```
-├── src/
-│   ├── components/              # React 组件
-│   ├── background/              # 后台脚本
-│   ├── hooks/                   # 自定义钩子
-│   ├── i18n/                    # 国际化配置
-│   │   ├── locales/             # 多语言翻译文件
-│   │   │   ├── zh-CN.json       # 中文翻译
-│   │   │   ├── en-US.json       # 英文翻译
-│   │   │   └── ...              # 其他语言翻译
-│   │   └── index.ts             # i18n 初始化
-│   ├── utils/                   # 工具函数
-│   └── main.tsx                 # 主入口
-├── tsconfig.json                # TypeScript 配置
-├── package.json                 # 项目配置
-└── README-zh.md                 # 项目说明（中文）
-```
-
 ### 技术栈
 
 - **React**：UI 框架
 - **TypeScript**：类型系统
-- **Plasmo**：浏览器扩展开发框架
+- **WXT**：浏览器扩展开发框架
 - **i18next**：国际化支持
 - **OpenAI SDK**：AI API 客户端
 
@@ -164,10 +142,10 @@
 
 ## 🙏 致谢
 
-- [Plasmo](https://docs.plasmo.com/)：浏览器扩展开发框架
+- [WXT](https://wxt.dev/)：浏览器扩展开发框架
 - [Readability.js](https://github.com/mozilla/readability)：网页内容解析
 - [i18next](https://www.i18next.com/)：国际化支持
 
 ## 📞 联系方式
 
-如有问题或建议，欢迎提交 [Issue](https://github.com/yourusername/chat-with-page/issues)。
+如有问题或建议，欢迎提交 [Issue](https://github.com/wanderxuhq/chat-with-page/issues)。

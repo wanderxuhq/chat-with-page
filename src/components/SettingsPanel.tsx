@@ -1,55 +1,54 @@
-import React, { useState } from 'react';
-import type { ThemeColors, ThemeMode } from '../hooks/useTheme';
-import { aiProviders, getDefaultBaseUrl } from '../config/aiProviders';
+import React, { useState, useCallback } from 'react';
+import type { ThemeMode } from '../hooks/useTheme';
+import { AiProviderId, aiProviders, getDefaultBaseUrl } from '../config/aiProviders';
+
+// Import hooks
+import { useProviderConfig } from '../hooks/useProviderConfig';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
+import { useTheme } from '../hooks/useTheme';
 
 interface SettingsPanelProps {
-  selectedProvider: string;
-  apiEndpointInput: string;
-  apiKeyInput: string;
-  selectedLanguage: string;
-  languages: Array<{
-    code: string;
-    name: string;
-  }>;
-  t: (key: string) => string;
-  handleProviderChange: (provider: string) => void;
-  setApiEndpointInput: (endpoint: string) => void;
-  setApiKeyInput: (key: string) => void;
-  setSelectedLanguage: (language: string) => void;
-  saveSettings: () => void;
-  onCancel?: () => void;
-  i18n: {
-    changeLanguage: (language: string) => void;
-  };
-  colors: ThemeColors;
-  themeMode: ThemeMode;
-  setThemeMode: (mode: ThemeMode) => void;
+  hasClose: boolean;
+  onClose: () => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({
-  selectedProvider,
-  apiEndpointInput,
-  apiKeyInput,
-  selectedLanguage,
-  languages,
-  t,
-  handleProviderChange,
-  setApiEndpointInput,
-  setApiKeyInput,
-  setSelectedLanguage,
-  saveSettings,
-  onCancel,
-  i18n,
-  colors,
-  themeMode,
-  setThemeMode
-}) => {
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ hasClose, onClose }) => {
+  // Theme
+  const { colors, themeMode, setThemeMode } = useTheme();
+
+  // Language management
+  const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
+
+  // Provider config
+  const {
+    selectedProvider,
+    apiEndpointInput,
+    apiKeyInput,
+    setApiEndpointInput,
+    setApiKeyInput,
+    handleProviderChange,
+    saveSettings: saveProviderSettings
+  } = useProviderConfig();
+
   const [showApiKey, setShowApiKey] = useState(false);
 
+  // Save settings - combine provider and language settings
+  const saveSettings = useCallback(async () => {
+    try {
+      await saveProviderSettings(selectedLanguage);
+      onClose();
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      if (error instanceof Error) {
+        console.error('Error stack:', error.stack);
+      }
+    }
+  }, [selectedProvider, selectedLanguage, apiKeyInput, apiEndpointInput, saveProviderSettings, onClose]);
+
   const themeOptions = [
-    { value: 'system' as ThemeMode, label: t('settings.themeSystem') || '跟随系统' },
-    { value: 'light' as ThemeMode, label: t('settings.themeLight') || '浅色' },
-    { value: 'dark' as ThemeMode, label: t('settings.themeDark') || '深色' },
+    { value: 'system' as ThemeMode, label: t('settings.themeSystem') },
+    { value: 'light' as ThemeMode, label: t('settings.themeLight') },
+    { value: 'dark' as ThemeMode, label: t('settings.themeDark') },
   ];
 
   const styles = {
@@ -194,7 +193,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
       {/* Theme selection */}
       <div style={styles.formGroup}>
-        <label style={styles.label}>{t('settings.theme') || '主题'}</label>
+        <label style={styles.label}>{t('settings.theme')}</label>
         <div style={styles.themeSelector}>
           {themeOptions.map((option) => (
             <button
@@ -222,7 +221,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
         <label style={styles.label}>{t('settings.aiProvider')}</label>
         <select
           value={selectedProvider}
-          onChange={(e) => handleProviderChange(e.target.value)}
+          onChange={(e) => handleProviderChange(e.target.value as AiProviderId)}
           style={styles.select}
         >
           {aiProviders.map(provider => (
@@ -239,12 +238,12 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           type="text"
           onChange={(e) => setApiEndpointInput(e.target.value)}
           value={apiEndpointInput}
-          placeholder={selectedProvider === "custom" ? t('placeholders.enterCustomBaseUrl') : getDefaultBaseUrl(selectedProvider)}
+          placeholder={selectedProvider === "custom" ? t('placeholders.enterCustomBaseUrl') : getDefaultBaseUrl(selectedProvider as AiProviderId)}
           style={styles.input}
         />
         {selectedProvider !== "custom" && (
           <p style={styles.hint}>
-            {t('settings.autoFill') || 'Leave empty to use default URL'}
+            {t('settings.autoFill')}
           </p>
         )}
       </div>
@@ -267,13 +266,13 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           >
             {showApiKey ? (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                <line x1="1" y1="1" x2="23" y2="23"/>
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
               </svg>
             ) : (
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
               </svg>
             )}
           </button>
@@ -286,7 +285,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           value={selectedLanguage}
           onChange={(e) => {
             const newLanguage = e.target.value;
-            setSelectedLanguage(newLanguage);
+            saveLanguage(newLanguage);
             i18n.changeLanguage(newLanguage);
           }}
           style={styles.select}
@@ -301,19 +300,23 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
 
       <div style={styles.buttonGroup}>
         <button
-          onClick={saveSettings}
-          style={onCancel ? styles.saveButton : { ...styles.saveButton, width: '100%' }}
+          onClick={() => {
+            saveSettings();
+          }}
+          style={hasClose ? styles.saveButton : { ...styles.saveButton, width: '100%' }}
           onMouseOver={(e) => {
             e.currentTarget.style.backgroundColor = colors.primaryHover;
           }}
           onMouseOut={(e) => {
             e.currentTarget.style.backgroundColor = colors.primary;
           }}
+          type="button"
         >
           {t('settings.save')}
         </button>
-        <button
-            onClick={onCancel}
+        {hasClose && (
+          <button
+            onClick={onClose}
             style={styles.cancelButton}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = colors.bgHover;
@@ -324,6 +327,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
           >
             {t('buttons.cancel')}
           </button>
+        )}
       </div>
     </div>
   );

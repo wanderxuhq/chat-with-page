@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { waitForBrowser } from '../utils/browserApi';
+import { getSetting, setSetting } from '../db/settings';
 
 export type ThemeMode = 'light' | 'dark' | 'system';
 
@@ -151,21 +151,21 @@ const darkTheme: ThemeColors = {
 
   // Theme colors - Purple
   primary: '#a855f7',
-  primaryHover: '#c084fc',
-  primaryLight: 'rgba(168, 85, 247, 0.2)',
+  primaryHover: '#9333ea',
+  primaryLight: 'rgba(168, 85, 247, 0.1)',
 
   // Functional colors
   danger: '#f87171',
   dangerHover: '#ef4444',
-  dangerLight: '#2d1a1a',
-  dangerBorder: '#5c2626',
+  dangerLight: '#450a0a',
+  dangerBorder: '#7f1d1d',
   success: '#34d399',
-  successLight: '#1a3d2d',
+  successLight: '#064e3b',
   warning: '#fbbf24',
-  warningLight: '#3d3520',
-  info: '#c4b5fd',
-  infoHover: '#a78bfa',
-  infoLight: '#2d1f3d',
+  warningLight: '#451a03',
+  info: '#a855f7',
+  infoHover: '#9333ea',
+  infoLight: '#2e1065',
 
   // Scrollbar
   scrollbarTrack: '#2d2d2d',
@@ -203,16 +203,12 @@ export const useTheme = () => {
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        // Load from browser.storage.local
-        const browser = await waitForBrowser();
-        const result = await browser.storage.local.get(THEME_STORAGE_KEY);
-        if (result[THEME_STORAGE_KEY]) {
-          const savedMode = result[THEME_STORAGE_KEY] as ThemeMode;
-          if (['light', 'dark', 'system'].includes(savedMode)) {
-            setThemeMode(savedMode);
-            setIsDark(computeIsDark(savedMode));
-            return;
-          }
+        // Load from settings
+        const savedMode = await getSetting<ThemeMode>(THEME_STORAGE_KEY);
+        if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
+          setThemeMode(savedMode);
+          setIsDark(computeIsDark(savedMode));
+          return;
         }
         // Default: auto-detect
         setIsDark(getSystemPreference());
@@ -245,9 +241,8 @@ export const useTheme = () => {
     setIsDark(computeIsDark(mode));
 
     try {
-      // Save to browser.storage.local
-      const browser = await waitForBrowser();
-      await browser.storage.local.set({ [THEME_STORAGE_KEY]: mode });
+      // Save to settings
+      await setSetting(THEME_STORAGE_KEY, mode);
     } catch (error) {
       console.error('Error saving theme:', error);
     }

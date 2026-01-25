@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
-import type { ThemeColors } from '../hooks/useTheme';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
+import { useTheme } from '../hooks/useTheme';
+import { useChat } from '../contexts/ChatContext';
 
 interface ChatHeaderProps {
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
-  clearChatHistory: () => void;
-  t: (key: string) => string;
   showSearch?: boolean;
   setShowSearch?: (show: boolean) => void;
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
   matchCount?: number;
-  colors: ThemeColors;
   showHistory?: boolean;
   setShowHistory?: (show: boolean) => void;
   hasHistory?: boolean;
@@ -19,18 +18,18 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   setShowSettings,
-  clearChatHistory,
-  t,
   showSearch = false,
   setShowSearch,
   searchTerm = '',
   setSearchTerm,
   matchCount = 0,
-  colors,
   showHistory = false,
   setShowHistory,
   hasHistory = false
 }) => {
+  const { clearMessages } = useChat();
+  const { t } = useLanguageManagement();
+  const { colors } = useTheme();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const styles = {
@@ -121,7 +120,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <input
             type="text"
             style={styles.searchInput}
-            placeholder={t('placeholders.search') || '搜索消息...'}
+            placeholder={t('placeholders.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             autoFocus
@@ -137,7 +136,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               setShowSearch(false);
               setSearchTerm('');
             }}
-            title={t('buttons.close') || '关闭'}
+            title={t('buttons.close')}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = colors.bgTertiary;
               e.currentTarget.style.color = colors.textSecondary;
@@ -156,7 +155,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       ) : showClearConfirm ? (
         /* Clear confirmation bar */
         <div style={styles.confirmBar}>
-          <span style={styles.confirmText}>{t('messages.confirmClear') || '确认清除?'}</span>
+          <span style={styles.confirmText}>{t('messages.confirmClear')}</span>
           <button
             style={{
               ...styles.confirmButton,
@@ -164,7 +163,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               color: 'white',
             }}
             onClick={() => {
-              clearChatHistory();
+              clearMessages();
               setShowClearConfirm(false);
             }}
             onMouseOver={(e) => {
@@ -174,7 +173,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               e.currentTarget.style.backgroundColor = colors.danger;
             }}
           >
-            {t('buttons.confirm') || '确认'}
+            {t('buttons.confirm')}
           </button>
           <button
             style={{
@@ -190,7 +189,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               e.currentTarget.style.backgroundColor = colors.bgHover;
             }}
           >
-            {t('buttons.cancel') || '取消'}
+            {t('buttons.cancel') }
           </button>
         </div>
       ) : (
@@ -198,7 +197,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <button
             onClick={() => setShowSearch(true)}
             style={styles.iconButton}
-            title={t('buttons.search') || '搜索'}
+            title={t('buttons.search')}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = colors.bgTertiary;
               e.currentTarget.style.color = colors.textSecondary;
@@ -243,7 +242,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             ...styles.iconButton,
             position: 'relative',
           }}
-          title={t('history.title') || '聊天历史'}
+          title={t('history.title')}
           onMouseOver={(e) => {
             e.currentTarget.style.backgroundColor = colors.bgTertiary;
             e.currentTarget.style.color = colors.textSecondary;

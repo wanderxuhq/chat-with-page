@@ -1,27 +1,46 @@
 import React, { useState } from 'react';
-import type { ChatSession } from '../hooks/useChatSessions';
-import type { ThemeColors } from '../hooks/useTheme';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
+import { useTheme } from '../hooks/useTheme';
 
 interface ChatHistoryListProps {
-  sessions: ChatSession[];
-  currentUrlHash: string;
-  onSelectSession: (session: ChatSession) => void;
-  onDeleteSession: (urlHash: string) => void;
+  currentUrl: string;
   onClose: () => void;
-  t: (key: string) => string;
-  colors: ThemeColors;
 }
 
 const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
-  sessions,
-  currentUrlHash,
-  onSelectSession,
-  onDeleteSession,
-  onClose,
-  t,
-  colors
+  currentUrl,
+  onClose
 }) => {
+  const { t } = useLanguageManagement();
+  const { colors } = useTheme();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { sessions, deleteHistory } = useChatHistories();
+
+  console.log(sessions);
+  
+  // Handle selecting historical session
+  const handleSelectSession = useCallback(async (session: { url: string }) => {
+    try {
+      // Query all open tabs across all windows
+      const tabs = await browser.tabs.query({});
+      const existingTab = tabs.find(tab => tab.url === session.url);
+
+      if (existingTab && existingTab.id) {
+        // If tab exists, activate it and focus its window
+        await browser.tabs.update(existingTab.id, { active: true });
+        if (existingTab.windowId) {
+          await browser.windows.update(existingTab.windowId, { focused: true });
+        }
+      } else {
+        // If tab doesn't exist, create a new one
+        await browser.tabs.create({ url: session.url, active: true });
+      }
+      //setShowHistory(false);
+      onClose();
+    } catch (error) {
+      // Silently handle errors
+    }
+  }, []);
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -40,13 +59,13 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
     }
   };
 
-  const handleDelete = (e: React.MouseEvent, urlHash: string) => {
+  const handleDelete = (e: React.MouseEvent, url: string) => {
     e.stopPropagation();
-    if (confirmDelete === urlHash) {
-      onDeleteSession(urlHash);
+    if (confirmDelete === url) {
+      deleteHistory(url);
       setConfirmDelete(null);
     } else {
-      setConfirmDelete(urlHash);
+      setConfirmDelete(url);
       // Auto cancel confirmation after 3 seconds
       setTimeout(() => setConfirmDelete(null), 3000);
     }
@@ -137,22 +156,22 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
           ) : (
             sessions.map((session) => (
               <div
-                key={session.urlHash}
-                onClick={() => onSelectSession(session)}
+                key={session.url}
+                onClick={() => handleSelectSession(session)}
                 style={{
                   padding: '12px 20px',
                   cursor: 'pointer',
-                  backgroundColor: session.urlHash === currentUrlHash ? colors.bgSelected : 'transparent',
-                  borderLeft: session.urlHash === currentUrlHash ? `3px solid ${colors.primary}` : '3px solid transparent',
+                  backgroundColor: session.url === currentUrl ? colors.bgSelected : 'transparent',
+                  borderLeft: session.url === currentUrl ? `3px solid ${colors.primary}` : '3px solid transparent',
                   transition: 'background-color 0.15s',
                 }}
                 onMouseOver={(e) => {
-                  if (session.urlHash !== currentUrlHash) {
+                  if (session.url !== currentUrl) {
                     e.currentTarget.style.backgroundColor = colors.bgHover;
                   }
                 }}
                 onMouseOut={(e) => {
-                  if (session.urlHash !== currentUrlHash) {
+                  if (session.url !== currentUrl) {
                     e.currentTarget.style.backgroundColor = 'transparent';
                   }
                 }}
@@ -170,9 +189,9 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                         whiteSpace: 'nowrap',
                         marginBottom: 2,
                       }}
-                      title={session.pageTitle || session.title}
+                      title={session.title}
                     >
-                      {session.pageTitle || session.title}
+                      {session.title}
                     </div>
                     {/* URL - shown below title in smaller text */}
                     <div
@@ -186,7 +205,7 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                       }}
                       title={session.url}
                     >
-                      {session.title}
+                      {session.url}
                     </div>
                     {/* Last message preview */}
                     {session.lastMessage && (
@@ -210,37 +229,37 @@ const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
                         {formatTime(session.lastActive)}
                       </div>
                       <div style={{ color: colors.textMuted, fontSize: 11 }}>
-                        {session.messageCount} {t('history.messages')}
+                        {session.messageCount - 1} {t('history.messages')}
                       </div>
                     </div>
                     {/* Delete button */}
                     <button
-                      onClick={(e) => handleDelete(e, session.urlHash)}
+                      onClick={(e) => handleDelete(e, session.url)}
                       style={{
-                        background: confirmDelete === session.urlHash ? colors.danger : 'none',
+                        background: confirmDelete === session.url ? colors.danger : 'none',
                         border: 'none',
                         cursor: 'pointer',
                         padding: 6,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: confirmDelete === session.urlHash ? '#fff' : colors.textMuted,
+                        color: confirmDelete === session.url ? '#fff' : colors.textMuted,
                         borderRadius: 4,
                         transition: 'all 0.15s',
                       }}
                       onMouseOver={(e) => {
-                        if (confirmDelete !== session.urlHash) {
+                        if (confirmDelete !== session.url) {
                           e.currentTarget.style.backgroundColor = colors.dangerLight;
                           e.currentTarget.style.color = colors.danger;
                         }
                       }}
                       onMouseOut={(e) => {
-                        if (confirmDelete !== session.urlHash) {
+                        if (confirmDelete !== session.url) {
                           e.currentTarget.style.backgroundColor = 'transparent';
                           e.currentTarget.style.color = colors.textMuted;
                         }
                       }}
-                      title={confirmDelete === session.urlHash ? t('buttons.confirm') : t('history.delete')}
+                      title={confirmDelete === session.url ? t('buttons.confirm') : t('history.delete')}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />

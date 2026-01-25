@@ -1,39 +1,34 @@
-import React, { useRef, useEffect } from 'react';
-import MessageList from './MessageList';
-import type { Message } from '../types/index';
-import type { ThemeColors } from '../hooks/useTheme';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { MessageList } from './index';
+import { useChat } from '../contexts/ChatContext';
+import { useTheme } from '../hooks/useTheme';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
 
 interface ChatBodyProps {
-  messages: Message[];
-  loading: boolean;
-  t: (key: string) => string;
   searchTerm?: string;
-  onCopy?: (content: string) => void;
-  onEdit?: (index: number, content: string) => void;
-  onRegenerate?: (index: number) => void;
-  onStopGeneration?: () => void;
-  colors: ThemeColors;
 }
 
 const ChatBody: React.FC<ChatBodyProps> = ({
-  messages,
-  loading,
-  t,
-  searchTerm = '',
-  onCopy,
-  onEdit,
-  onRegenerate,
-  onStopGeneration,
-  colors
+  searchTerm = ''
 }) => {
+  const { messages, stopGeneration, isLoading, lastMessage } = useChat();
+  const { colors } = useTheme();
+  const { t } = useLanguageManagement();
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Determine if we should show the loading dots (thinking state)
+  // Show dots only when loading but no message has started streaming yet
+  const showLoadingDots = isLoading && !lastMessage;
+
+  // Determine if we should show the stop button
+  const showStopButton = isLoading;
 
   // Scroll to bottom when messages or loading state change
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [messages, loading]);
+  }, [messages, showLoadingDots, lastMessage]);
 
   const styles = {
     container: {
@@ -73,23 +68,17 @@ const ChatBody: React.FC<ChatBodyProps> = ({
       {/* Message list */}
       <div ref={containerRef} style={styles.messageContainer}>
         <MessageList
-          messages={messages}
-          loading={loading}
-          t={t}
+          isGenerating={showLoadingDots}
           searchTerm={searchTerm}
-          onCopy={onCopy}
-          onEdit={onEdit}
-          onRegenerate={onRegenerate}
-          colors={colors}
         />
       </div>
 
       {/* Stop generating button */}
-      {loading && onStopGeneration && (
+      {showStopButton && (
         <div style={styles.stopButton}>
           <button
             style={styles.stopButtonInner}
-            onClick={onStopGeneration}
+            onClick={stopGeneration}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = colors.dangerHover;
             }}
@@ -100,7 +89,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="6" width="12" height="12" rx="2"></rect>
             </svg>
-            {t('buttons.stopGenerating') || '停止生成'}
+            {t('buttons.stopGenerating')}
           </button>
         </div>
       )}
