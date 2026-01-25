@@ -14,6 +14,7 @@ import { ModelProvider } from "@/contexts/ModelContext";
 interface ChatSessionProps {
   url: string;
   title?: string;
+  tabId: number;
   isActive: boolean;
   onShowSettings: (show: boolean) => void;
   isHistoryOpen: boolean;
@@ -23,6 +24,7 @@ interface ChatSessionProps {
 const ChatSession: React.FC<ChatSessionProps> = ({ 
   url, 
   title, 
+  tabId,
   isActive, 
   onShowSettings, 
   isHistoryOpen,
@@ -40,7 +42,7 @@ const ChatSession: React.FC<ChatSessionProps> = ({
         width: '100%' 
       }}
     >
-      <ChatProvider initialPageUrl={url} currentPageTitle={title}>
+      <ChatProvider initialPageUrl={url} currentPageTitle={title} initialTabId={tabId}>
         <ChatHeader
           showSettings={false} 
           setShowSettings={onShowSettings}
@@ -72,42 +74,53 @@ export default function ChatPanel() {
   useGlobalStyles(colors);
 
   // Page interaction - used to determine which session is active
-  const { currentUrl, currentPageTitle } = usePageInteraction();
+  const { currentUrl, currentPageTitle, currentTabId } = usePageInteraction();
 
   // Session management
-  const [activeSessions, setActiveSessions] = useState<{url: string, title?: string}[]>([]);
+  const [activeSessions, setActiveSessions] = useState<{url: string, title?: string, tabId: number}[]>([]);
   
   // Local cache of tab states to avoid full re-scans on every event
   // We use a Ref so it's stable across renders and doesn't trigger re-renders itself
   const tabsMapRef = React.useRef<Map<number, {url: string, title?: string}>>(new Map());
   
   // Also keep current page info in a ref for access inside stable event handlers
-  const currentInfoRef = React.useRef({ url: currentUrl, title: currentPageTitle });
+  const currentInfoRef = React.useRef({ url: currentUrl, title: currentPageTitle, tabId: currentTabId });
 
   // Update ref when props change
   useEffect(() => {
-    currentInfoRef.current = { url: currentUrl, title: currentPageTitle };
+    currentInfoRef.current = { url: currentUrl, title: currentPageTitle, tabId: currentTabId };
     updateSessions(); // Trigger update immediately
-  }, [currentUrl, currentPageTitle]);
+  }, [currentUrl, currentPageTitle, currentTabId]);
 
   // Core logic to derive unique sessions from local state
   const updateSessions = useCallback(() => {
-    const uniqueSessions = new Map<string, string | undefined>();
+    const uniqueSessions = new Map<string, {title?: string, tabId: number}>();
     
     // 1. Add sessions from known tabs
-    for (const tab of tabsMapRef.current.values()) {
-        if (tab.url && !uniqueSessions.has(tab.url)) {
-            uniqueSessions.set(tab.url, tab.title);
+    for (const [tabId, tab] of tabsMapRef.current.entries()) {
+        if (tab.url) {
+            const existing = uniqueSessions.get(tab.url);
+            
+            // Logic to determine which tab ID to use for a session:
+            // 1. !existing: First time seeing this URL -> Use this tab's ID.
+            // 2. tabId === currentInfoRef.current.tabId: URL already exists (from another tab), 
+            //    but THIS tab is the active one -> Overwrite to use this active tab's ID.
+            // This ensures AI reads content from the tab the user is actually looking at.
+            if (!existing || tabId === currentInfoRef.current.tabId) {
+                uniqueSessions.set(tab.url, { title: tab.title, tabId });
+            }
         }
     }
 
     // 2. Ensure current session is always present (priority)
-    const { url, title } = currentInfoRef.current;
-    if (url && !uniqueSessions.has(url)) {
-        uniqueSessions.set(url, title);
+    const { url, title, tabId } = currentInfoRef.current;
+    if (url && tabId) {
+        // Always force update current session to use the active tab ID
+        // This ensures that when we switch tabs with same URL, we switch to the active tab ID
+        uniqueSessions.set(url, { title, tabId });
     }
 
-    setActiveSessions(Array.from(uniqueSessions.entries()).map(([u, t]) => ({ url: u, title: t })));
+    setActiveSessions(Array.from(uniqueSessions.entries()).map(([u, info]) => ({ url: u, title: info.title, tabId: info.tabId })));
   }, []);
 
   // Initialize and listen to events
@@ -175,6 +188,7 @@ export default function ChatPanel() {
               key={session.url}
               url={session.url}
               title={session.title}
+              tabId={session.tabId}
               isActive={session.url === currentUrl}
               onShowSettings={setShowSettings}
               isHistoryOpen={showHistory}

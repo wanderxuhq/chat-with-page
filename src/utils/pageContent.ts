@@ -212,15 +212,12 @@ export const extractAiInputText = (annotations: { text: string; index: number }[
 }
 
 // Build system prompt from page content
-export const buildSystemPrompt = async (language: string = 'zh'): Promise<string> => {
-  const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-  const activeTab = tabs[0];
-
-  if (!activeTab || !activeTab.id || !isAccessibleUrl(activeTab.url)) {
+export const buildSystemPrompt = async (tabId: number, url: string, language: string = 'zh'): Promise<string> => {
+  if (!tabId || !isAccessibleUrl(url)) {
     return '';
   }
 
-  const annotations = await extractPageContent(activeTab.id, true);
+  const annotations = await extractPageContent(tabId, true);
 
   if (!annotations || annotations.length === 0) {
     return '';
@@ -237,17 +234,19 @@ export const buildSystemPrompt = async (language: string = 'zh'): Promise<string
     `The input text contains markers in the format [REF***]. ` +
     `When quoting the original text, you must keep the corresponding marker ` +
     `exactly as it is immediately after the quoted sentence.\n\n` +
-    `Below is page content:\n${aiInputText}`;
+    `Below is page content. Please focus on the main content:\n${aiInputText}`;
 
   return systemPrompt;
 };
 
 // Ensure system prompt is available (extract if not exists)
 export const ensureSystemPrompt = async (
+  tabId: number,
+  url: string,
   setSystemPrompt?: (prompt: string) => void,
   language: string = 'zh'
 ): Promise<string> => {
-  const newSystemPrompt = await buildSystemPrompt(language);
+  const newSystemPrompt = await buildSystemPrompt(tabId, url, language);
   setSystemPrompt?.(newSystemPrompt);
   return newSystemPrompt;
 };

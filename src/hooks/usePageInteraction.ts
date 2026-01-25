@@ -4,6 +4,7 @@ import { browser } from 'wxt/browser';
 export const usePageInteraction = () => {
   const [currentUrl, setCurrentUrl] = useState<string>('');
   const [currentPageTitle, setCurrentPageTitle] = useState<string>('');
+  const [currentTabId, setCurrentTabId] = useState<number | null>(null);
   const previousUrlRef = useRef<string>('');
   const activeTabIdRef = useRef<number | null>(null);
 
@@ -18,6 +19,7 @@ export const usePageInteraction = () => {
           previousUrlRef.current = newUrl;
           if (tabs[0].id) {
             activeTabIdRef.current = tabs[0].id;
+            setCurrentTabId(tabs[0].id);
           }
           setCurrentUrl(newUrl);
           setCurrentPageTitle(newTitle);
@@ -37,12 +39,16 @@ export const usePageInteraction = () => {
         previousUrlRef.current = newUrl;
         setCurrentUrl(newUrl);
         setCurrentPageTitle(newTitle);
+        if (tab.id) {
+            setCurrentTabId(tab.id);
+        }
       }
     };
 
     // Listen for tab activation (switching to another tab)
     const onTabActivated = async (activeInfo: Browser.tabs.OnActivatedInfo) => {
       activeTabIdRef.current = activeInfo.tabId;
+      setCurrentTabId(activeInfo.tabId);
       try {
         const tab = await browser.tabs.get(activeInfo.tabId);
         
@@ -77,5 +83,6 @@ export const usePageInteraction = () => {
   return {
     currentUrl,
     currentPageTitle,
+    currentTabId,
   };
 };

@@ -43,16 +43,20 @@ import { useModel } from './ModelContext';
 interface ChatProviderProps {
   children: ReactNode;
   initialPageUrl?: string;
+  initialTabId?: number;
   updateSessionIndex?: (url: string, messages: Message[], pageTitle?: string) => void;
   currentPageTitle?: string;
   isActive?: boolean;
 }
 
-export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPageTitle, initialPageUrl, isActive = true}) => {
-  const {currentUrl: detectedUrl, currentPageTitle: fetchedPageTitle} = usePageInteraction();
+export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPageTitle, initialPageUrl, initialTabId, isActive = true}) => {
+  const {currentUrl: detectedUrl, currentPageTitle: fetchedPageTitle, currentTabId: detectedTabId} = usePageInteraction();
   
   // Use initialPageUrl if provided (for multi-session mode), otherwise fallback to detected URL
   const currentUrl = initialPageUrl || detectedUrl;
+  
+  // Use initialTabId if provided, otherwise fallback to detected Tab ID
+  const currentTabId = initialTabId || detectedTabId;
 
   // Prioritize passed prop over fetched title to avoid shadowing
   // If we are in multi-session mode (initialPageUrl provided), we only use fetchedPageTitle if it matches our URL
@@ -143,13 +147,17 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPage
   // Ensure system prompt exists when messages change
   useEffect(() => {
     const checkSystemPrompt = async () => {
-      if (!messages.length) {
-        await ensureSystemPrompt(setSystemPrompt, selectedLanguage);
+      if (!messages.length && currentTabId && currentUrl) {
+        try {
+          await ensureSystemPrompt(currentTabId, currentUrl, setSystemPrompt, selectedLanguage);
+        } catch (e) {
+          console.error('Failed to ensure system prompt:', e);
+        }
       }
     };
 
     checkSystemPrompt();
-  }, [messages.length, setSystemPrompt, selectedLanguage]);
+  }, [messages.length, setSystemPrompt, selectedLanguage, currentTabId, currentUrl]);
 
   useEffect(() => {
     if (!isLoading && lastMessage) {
