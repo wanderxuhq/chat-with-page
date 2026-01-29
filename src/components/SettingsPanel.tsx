@@ -5,20 +5,24 @@ import { AiProviderId, aiProviders, getDefaultBaseUrl } from '../config/aiProvid
 // Import hooks
 import { useProviderConfig } from '../hooks/useProviderConfig';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
-import { useTheme } from '../hooks/useTheme';
+import { useGlobalStyles } from '../hooks/useGlobalStyles';
+import { setSetting } from '@/db/settings';
 
 interface SettingsPanelProps {
   hasClose: boolean;
   onClose: () => void;
+  colors: ThemeColors;
+  themeMode: ThemeMode;
+  setThemeMode: (mode: ThemeMode) => void;
 }
 
-const SettingsPanel: React.FC<SettingsPanelProps> = ({ hasClose, onClose }) => {
+const SettingsPanel: React.FC<SettingsPanelProps> = ({ hasClose, onClose, colors, themeMode, setThemeMode }) => {  
   // Theme
-  const { colors, themeMode, setThemeMode } = useTheme();
-
+  useGlobalStyles(colors);
+  
   // Language management
   const { t, i18n, languages, selectedLanguage, saveLanguage } = useLanguageManagement();
-
+  
   // Provider config
   const {
     selectedProvider,
@@ -36,6 +40,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({ hasClose, onClose }) => {
   const saveSettings = useCallback(async () => {
     try {
       await saveProviderSettings(selectedLanguage);
+      await setSetting('chat-with-page-theme', themeMode);
       onClose();
     } catch (error) {
       console.error('Error saving settings:', error);

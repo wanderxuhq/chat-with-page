@@ -176,9 +176,6 @@ const darkTheme: ThemeColors = {
   shadowLight: 'rgba(0, 0, 0, 0.3)',
   shadowMedium: 'rgba(0, 0, 0, 0.4)',
 };
-
-const THEME_STORAGE_KEY = 'chat-with-page-theme';
-
 export const useTheme = () => {
   const [themeMode, setThemeMode] = useState<ThemeMode>('system');
   const [isDark, setIsDark] = useState(false);
@@ -199,12 +196,13 @@ export const useTheme = () => {
     return mode === 'dark';
   }, [getSystemPreference]);
 
+  
   // Initialize theme
   useEffect(() => {
     const loadTheme = async () => {
       try {
         // Load from settings
-        const savedMode = await getSetting<ThemeMode>(THEME_STORAGE_KEY);
+        const savedMode = await getSetting<ThemeMode>('chat-with-page-theme');
         if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
           setThemeMode(savedMode);
           setIsDark(computeIsDark(savedMode));
@@ -219,6 +217,11 @@ export const useTheme = () => {
     };
     loadTheme();
   }, [computeIsDark, getSystemPreference]);
+  
+
+  useEffect(() => {
+    setIsDark(computeIsDark(themeMode));
+  }, [themeMode, computeIsDark]);
 
   // Listen for system theme changes
   useEffect(() => {
@@ -235,25 +238,12 @@ export const useTheme = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [themeMode]);
 
-  // Save and set theme
-  const saveTheme = useCallback(async (mode: ThemeMode) => {
-    setThemeMode(mode);
-    setIsDark(computeIsDark(mode));
-
-    try {
-      // Save to settings
-      await setSetting(THEME_STORAGE_KEY, mode);
-    } catch (error) {
-      console.error('Error saving theme:', error);
-    }
-  }, [computeIsDark]);
-
   // Get current theme colors
   const colors: ThemeColors = isDark ? darkTheme : lightTheme;
 
   return {
     themeMode,
-    setThemeMode: saveTheme,
+    setThemeMode,
     isDark,
     colors,
   };

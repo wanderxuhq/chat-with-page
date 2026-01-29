@@ -1,7 +1,7 @@
 import React, { createContext, useContext, type ReactNode, useRef, useCallback, useEffect } from 'react';
 import type { Message } from '../types';
 import { sendToBackground, setupPortListeners, stopGeneration } from '../utils/backgroundComm';
-import { copyMessageToClipboard, updateMessagesAndSession, buildMessages } from '../utils/messageUtils';
+import { buildMessages } from '../utils/messageUtils';
 import { ensureSystemPrompt } from '../utils/pageContent';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
 import { useChatSession } from '../hooks/useChatSession';
@@ -318,11 +318,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPage
     await clearChatHistory();
   }, [clearChatHistory]);
 
-  // Copy message
-  // const handleCopyMessage = useCallback(async (content: string) => {
-  //   await copyMessageToClipboard(content);
-  // }, []);
-
   // Provide context value
   const contextValue: ChatContextValue = {
     //tabId,
@@ -330,7 +325,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPage
     lastMessage,
     isLoading,
     currentPageUrl: currentUrl,
-    //currentPageTitle,
     selectedModel: selectedModel,
     setLastMessage,
     sendMessage: handleSendMessage,
@@ -338,7 +332,6 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPage
     regenerateMessage: handleRegenerateMessage,
     stopGeneration: handleStopGeneration,
     clearMessages: handleClearMessages,
-    // copyMessage: handleCopyMessage,
     systemPrompt: getSystemPrompt(),
     setSystemPrompt
   };

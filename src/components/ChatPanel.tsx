@@ -3,7 +3,6 @@ import { browser } from "wxt/browser";
 
 // Import hooks
 import { usePageInteraction } from '../hooks/usePageInteraction';
-import { useGlobalStyles } from '../hooks/useGlobalStyles';
 import { useTheme } from '../hooks/useTheme';
 
 // Import components
@@ -19,6 +18,7 @@ interface ChatSessionProps {
   onShowSettings: (show: boolean) => void;
   isHistoryOpen: boolean;
   onShowHistory: (show: boolean) => void;
+  colors: ThemeColors;
 }
 
 const ChatSession: React.FC<ChatSessionProps> = ({ 
@@ -28,7 +28,8 @@ const ChatSession: React.FC<ChatSessionProps> = ({
   isActive, 
   onShowSettings, 
   isHistoryOpen,
-  onShowHistory 
+  onShowHistory,
+  colors,
 }) => {
   const [showSearch, setShowSearch] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -52,13 +53,15 @@ const ChatSession: React.FC<ChatSessionProps> = ({
           setSearchTerm={setSearchTerm}
           showHistory={isHistoryOpen} 
           setShowHistory={onShowHistory}
+          colors={colors}
         />
 
         <ChatBody
           searchTerm={searchTerm}
+          colors={colors}
         />
 
-        <ChatFooter />
+        <ChatFooter colors={colors} />
       </ChatProvider>
     </div>
   );
@@ -70,8 +73,7 @@ export default function ChatPanel() {
   const [showHistory, setShowHistory] = useState(false);
 
   // Theme and styles
-  const { colors } = useTheme();
-  useGlobalStyles(colors);
+  const { colors, themeMode, setThemeMode } = useTheme();
 
   // Page interaction - used to determine which session is active
   const { currentUrl, currentPageTitle, currentTabId } = usePageInteraction();
@@ -175,12 +177,11 @@ export default function ChatPanel() {
         overflow: "hidden",
         boxSizing: "border-box",
         margin: 0,
-        backgroundColor: colors.bgPrimary,
         transition: 'background-color 0.2s',
       }}
     >
       {showSettings ? (
-        <SettingsPanel hasClose={true} onClose={() => setShowSettings(false)} />
+        <SettingsPanel colors={colors} themeMode={themeMode} setThemeMode={setThemeMode} hasClose={true} onClose={() => setShowSettings(false)} />
       ) : (
         <ModelProvider>
           {activeSessions.map(session => (
@@ -193,6 +194,7 @@ export default function ChatPanel() {
               onShowSettings={setShowSettings}
               isHistoryOpen={showHistory}
               onShowHistory={setShowHistory}
+              colors={colors}
             />
           ))}
 
@@ -200,6 +202,7 @@ export default function ChatPanel() {
             <ChatHistoryList
               currentUrl={currentUrl}
               onClose={() => setShowHistory(false)}
+              colors={colors}
             />
           )}
         </ModelProvider>

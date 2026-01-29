@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react"
 
 // Import hooks
 import { useHostPermission } from '../hooks/useHostPermission';
+import { useTheme } from '../hooks/useTheme';
+import { useGlobalStyles } from '../hooks/useGlobalStyles';
 import { useProviderConfig } from '../hooks/useProviderConfig';
 
 // Import components
@@ -44,6 +46,10 @@ function ChatApp() {
   const { loaded: providerLoaded, selectedProvider } = useProviderConfig();
   const { loaded: permissionLoaded, hasPermission, isRequesting, requestPermission } = useHostPermission();
 
+  // Theme and styles
+  const { colors, themeMode, setThemeMode } = useTheme();
+  useGlobalStyles(colors);
+
   useEffect(() => {
     setShowSettings(!selectedProvider);
   }, [selectedProvider]);
@@ -68,7 +74,7 @@ function ChatApp() {
 
   // 3. Configuration Check
   if (showSettings) {
-    return <SettingsPanel hasClose={false} onClose={() => setShowSettings(false)} />;
+    return <SettingsPanel hasClose={false} onClose={() => setShowSettings(false)} colors={colors} themeMode={themeMode} setThemeMode={setThemeMode}  />;
   }
 
   // 4. Main UI

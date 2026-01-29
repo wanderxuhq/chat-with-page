@@ -20,7 +20,18 @@ export const buildMessages = (userContent: string, prevMessages: Message[]) => {
 // Copy message to clipboard
 export const copyMessageToClipboard = async (content: string): Promise<boolean> => {
   try {
-    await navigator.clipboard.writeText(content);
+    // Remove ref tags before copying to clipboard
+    let cleanedContent = content;
+    
+    // Remove reference ranges like [REF1]-[REF5]
+    const separateRangePattern = /\[(REF(\d+))\]-\[(REF(\d+))\]/g;
+    cleanedContent = cleanedContent.replace(separateRangePattern, '');
+    
+    // Remove combined references like [REF1,REF2,REF3-REF5]
+    const refPattern = /\[(REF[\d,REF\s-]+)\]/g;
+    cleanedContent = cleanedContent.replace(refPattern, '');
+    
+    await navigator.clipboard.writeText(cleanedContent);
     return true;
   } catch (error) {
     // Silently handle errors

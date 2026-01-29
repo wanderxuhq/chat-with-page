@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
-import { useTheme } from '../hooks/useTheme';
 import { useChat } from '../contexts/ChatContext';
 
 interface ChatHeaderProps {
@@ -14,6 +13,7 @@ interface ChatHeaderProps {
   showHistory?: boolean;
   setShowHistory?: (show: boolean) => void;
   hasHistory?: boolean;
+  colors: ThemeColors;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
@@ -25,11 +25,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   matchCount = 0,
   showHistory = false,
   setShowHistory,
-  hasHistory = false
+  hasHistory = false,
+  colors
 }) => {
   const { clearMessages } = useChat();
   const { t } = useLanguageManagement();
-  const { colors } = useTheme();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const styles = {
@@ -61,8 +61,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       alignItems: 'center',
       gap: '6px',
       flex: 1,
-      height: '32px',
-      padding: '0 10px',
+      height: '30px',
+      marginLeft: '10px',
       backgroundColor: colors.bgSecondary,
       borderRadius: '6px',
       border: `1px solid ${colors.borderSecondary}`,
@@ -76,6 +76,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       height: '100%',
       minWidth: 0,
       color: colors.textPrimary,
+      padding: '0',
     },
     searchCount: {
       fontSize: '11px',
@@ -113,10 +114,11 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       {/* Search bar */}
       {showSearch && setShowSearch && setSearchTerm ? (
         <div style={styles.searchBar}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textDisabled} strokeWidth="2">
+          <div style={{marginLeft: "5px"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textDisabled} strokeWidth="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
+          </div>
           <input
             type="text"
             style={styles.searchInput}
@@ -125,11 +127,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             onChange={(e) => setSearchTerm(e.target.value)}
             autoFocus
           />
-          {searchTerm && (
-            <span style={styles.searchCount}>
-              {matchCount}
-            </span>
-          )}
+          {/* <span style={styles.searchCount}>
+            {searchTerm ? matchCount : ''}
+          </span> */}
           <button
             style={{...styles.iconButton, width: '24px', height: '24px'}}
             onClick={() => {

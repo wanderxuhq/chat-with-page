@@ -3,7 +3,6 @@ import { marked } from 'marked';
 import { processAIOutput } from '../utils/aiOutput';
 import { copyMessageToClipboard } from '../utils/messageUtils';
 import type { Message } from '../types/index';
-import { useTheme } from '../hooks/useTheme';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
 import { useChat } from '../contexts/ChatContext';
 
@@ -20,6 +19,7 @@ interface MessageProps {
   setHoveredId: (id: string | null) => void;
   handleSaveEdit: (messageId: string) => void;
   handleCancelEdit: () => void;
+  colors: ThemeColors;
 }
 
 const Message: React.FC<MessageProps> = ({
@@ -34,9 +34,9 @@ const Message: React.FC<MessageProps> = ({
   setCopiedId,
   setHoveredId,
   handleSaveEdit,
-  handleCancelEdit
+  handleCancelEdit,
+  colors
 }) => {
-  const { colors } = useTheme();
   const { t } = useLanguageManagement();
   const { regenerateMessage } = useChat();
   const [parsedContent, setParsedContent] = useState<string>('');
@@ -104,7 +104,7 @@ const Message: React.FC<MessageProps> = ({
       transition: 'background-color 0.2s, color 0.2s',
     },
     editTextarea: {
-      width: '100%',
+      width: '80%',
       minHeight: '80px',
       padding: '10px 14px',
       borderRadius: '12px',

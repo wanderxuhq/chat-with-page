@@ -1,29 +1,19 @@
 import React, { useRef, useEffect } from 'react';
-import { useTheme } from '../hooks/useTheme';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
-import { useChat } from '@/contexts/ChatContext';
 import { useModel } from '@/contexts/ModelContext';
 
 interface ModelSelectorProps {
-  highlightModelButton: boolean;
   setShowModelSelector: (show: boolean) => void;
-  //doSend: (() => void) | null;
-  //setDoSend: (doSend: (() => void) | null) => void;
+  setPendingMessage: (pendingMessage: string | null) => void;
+  colors: ThemeColors;
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
-  highlightModelButton,
   setShowModelSelector,
-  //doSend,
-  //setDoSend,
+  setPendingMessage,
+  colors,
 }) => {
-  const { colors } = useTheme();
   const { t } = useLanguageManagement();
-  const {
-    selectedProvider,
-    apiKeyInput,
-    apiEndpointInput,
-  } = useProviderConfig();
   const { models, selectedModel, modelSearchTerm, setModelSearchTerm, setShowModelList, saveSelectedModel, showModelList, fetchingModels } = useModel();
 
   const modelInputRef = useRef<HTMLInputElement>(null);
@@ -38,7 +28,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
     saveSelectedModel(model);
     setModelSearchTerm(model);
     setShowModelSelector(false);
-    //setHighlightModelButton(false);
+    //set(false);
     // Don't execute pending action here - let useEffect handle it when selectedModel updates
   };
 
@@ -69,6 +59,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           setTimeout(() => {
             setShowModelList(false);
             setShowModelSelector(false);
+            setPendingMessage(null)
           }, 200);
         }}
         autoFocus
@@ -76,15 +67,13 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           width: '100%',
           height: '36px',
           padding: '0 10px',
-          border: highlightModelButton ? `2px solid ${colors.primary}` : `1px solid ${colors.borderPrimary}`,
+          border:  `1px solid ${colors.borderPrimary}`,
           borderRadius: '8px',
           fontSize: '13px',
           outline: 'none',
           backgroundColor: colors.bgSecondary,
           color: colors.textPrimary,
           boxSizing: 'border-box' as const,
-          boxShadow: highlightModelButton ? `0 0 0 3px ${colors.primaryLight}` : 'none',
-          animation: highlightModelButton ? 'pulse 0.5s ease-in-out 3' : 'none',
         }}
       />
       {showModelList && (

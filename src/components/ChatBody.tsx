@@ -1,18 +1,18 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { MessageList } from './index';
 import { useChat } from '../contexts/ChatContext';
-import { useTheme } from '../hooks/useTheme';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
 
 interface ChatBodyProps {
   searchTerm?: string;
+  colors: ThemeColors;
 }
 
 const ChatBody: React.FC<ChatBodyProps> = ({
-  searchTerm = ''
+  searchTerm = '',
+  colors
 }) => {
   const { messages, stopGeneration, isLoading, lastMessage } = useChat();
-  const { colors } = useTheme();
   const { t } = useLanguageManagement();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -70,6 +70,7 @@ const ChatBody: React.FC<ChatBodyProps> = ({
         <MessageList
           isGenerating={showLoadingDots}
           searchTerm={searchTerm}
+          colors={colors}
         />
       </div>
 

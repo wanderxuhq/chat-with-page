@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
-import type { Message } from '../types/index';
-import { useTheme } from '../hooks/useTheme';
-import { useLanguageManagement } from '../hooks/useLanguageManagement';
 import { useChat } from '../contexts/ChatContext';
 import MessageItem from './MessageItem';
 
 interface MessageListProps {
   isGenerating: boolean;
   searchTerm?: string;
+  colors: ThemeColors;
 }
 
 const MessageList: React.FC<MessageListProps> = ({
   isGenerating,
-  searchTerm = ''
+  searchTerm = '',
+  colors
 }) => {
-  const { colors } = useTheme();
-  const { t } = useLanguageManagement();
   const { messages, lastMessage, editMessage, regenerateMessage } = useChat();
   const [editingIndex, setEditingIndex] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>('');
@@ -109,6 +106,7 @@ const MessageList: React.FC<MessageListProps> = ({
           setHoveredId={setHoveredId}
           handleSaveEdit={handleSaveEdit}
           handleCancelEdit={handleCancelEdit}
+          colors={colors}
         />
       ))}
       {lastMessage && <MessageItem
@@ -125,6 +123,7 @@ const MessageList: React.FC<MessageListProps> = ({
           setHoveredId={setHoveredId}
           handleSaveEdit={handleSaveEdit}
           handleCancelEdit={handleCancelEdit}
+          colors={colors}
         />}
 
       {isGenerating && (

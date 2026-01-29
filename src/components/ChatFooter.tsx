@@ -1,19 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useChat } from '../contexts/ChatContext';
-import { useTheme } from '../hooks/useTheme';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
 import ModelSelector from './ModelSelector';
 import { isAccessibleUrl } from '../utils/pageContent';
 
-interface ChatFooterProps { }
+  interface ChatFooterProps {
+    colors: ThemeColors;
+  }
 
-const ChatFooter: React.FC<ChatFooterProps> = ({ }) => {
+const ChatFooter: React.FC<ChatFooterProps> = ({ colors }) => {
   const { currentPageUrl, sendMessage, isLoading, selectedModel } = useChat();
-  //const { isAccessibleUrl } = useHostPermission();
-  const { colors } = useTheme();
   const { t } = useLanguageManagement();
   const [showModelSelector, setShowModelSelector] = useState(false);
-  const [highlightModelButton, setHighlightModelButton] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | null>(null);
   const [input, setInput] = useState<string>('');
   const isSubmittingRef = useRef(false);
@@ -25,9 +23,6 @@ const ChatFooter: React.FC<ChatFooterProps> = ({ }) => {
 
       sendMessage(pendingMessage);
       setPendingMessage(null);
-
-      // Clear pending action and reset UI states
-      setHighlightModelButton(false);
 
       // Reset submitting flag after a short delay to ensure UI has updated
       setTimeout(() => {
@@ -51,7 +46,6 @@ const ChatFooter: React.FC<ChatFooterProps> = ({ }) => {
     if (!selectedModel) {
       // Store the pending message and open model selector
       setShowModelSelector(true);
-      setHighlightModelButton(true);
       return true;
     }
     return true;
@@ -121,8 +115,9 @@ const ChatFooter: React.FC<ChatFooterProps> = ({ }) => {
         {/* Model selector */}
         {showModelSelector ? (
           <ModelSelector
-            highlightModelButton={highlightModelButton}
             setShowModelSelector={setShowModelSelector}
+            setPendingMessage={setPendingMessage}
+            colors={colors}
           />
         ) : (
           <button

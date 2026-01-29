@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import { useLanguageManagement } from '../hooks/useLanguageManagement';
-import { useTheme } from '../hooks/useTheme';
 
 interface ChatHistoryListProps {
   currentUrl: string;
   onClose: () => void;
+  colors: ThemeColors;
 }
 
 const ChatHistoryList: React.FC<ChatHistoryListProps> = ({
   currentUrl,
-  onClose
+  onClose,
+  colors
 }) => {
   const { t } = useLanguageManagement();
-  const { colors } = useTheme();
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
   const { sessions, deleteHistory } = useChatHistories();
 
