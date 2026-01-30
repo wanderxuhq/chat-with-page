@@ -1,6 +1,6 @@
 # Chat with Page - Web Content Interaction Plugin
 
-This is a browser extension developed based on the [Plasmo](https://docs.plasmo.com/) framework that allows you to interact intelligently with web page content, supporting multiple AI providers and a multilingual interface.
+This is a browser extension developed based on the [WXT](https://wxt.dev/) framework that allows you to interact intelligently with web page content, supporting multiple AI providers and a multilingual interface.
 
 ## 🚀 Main Features
 
@@ -67,7 +67,7 @@ You can modify or extend the translation files as needed to meet specific locali
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/chat-with-page.git
+   git clone https://github.com/wanderxuhq/chat-with-page.git
    cd chat-with-page
    ```
 
@@ -86,8 +86,8 @@ You can modify or extend the translation files as needed to meet specific locali
    ```
 
 4. Load the extension in your browser:
-   - Chrome/Edge: Open `chrome://extensions/`, enable Developer mode, click "Load unpacked extension", select the `build/chrome-mv3-dev` directory
-   - Firefox: Open `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", select the `build/firefox-mv3-dev` directory
+   - Chrome/Edge: Open `chrome://extensions/`, enable Developer mode, click "Load unpacked extension", select the `dist/chrome-mv3-dev` directory
+   - Firefox: Open `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", select the `dist/firefox-mv3-dev` directory
 
 ### Production Version
 
@@ -98,7 +98,7 @@ You can modify or extend the translation files as needed to meet specific locali
    npm run build
    ```
 
-2. After building, the extension files will be generated in the `build` directory, which can be used for publishing to browser app stores.
+2. After building, the extension files will be generated in the `dist` directory, which can be used for publishing to browser app stores.
 
 ## 🎯 Usage
 
@@ -116,33 +116,11 @@ The extension supports the following configuration options:
 - **Model**: Select the AI model to use
 - **Language**: Manually select the interface language
 
-## 🛠️ Development
-
-### Project Structure
-
-```
-├── src/
-│   ├── components/              # React components
-│   ├── background/              # Background scripts
-│   ├── hooks/                   # Custom hooks
-│   ├── i18n/                    # Internationalization configuration
-│   │   ├── locales/             # Multi-language translation files
-│   │   │   ├── zh-CN.json       # Chinese translation
-│   │   │   ├── en-US.json       # English translation
-│   │   │   └── ...              # Other language translations
-│   │   └── index.ts             # i18n initialization
-│   ├── utils/                   # Utility functions
-│   └── main.tsx                 # Main entry point
-├── tsconfig.json                # TypeScript configuration
-├── package.json                 # Project configuration
-└── README-zh.md                 # Project documentation (Chinese)
-```
-
 ### Technology Stack
 
 - **React**: UI framework
 - **TypeScript**: Type system
-- **Plasmo**: Browser extension development framework
+- **WXT**: Browser extension development framework
 - **i18next**: Internationalization support
 - **OpenAI SDK**: AI API client
 
@@ -164,10 +142,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [Plasmo](https://docs.plasmo.com/): Browser extension development framework
+- [WXT](https://wxt.dev/): Browser extension development framework
 - [Readability.js](https://github.com/mozilla/readability): Web page content parsing
 - [i18next](https://www.i18next.com/): Internationalization support
 
 ## 📞 Contact
 
-If you have any questions or suggestions, please submit an [Issue](https://github.com/yourusername/chat-with-page/issues).
+If you have any questions or suggestions, please submit an [Issue](https://github.com/wanderxuhq/chat-with-page/issues).

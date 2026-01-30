@@ -1,214 +1,171 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
+import { useModel } from '@/contexts/ModelContext';
 
 interface ModelSelectorProps {
-  models: string[];
-  selectedModel: string;
-  modelSearchTerm: string;
-  showModelList: boolean;
-  fetchingModels: boolean;
-  t: (key: string) => string;
-  setModelSearchTerm: (term: string) => void;
-  setShowModelList: (show: boolean) => void;
-  handleInputFocus?: () => void;
-  saveSelectedModel: (model: string) => void;
+  setShowModelSelector: (show: boolean) => void;
+  setPendingMessage: (pendingMessage: string | null) => void;
+  colors: ThemeColors;
 }
 
 const ModelSelector: React.FC<ModelSelectorProps> = ({
-  models,
-  selectedModel,
-  modelSearchTerm,
-  showModelList,
-  fetchingModels,
-  t,
-  setModelSearchTerm,
-  setShowModelList,
-  handleInputFocus,
-  saveSelectedModel
+  setShowModelSelector,
+  setPendingMessage,
+  colors,
 }) => {
-  const styles = {
-    container: {
-      marginBottom: '12px',
-    },
-    inputWrapper: {
-      position: 'relative' as const,
-    },
-    inputContainer: {
-      position: 'relative' as const,
-      border: '1px solid #d1d5db',
-      borderRadius: '8px',
-      fontSize: '13px',
-      width: '100%',
-      boxSizing: 'border-box' as const,
-      backgroundColor: '#f9fafb',
-      transition: 'border-color 0.2s, box-shadow 0.2s',
-    },
-    input: {
-      padding: '10px 14px',
-      border: 'none',
-      borderRadius: '8px',
-      fontSize: '13px',
-      width: '100%',
-      boxSizing: 'border-box' as const,
-      outline: 'none',
-      backgroundColor: 'transparent',
-    },
-    dropdown: {
-      position: 'absolute' as const,
-      bottom: '100%',
-      left: 0,
-      right: 0,
-      border: '1px solid #d1d5db',
-      borderBottom: 'none',
-      borderRadius: '8px 8px 0 0',
-      maxHeight: '220px',
-      overflowY: 'auto' as const,
-      backgroundColor: 'white',
-      zIndex: 1000,
-      boxShadow: '0 -4px 12px rgba(0,0,0,0.1)',
-    },
-    loadingText: {
-      padding: '12px 14px',
-      fontSize: '13px',
-      color: '#6b7280',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-    },
-    list: {
-      listStyle: 'none',
-      padding: 0,
-      margin: 0,
-    },
-    listItem: (isSelected: boolean) => ({
-      padding: '10px 14px',
-      cursor: 'pointer',
-      fontSize: '13px',
-      backgroundColor: isSelected ? '#ecfdf5' : 'white',
-      borderBottom: '1px solid #f3f4f6',
-      transition: 'background-color 0.15s',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-    }),
-    noResults: {
-      padding: '12px 14px',
-      fontSize: '13px',
-      color: '#9ca3af',
-      textAlign: 'center' as const,
-    },
-    selectedIcon: {
-      width: '16px',
-      height: '16px',
-      color: '#10b981',
-    },
+  const { t } = useLanguageManagement();
+  const { models, selectedModel, modelSearchTerm, setModelSearchTerm, setShowModelList, saveSelectedModel, showModelList, fetchingModels } = useModel();
+
+  const modelInputRef = useRef<HTMLInputElement>(null);
+  // Focus input when component mounts
+  useEffect(() => {
+    if (modelInputRef.current) {
+      modelInputRef.current.focus();
+    }
+  }, [modelInputRef]);
+
+  const handleModelSelect = (model: string) => {
+    saveSelectedModel(model);
+    setModelSearchTerm(model);
+    setShowModelSelector(false);
+    //set(false);
+    // Don't execute pending action here - let useEffect handle it when selectedModel updates
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.inputWrapper}>
-        <div style={styles.inputContainer}>
-          <input
-            type="text"
-            placeholder={t('labels.model')}
-            value={modelSearchTerm}
-            onChange={(e) => {
-              setModelSearchTerm(e.target.value);
-              setShowModelList(true);
-            }}
-            onFocus={() => {
-              if (handleInputFocus) {
-                handleInputFocus();
-              } else {
-                setShowModelList(true);
-              }
-            }}
-            onBlur={() => {
-              setTimeout(() => setShowModelList(false), 200);
-            }}
-            style={styles.input}
-          />
+    <div style={{
+      position: 'relative',
+      flex: 1,
+      minWidth: '120px',
+      maxWidth: '200px',
+    }}>
+      <input
+        ref={modelInputRef}
+        type="text"
+        placeholder={t('labels.model')}
+        value={modelSearchTerm}
+        onChange={(e) => {
+          setModelSearchTerm(e.target.value);
+        }}
+        onFocus={(e) => {
+          setShowModelList(true);
+          e.target.select();
+        }}
+        onBlur={(e) => {
+          setShowModelSelector(false);
+          setPendingMessage(null);
+        }}
+        autoFocus
+        style={{
+          width: '100%',
+          height: '36px',
+          padding: '0 10px',
+          border: `1px solid ${colors.borderPrimary}`,
+          borderRadius: '8px',
+          fontSize: '13px',
+          outline: 'none',
+          backgroundColor: colors.bgSecondary,
+          color: colors.textPrimary,
+          boxSizing: 'border-box' as const,
+        }}
+      />
+      {showModelList && (
+        <div style={{
+          position: 'absolute',
+          bottom: '100%',
+          left: 0,
+          right: 0,
+          border: `1px solid ${colors.borderPrimary}`,
+          borderBottom: 'none',
+          borderRadius: '8px 8px 0 0',
+          maxHeight: '220px',
+          overflowY: 'auto' as const,
+          backgroundColor: colors.bgModelList,
+          zIndex: 1000,
+          boxShadow: `0 -4px 12px ${colors.shadowLight}`,
+          scrollbarWidth: 'none' as const,
+        }}>
+          {fetchingModels ? (
+            <div style={{
+              padding: '12px 14px',
+              fontSize: '13px',
+              color: colors.textMuted,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
+                <circle cx="12" cy="12" r="10" strokeOpacity="0.25"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10" strokeOpacity="0.75"></path>
+              </svg>
+              {t('messages.loadingModels')}
+            </div>
+          ) : (
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {(() => {
+                let commonPrefix = models.reduce((prefix, model) => {
+                  let i = 0;
+                  while (i < prefix.length && i < model.length && prefix[i] === model[i]) i++;
+                  return prefix.slice(0, i);
+                }, models[0] || '');
+                if (!commonPrefix.endsWith('/')) commonPrefix = '';
+                const filteredModels = models.filter(model => {
+                  if (!modelSearchTerm.trim()) return true;
+                  const searchTerm = modelSearchTerm.trim().toLowerCase();
+                  const fuzzyPattern = searchTerm
+                    .split('')
+                    .map(char => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+                    .join('.*');
+                  return new RegExp(fuzzyPattern, 'i').test(model);
+                });
+                return filteredModels.length > 0 ? (
+                  filteredModels.map(model => (
+                    <li
+                      key={model}
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        handleModelSelect(model);
+                      }}
+                      style={{
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        color: colors.textPrimary,
+                        backgroundColor: selectedModel === model ? colors.bgSelected : colors.bgModelList,
+                        borderBottom: `1px solid ${colors.bgTertiary}`,
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedModel !== model) {
+                          e.currentTarget.style.backgroundColor = colors.bgSecondary;
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = selectedModel === model ? colors.bgSelected : colors.bgModelList;
+                      }}
+                    >
+                      {model.replace(commonPrefix, '')}
+                    </li>
+                  ))
+                ) : (
+                  <li style={{ padding: '12px 14px', fontSize: '13px', color: colors.textDisabled, textAlign: 'center' }}>
+                    {t('messages.noMatchingModels')}
+                  </li>
+                );
+              })()}
+            </ul>
+          )}
         </div>
-        {showModelList && (
-          <div style={styles.dropdown}>
-            {fetchingModels ? (
-              <div style={styles.loadingText}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
-                  <circle cx="12" cy="12" r="10" strokeOpacity="0.25"></circle>
-                  <path d="M12 2a10 10 0 0 1 10 10" strokeOpacity="0.75"></path>
-                </svg>
-                {t('messages.loadingModels')}
-              </div>
-            ) : (
-              <ul style={styles.list}>
-                {(() => {
-                  const filteredModels = models.filter(model => {
-                    if (!modelSearchTerm.trim()) return true;
-                    const searchTerm = modelSearchTerm.trim().toLowerCase();
-                    const modelName = model.toLowerCase();
-
-                    if (searchTerm.includes('*')) {
-                      const regexPattern = searchTerm
-                        .replace(/\*/g, '.*')
-                        .replace(/\s+/g, '.*');
-                      const regex = new RegExp(regexPattern);
-                      return regex.test(modelName);
-                    }
-
-                    return modelName.includes(searchTerm);
-                  });
-
-                  return (
-                    <>
-                      {filteredModels.length > 0 ? (
-                        filteredModels.map(model => (
-                          <li
-                            key={model}
-                            onClick={() => {
-                              saveSelectedModel(model);
-                              setModelSearchTerm(model);
-                            }}
-                            style={styles.listItem(selectedModel === model)}
-                            onMouseEnter={(e) => {
-                              if (selectedModel !== model) {
-                                e.currentTarget.style.backgroundColor = '#f9fafb';
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              if (selectedModel !== model) {
-                                e.currentTarget.style.backgroundColor = 'white';
-                              } else {
-                                e.currentTarget.style.backgroundColor = '#ecfdf5';
-                              }
-                            }}
-                          >
-                            {selectedModel === model && (
-                              <svg style={styles.selectedIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                              </svg>
-                            )}
-                            {model}
-                          </li>
-                        ))
-                      ) : (
-                        <li style={styles.noResults}>
-                          {t('messages.noMatchingModels')}
-                        </li>
-                      )}
-                    </>
-                  );
-                })()}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+      )}
       <style>
-        {`
-          @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-        `}
+        {
+          `
+            @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+            @keyframes pulse {
+              0%, 100% { transform: scale(1); }
+              50% { transform: scale(1.02); }
+            }
+          `
+        }
       </style>
     </div>
   );

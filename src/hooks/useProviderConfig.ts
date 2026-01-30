@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
-import { browser } from '../utils/browserApi';
 import { useTranslation } from 'react-i18next';
-import { encryptValue, decryptValue } from '../utils/crypto';
-import { getDefaultBaseUrl } from '../config/aiProviders';
+import { getSettingsConfig, saveProviderConfig } from '../utils/configUtils';
+import { AiProviderId } from '@/config/aiProviders';
+import { getSetting, setSetting } from '../db/settings';
 
 export const useProviderConfig = () => {
   const { i18n } = useTranslation();
-  const [selectedProvider, setSelectedProvider] = useState<string>('openai');
+  const [loaded, setLoaded] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<string>('');
   const [apiKey, setApiKey] = useState<string>('');
   const [apiEndpoint, setApiEndpoint] = useState<string>('');
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
@@ -16,116 +17,81 @@ export const useProviderConfig = () => {
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const savedProvider = await browser.storage.local.get('selectedProvider');
-        const providerToLoad = (savedProvider.selectedProvider as string) || 'openai';
-
-        // Load provider-specific API configuration
-        const savedApiKey = await browser.storage.local.get(`${providerToLoad}ApiKey`);
-        const savedApiEndpoint = await browser.storage.local.get(`${providerToLoad}ApiEndpoint`);
-
-        // Load generic API configuration as fallback
-        const savedGenericApiKey = await browser.storage.local.get('apiKey');
-        const savedGenericApiEndpoint = await browser.storage.local.get('apiEndpoint');
-
-        const savedLanguage = await browser.storage.local.get('language');
-
-        setSelectedProvider(providerToLoad);
-
-        // Use provider-specific configuration, fallback to generic if not available
-        // Decrypt API key from storage
-        const encryptedKey = (savedApiKey[`${providerToLoad}ApiKey`] as string) ||
-                            (savedGenericApiKey.apiKey as string) ||
-                            '';
-        const apiKeyToUse = encryptedKey ? await decryptValue(encryptedKey) : '';
+        // Load initial provider
+        const savedProvider = await getSetting<string>('selectedProvider');
         
-        const apiEndpointToUse = (savedApiEndpoint[`${providerToLoad}ApiEndpoint`] as string) ||
-                                (savedGenericApiEndpoint.apiEndpoint as string) ||
-                                getDefaultBaseUrl(providerToLoad);
-        
-        setApiKey(apiKeyToUse);
-        setApiKeyInput(apiKeyToUse);
-        setApiEndpoint(apiEndpointToUse);
-        setApiEndpointInput(apiEndpointToUse);
-        if (savedLanguage.language) {
-          i18n.changeLanguage(savedLanguage.language as string);
+        // Use ConfigService to get settings
+        if (savedProvider) {
+          const providerToLoad = savedProvider as AiProviderId;
+          const { apiKey: loadedKey, baseURL: loadedEndpoint } = await getSettingsConfig(providerToLoad);
+          
+          // Load language
+          const savedLanguage = await getSetting<string>('language');
+          
+          setSelectedProvider(providerToLoad);
+          setApiKey(loadedKey);
+          setApiKeyInput(loadedKey);
+          setApiEndpoint(loadedEndpoint);
+          setApiEndpointInput(loadedEndpoint);
+          
+          if (savedLanguage) {
+            i18n.changeLanguage(savedLanguage);
+          }
         }
+        setLoaded(true);
       } catch (error) {
         console.error('Error loading settings:', error);
       }
     };
 
     loadSettings();
-  }, []);
+  }, [i18n]);
 
-  const handleProviderChange = async (provider: string) => {
+  const handleProviderChange = async (provider: AiProviderId) => {
     setSelectedProvider(provider);
 
-    // Save new provider
-    await browser.storage.local.set({ selectedProvider: provider });
+    // Save new provider selection immediately (optional, but consistent with old behavior)
+    // await setSetting('selectedProvider', provider);
 
     // Load corresponding API Key and Endpoint based on new provider
-    const savedApiKey = await browser.storage.local.get(`${provider}ApiKey`);
-    const savedApiEndpoint = await browser.storage.local.get(`${provider}ApiEndpoint`);
+    const { apiKey: loadedKey, baseURL: loadedEndpoint } = await getSettingsConfig(provider);
 
-    if (savedApiKey[`${provider}ApiKey`]) {
-      // Decrypt API key
-      const decryptedKey = await decryptValue(savedApiKey[`${provider}ApiKey`] as string);
-      setApiKey(decryptedKey);
-      setApiKeyInput(decryptedKey);
-    } else {
-      setApiKey('');
-      setApiKeyInput('');
-    }
-
-    if (savedApiEndpoint[`${provider}ApiEndpoint`]) {
-      setApiEndpoint(savedApiEndpoint[`${provider}ApiEndpoint`] as string);
-      setApiEndpointInput(savedApiEndpoint[`${provider}ApiEndpoint`] as string);
-    } else {
-      // Use default endpoint from centralized config
-      const defaultEndpoint = getDefaultBaseUrl(provider);
-      setApiEndpoint(defaultEndpoint);
-      setApiEndpointInput(defaultEndpoint);
-    }
+    setApiKey(loadedKey);
+    setApiKeyInput(loadedKey);
+    setApiEndpoint(loadedEndpoint);
+    setApiEndpointInput(loadedEndpoint);
   };
 
   const saveSettings = async (selectedLanguage?: string) => {
     try {
-      // Encrypt API key before saving
-      const encryptedApiKey = apiKeyInput ? await encryptValue(apiKeyInput) : '';
+      // Use ConfigService to save provider config
+      await saveProviderConfig(selectedProvider, apiKeyInput, apiEndpointInput);
 
-      // Save current provider's API Key and Endpoint
-      await browser.storage.local.set({
-        selectedProvider,
-        apiKey: encryptedApiKey,
-        apiEndpoint: apiEndpointInput,
-        [`${selectedProvider}ApiKey`]: encryptedApiKey,
-        [`${selectedProvider}ApiEndpoint`]: apiEndpointInput
-      });
+      // Save language separately if provided
+      if (selectedLanguage) {
+        await setSetting('language', selectedLanguage);
+        i18n.changeLanguage(selectedLanguage);
+      }
 
+      // Update local state to reflect saved values
       setApiKey(apiKeyInput);
       setApiEndpoint(apiEndpointInput);
-
-      // Save language settings
-      const languageToSave = selectedLanguage || i18n.language;
-      await browser.storage.local.set({ language: languageToSave });
       
-      // Update i18n language
-      i18n.changeLanguage(languageToSave);
+      return true;
     } catch (error) {
       console.error('Error saving settings:', error);
+      return false;
     }
   };
 
   return {
+    loaded,
     selectedProvider,
-    setSelectedProvider,
     apiKey,
-    setApiKey,
     apiEndpoint,
-    setApiEndpoint,
     apiKeyInput,
-    setApiKeyInput,
     apiEndpointInput,
+    setApiKeyInput,
     setApiEndpointInput,
     handleProviderChange,
     saveSettings

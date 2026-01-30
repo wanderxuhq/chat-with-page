@@ -49,6 +49,19 @@ export const useGlobalStyles = (colors: ThemeColors) => {
     document.body.style.backgroundColor = colors.bgPrimary;
     document.body.style.color = colors.textPrimary;
 
+    // Set document element styles for better theme coverage
+    if (document.documentElement) {
+      document.documentElement.style.backgroundColor = colors.bgPrimary;
+      document.documentElement.style.color = colors.textPrimary;
+    }
+
+    // Set root element styles for immediate theme update
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      rootElement.style.backgroundColor = colors.bgPrimary;
+      rootElement.style.color = colors.textPrimary;
+    }
+
     // Cleanup function
     return () => {
       const styleEl = document.getElementById('global-theme-styles');

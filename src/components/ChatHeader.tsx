@@ -1,36 +1,35 @@
 import React, { useState } from 'react';
-import type { ThemeColors } from '../hooks/useTheme';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
+import { useChat } from '../contexts/ChatContext';
 
 interface ChatHeaderProps {
   showSettings: boolean;
   setShowSettings: (show: boolean) => void;
-  clearChatHistory: () => void;
-  t: (key: string) => string;
   showSearch?: boolean;
   setShowSearch?: (show: boolean) => void;
   searchTerm?: string;
   setSearchTerm?: (term: string) => void;
   matchCount?: number;
-  colors: ThemeColors;
   showHistory?: boolean;
   setShowHistory?: (show: boolean) => void;
   hasHistory?: boolean;
+  colors: ThemeColors;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({
   setShowSettings,
-  clearChatHistory,
-  t,
   showSearch = false,
   setShowSearch,
   searchTerm = '',
   setSearchTerm,
   matchCount = 0,
-  colors,
   showHistory = false,
   setShowHistory,
-  hasHistory = false
+  hasHistory = false,
+  colors
 }) => {
+  const { clearMessages } = useChat();
+  const { t } = useLanguageManagement();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const styles = {
@@ -62,8 +61,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       alignItems: 'center',
       gap: '6px',
       flex: 1,
-      height: '32px',
-      padding: '0 10px',
+      height: '30px',
+      marginLeft: '10px',
       backgroundColor: colors.bgSecondary,
       borderRadius: '6px',
       border: `1px solid ${colors.borderSecondary}`,
@@ -77,6 +76,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       height: '100%',
       minWidth: 0,
       color: colors.textPrimary,
+      padding: '0',
     },
     searchCount: {
       fontSize: '11px',
@@ -114,30 +114,29 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       {/* Search bar */}
       {showSearch && setShowSearch && setSearchTerm ? (
         <div style={styles.searchBar}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textDisabled} strokeWidth="2">
+          <div style={{marginLeft: "5px"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={colors.textDisabled} strokeWidth="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
+          </div>
           <input
             type="text"
             style={styles.searchInput}
-            placeholder={t('placeholders.search') || '搜索消息...'}
+            placeholder={t('placeholders.search')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             autoFocus
           />
-          {searchTerm && (
-            <span style={styles.searchCount}>
-              {matchCount}
-            </span>
-          )}
+          {/* <span style={styles.searchCount}>
+            {searchTerm ? matchCount : ''}
+          </span> */}
           <button
             style={{...styles.iconButton, width: '24px', height: '24px'}}
             onClick={() => {
               setShowSearch(false);
               setSearchTerm('');
             }}
-            title={t('buttons.close') || '关闭'}
+            title={t('buttons.close')}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = colors.bgTertiary;
               e.currentTarget.style.color = colors.textSecondary;
@@ -156,7 +155,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
       ) : showClearConfirm ? (
         /* Clear confirmation bar */
         <div style={styles.confirmBar}>
-          <span style={styles.confirmText}>{t('messages.confirmClear') || '确认清除?'}</span>
+          <span style={styles.confirmText}>{t('messages.confirmClear')}</span>
           <button
             style={{
               ...styles.confirmButton,
@@ -164,7 +163,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               color: 'white',
             }}
             onClick={() => {
-              clearChatHistory();
+              clearMessages();
               setShowClearConfirm(false);
             }}
             onMouseOver={(e) => {
@@ -174,7 +173,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               e.currentTarget.style.backgroundColor = colors.danger;
             }}
           >
-            {t('buttons.confirm') || '确认'}
+            {t('buttons.confirm')}
           </button>
           <button
             style={{
@@ -190,7 +189,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
               e.currentTarget.style.backgroundColor = colors.bgHover;
             }}
           >
-            {t('buttons.cancel') || '取消'}
+            {t('buttons.cancel') }
           </button>
         </div>
       ) : (
@@ -198,7 +197,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
           <button
             onClick={() => setShowSearch(true)}
             style={styles.iconButton}
-            title={t('buttons.search') || '搜索'}
+            title={t('buttons.search')}
             onMouseOver={(e) => {
               e.currentTarget.style.backgroundColor = colors.bgTertiary;
               e.currentTarget.style.color = colors.textSecondary;
@@ -243,7 +242,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
             ...styles.iconButton,
             position: 'relative',
           }}
-          title={t('history.title') || '聊天历史'}
+          title={t('history.title')}
           onMouseOver={(e) => {
             e.currentTarget.style.backgroundColor = colors.bgTertiary;
             e.currentTarget.style.color = colors.textSecondary;

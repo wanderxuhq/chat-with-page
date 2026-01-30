@@ -1,19 +1,25 @@
 import { useState, useEffect, useCallback } from 'react';
-import { browser, waitForBrowser } from '../utils/browserApi';
-import type { Permissions } from 'webextension-polyfill';
+
+// Permissions type for compatibility
+interface Permissions {
+  origins?: string[];
+  permissions?: string[];
+};
 
 export const useHostPermission = () => {
+  const [loaded, setLoaded] = useState(false);
   const [hasPermission, setHasPermission] = useState<boolean | null>(null);
   const [isRequesting, setIsRequesting] = useState(false);
 
   // Check if we already have host permissions
   const checkPermission = useCallback(async () => {
     try {
-      const browser = await waitForBrowser();
       const result = await browser.permissions.contains({
         origins: ['https://*/*', 'http://*/*']
       });
       setHasPermission(result);
+
+      setLoaded(true);
       return result;
     } catch (error) {
       console.error('Error checking permission:', error);
@@ -26,7 +32,6 @@ export const useHostPermission = () => {
   const requestPermission = useCallback(async () => {
     setIsRequesting(true);
     try {
-      const browser = await waitForBrowser();
       const granted = await browser.permissions.request({
         origins: ['https://*/*', 'http://*/*']
       });
@@ -47,7 +52,7 @@ export const useHostPermission = () => {
 
   // Listen for permission changes
   useEffect(() => {
-    const handleAdded = (permissions: Permissions.Permissions) => {
+    const handleAdded = (permissions: Permissions) => {
       if (permissions.origins?.some(origin =>
         origin === 'https://*/*' || origin === 'http://*/*' || origin === '<all_urls>'
       )) {
@@ -55,7 +60,7 @@ export const useHostPermission = () => {
       }
     };
 
-    const handleRemoved = (permissions: Permissions.Permissions) => {
+    const handleRemoved = (permissions: Permissions) => {
       if (permissions.origins?.some(origin =>
         origin === 'https://*/*' || origin === 'http://*/*' || origin === '<all_urls>'
       )) {
@@ -63,16 +68,22 @@ export const useHostPermission = () => {
       }
     };
 
-    browser.permissions.onAdded.addListener(handleAdded);
-    browser.permissions.onRemoved.addListener(handleRemoved);
+    // Check if permissions API is available
+    if (browser.permissions && browser.permissions.onAdded && browser.permissions.onRemoved) {
+      browser.permissions.onAdded.addListener(handleAdded);
+      browser.permissions.onRemoved.addListener(handleRemoved);
 
-    return () => {
-      browser.permissions.onAdded.removeListener(handleAdded);
-      browser.permissions.onRemoved.removeListener(handleRemoved);
-    };
+      return () => {
+        browser.permissions.onAdded.removeListener(handleAdded);
+        browser.permissions.onRemoved.removeListener(handleRemoved);
+      };
+    }
+
+    return () => {};
   }, [checkPermission]);
 
   return {
+    loaded,
     hasPermission,
     isRequesting,
     requestPermission,

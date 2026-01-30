@@ -1,20 +1,6 @@
 {
-  "extends": "plasmo/templates/tsconfig.base",
-  "exclude": [
-    "node_modules"
-  ],
-  "include": [
-    ".plasmo/index.d.ts",
-    "./**/*.ts",
-    "./**/*.tsx"
-  ],
+  "extends": "./.wxt/tsconfig.json",
   "compilerOptions": {
-    "paths": {
-      "~*": [
-        "./*"
-      ]
-    },
-    "baseUrl": ".",
-    "types": ["@types/webextension-polyfill", "chrome"]
+    "jsx": "react-jsx"
   }
 }

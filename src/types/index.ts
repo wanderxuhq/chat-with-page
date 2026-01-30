@@ -1,14 +1,31 @@
-export interface Message {
-  id: string;
+// Message role type
+export type MessageRole = 'user' | 'assistant' | 'system';
+
+export interface BaseMessage {
+  role: MessageRole;
   content: string;
-  type: 'user' | 'assistant';
-  timestamp: number;
-  isGenerating?: boolean;
-  references?: Array<{
-    originalText: string;
-    htmlElement?: HTMLElement;
-    isVisible?: boolean;
-  }>;
+}
+
+export interface Message extends BaseMessage {
+  id: string;
+}
+
+export interface ChatSession {
+  url: string;
+  title: string;
+  pageTitle?: string;
+  lastActive: number;
+  messageCount: number;
+  lastMessage?: string;
+}
+
+export interface AIPortMessage {
+  action: 'chat' | 'summarize' | 'stop';
+  messages: BaseMessage[];
+  model: string;
+  language: string;
+  systemPrompt?: string;
+  callId?: string;
 }
 
 export interface Chunk {

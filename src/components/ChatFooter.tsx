@@ -1,96 +1,54 @@
 import React, { useState, useEffect, useRef } from 'react';
-import type { ThemeColors } from '../hooks/useTheme';
+import { useChat } from '../contexts/ChatContext';
+import { useLanguageManagement } from '../hooks/useLanguageManagement';
+import ModelSelector from './ModelSelector';
+import { isAccessibleUrl } from '../utils/pageContent';
 
-interface ChatFooterProps {
-  models: string[];
-  selectedModel: string;
-  modelSearchTerm: string;
-  showModelList: boolean;
-  fetchingModels: boolean;
-  input: string;
-  setInput: (value: string) => void;
-  t: (key: string) => string;
-  setModelSearchTerm: (term: string) => void;
-  setShowModelList: (show: boolean) => void;
-  saveSelectedModel: (model: string) => void;
-  sendMessage: () => void;
-  summarizePage: () => void;
-  colors: ThemeColors;
-  hasArticle: boolean | null;
-  needsModelSelection?: boolean; // Flag to indicate model selection is required
-  onModelSelectedWithPendingAction?: (model: string, action: 'send' | 'summarize') => void;
-}
+  interface ChatFooterProps {
+    colors: ThemeColors;
+  }
 
-const ChatFooter: React.FC<ChatFooterProps> = ({
-  models,
-  selectedModel,
-  modelSearchTerm,
-  showModelList,
-  fetchingModels,
-  input,
-  setInput,
-  t,
-  setModelSearchTerm,
-  setShowModelList,
-  saveSelectedModel,
-  sendMessage,
-  summarizePage,
-  colors,
-  hasArticle,
-  needsModelSelection = false,
-  onModelSelectedWithPendingAction
-}) => {
+const ChatFooter: React.FC<ChatFooterProps> = ({ colors }) => {
+  const { currentPageUrl, sendMessage, isLoading, selectedModel } = useChat();
+  const { t } = useLanguageManagement();
   const [showModelSelector, setShowModelSelector] = useState(false);
-  const [highlightModelButton, setHighlightModelButton] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'send' | 'summarize' | null>(null);
-  const modelInputRef = useRef<HTMLInputElement>(null);
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null);
+  const [input, setInput] = useState<string>('');
+  const isSubmittingRef = useRef(false);
 
-  // When needsModelSelection changes to true, open the model selector and highlight
   useEffect(() => {
-    if (needsModelSelection && !selectedModel) {
-      setShowModelSelector(true);
-      setShowModelList(true);
-      setHighlightModelButton(true);
-      // Focus the input after a brief delay to ensure it's rendered
+    if (selectedModel && pendingMessage && !isLoading && !isSubmittingRef.current) {
+      // Mark as submitting to prevent duplicate submissions
+      isSubmittingRef.current = true;
+
+      sendMessage(pendingMessage);
+      setPendingMessage(null);
+
+      // Reset submitting flag after a short delay to ensure UI has updated
       setTimeout(() => {
-        modelInputRef.current?.focus();
+        isSubmittingRef.current = false;
       }, 100);
-      // Remove highlight after animation
-      setTimeout(() => {
-        setHighlightModelButton(false);
-      }, 2000);
     }
-  }, [needsModelSelection, selectedModel, setShowModelList]);
+  }, [selectedModel, sendMessage, isLoading, pendingMessage]);
 
-  // Handle model selection and execute pending action
-  const handleModelSelect = (model: string) => {
-    saveSelectedModel(model);
-    setModelSearchTerm(model);
-    setShowModelSelector(false);
-
-    // Execute pending action after model is selected via callback
-    if (pendingAction && onModelSelectedWithPendingAction) {
-      const action = pendingAction;
-      setPendingAction(null);
-      // Use callback to notify parent component with selected model
-      onModelSelectedWithPendingAction(model, action);
-    }
-  };
-
-  // Handle send with pending action
   const handleSendMessage = () => {
-    if (!selectedModel) {
-      setPendingAction('send');
+    if (invokeSendMessage(input)) {
+      setInput('');
     }
-    sendMessage();
   };
+  const handleSummarizePage = () => invokeSendMessage(t('prompts.summarizePage'));
 
-  // Handle summarize with pending action
-  const handleSummarizePage = () => {
+  const invokeSendMessage = (message: string): boolean => {
+    if (isLoading || isSubmittingRef.current) return false;
+
+    setPendingMessage(message);
+
     if (!selectedModel) {
-      setPendingAction('summarize');
+      // Store the pending message and open model selector
+      setShowModelSelector(true);
+      return true;
     }
-    summarizePage();
+    return true;
   };
 
   const styles = {
@@ -154,148 +112,17 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
     <div style={styles.container}>
       {/* Input row */}
       <div style={styles.inputRow}>
-        {/* Model selector - Click button to expand/collapse */}
+        {/* Model selector */}
         {showModelSelector ? (
-          <div style={{
-            position: 'relative',
-            flex: 1,
-            minWidth: '120px',
-            maxWidth: '200px',
-          }}>
-            <input
-              ref={modelInputRef}
-              type="text"
-              placeholder={t('labels.model')}
-              value={modelSearchTerm}
-              onChange={(e) => {
-                setModelSearchTerm(e.target.value);
-                setShowModelList(true);
-              }}
-              onFocus={() => setShowModelList(true)}
-              onBlur={() => {
-                setTimeout(() => {
-                  setShowModelList(false);
-                  setShowModelSelector(false);
-                }, 200);
-              }}
-              autoFocus
-              style={{
-                width: '100%',
-                height: '36px',
-                padding: '0 10px',
-                border: highlightModelButton ? `2px solid ${colors.primary}` : `1px solid ${colors.borderPrimary}`,
-                borderRadius: '8px',
-                fontSize: '13px',
-                outline: 'none',
-                backgroundColor: colors.bgSecondary,
-                color: colors.textPrimary,
-                boxSizing: 'border-box' as const,
-                boxShadow: highlightModelButton ? `0 0 0 3px ${colors.primaryLight}` : 'none',
-                animation: highlightModelButton ? 'pulse 0.5s ease-in-out 3' : 'none',
-              }}
-            />
-            {showModelList && (
-              <div style={{
-                position: 'absolute',
-                bottom: '100%',
-                left: 0,
-                right: 0,
-                border: `1px solid ${colors.borderPrimary}`,
-                borderBottom: 'none',
-                borderRadius: '8px 8px 0 0',
-                maxHeight: '220px',
-                overflowY: 'auto' as const,
-                backgroundColor: colors.bgModelList,
-                zIndex: 1000,
-                boxShadow: `0 -4px 12px ${colors.shadowLight}`,
-              }}>
-                {fetchingModels ? (
-                  <div style={{
-                    padding: '12px 14px',
-                    fontSize: '13px',
-                    color: colors.textMuted,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                  }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: 'spin 1s linear infinite' }}>
-                      <circle cx="12" cy="12" r="10" strokeOpacity="0.25"></circle>
-                      <path d="M12 2a10 10 0 0 1 10 10" strokeOpacity="0.75"></path>
-                    </svg>
-                    {t('messages.loadingModels')}
-                  </div>
-                ) : (
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {(() => {
-                      const filteredModels = models.filter(model => {
-                        if (!modelSearchTerm.trim()) return true;
-                        const searchTerm = modelSearchTerm.trim().toLowerCase();
-                        const modelName = model.toLowerCase();
-                        if (searchTerm.includes('*')) {
-                          const regexPattern = searchTerm.replace(/\*/g, '.*').replace(/\s+/g, '.*');
-                          const regex = new RegExp(regexPattern);
-                          return regex.test(modelName);
-                        }
-                        return modelName.includes(searchTerm);
-                      });
-                      return filteredModels.length > 0 ? (
-                        filteredModels.map(model => (
-                          <li
-                            key={model}
-                            onClick={() => handleModelSelect(model)}
-                            style={{
-                              padding: '10px 14px',
-                              cursor: 'pointer',
-                              fontSize: '13px',
-                              color: colors.textPrimary,
-                              backgroundColor: selectedModel === model ? colors.bgSelected : colors.bgModelList,
-                              borderBottom: `1px solid ${colors.bgTertiary}`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '8px',
-                            }}
-                            onMouseEnter={(e) => {
-                              if (selectedModel !== model) {
-                                e.currentTarget.style.backgroundColor = colors.bgSecondary;
-                              }
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = selectedModel === model ? colors.bgSelected : colors.bgModelList;
-                            }}
-                          >
-                            {selectedModel === model && (
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                              </svg>
-                            )}
-                            {model}
-                          </li>
-                        ))
-                      ) : (
-                        <li style={{ padding: '12px 14px', fontSize: '13px', color: colors.textDisabled, textAlign: 'center' }}>
-                          {t('messages.noMatchingModels')}
-                        </li>
-                      );
-                    })()}
-                  </ul>
-                )}
-              </div>
-            )}
-            <style>
-              {`
-                @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-                @keyframes pulse {
-                  0%, 100% { transform: scale(1); }
-                  50% { transform: scale(1.02); }
-                }
-              `}
-            </style>
-          </div>
+          <ModelSelector
+            setShowModelSelector={setShowModelSelector}
+            setPendingMessage={setPendingMessage}
+            colors={colors}
+          />
         ) : (
           <button
             onClick={() => {
               setShowModelSelector(true);
-              setShowModelList(true);
             }}
             style={styles.iconButton}
             title={`${t('labels.model')}: ${selectedModel}`}
@@ -316,24 +143,24 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           </button>
         )}
 
-        {/* Summarize page button - Disabled when no article */}
+        {/* Summarize page button */}
         <button
           onClick={handleSummarizePage}
           style={{
             ...styles.iconButton,
-            opacity: hasArticle === false ? 0.5 : 1,
-            cursor: hasArticle === false ? 'not-allowed' : 'pointer',
+            opacity: (isLoading || !isAccessibleUrl(currentPageUrl)) ? 0.6 : 1,
+            cursor: (isLoading || !isAccessibleUrl(currentPageUrl)) ? 'not-allowed' : 'pointer',
           }}
-          title={hasArticle === false ? t('messages.noArticleFound') : t('buttons.chatWithPage')}
-          disabled={hasArticle === false}
+          title={t('buttons.chatWithPage')}
+          disabled={isLoading || !isAccessibleUrl(currentPageUrl)}
           onMouseOver={(e) => {
-            if (hasArticle !== false) {
+            if (!isLoading) {
               e.currentTarget.style.backgroundColor = colors.infoLight;
               e.currentTarget.style.color = colors.info;
             }
           }}
           onMouseOut={(e) => {
-            if (hasArticle !== false) {
+            if (!isLoading) {
               e.currentTarget.style.backgroundColor = colors.bgTertiary;
               e.currentTarget.style.color = colors.textMuted;
             }
@@ -351,34 +178,52 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
         <input
           type="text"
           value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyPress={(e) => {
-            if (e.key === "Enter") {
+          onChange={(e) => !isLoading && setInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !isLoading) {
               handleSendMessage();
             }
           }}
           onFocus={(e) => {
-            e.currentTarget.style.borderColor = colors.borderFocus;
-            e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryLight}`;
+            if (!isLoading) {
+              e.currentTarget.style.borderColor = colors.borderFocus;
+              e.currentTarget.style.boxShadow = `0 0 0 3px ${colors.primaryLight}`;
+            }
           }}
           onBlur={(e) => {
-            e.currentTarget.style.borderColor = colors.borderPrimary;
-            e.currentTarget.style.boxShadow = 'none';
+            if (!isLoading) {
+              e.currentTarget.style.borderColor = colors.borderPrimary;
+              e.currentTarget.style.boxShadow = 'none';
+            }
           }}
-          style={styles.input}
+          style={{
+            ...styles.input,
+            opacity: isLoading ? 0.6 : 1,
+            cursor: isLoading ? 'not-allowed' : 'text',
+          }}
           placeholder={t('placeholders.enterMessage')}
+          disabled={isLoading}
         />
 
         {/* Send button */}
         <button
           onClick={handleSendMessage}
-          style={styles.sendButton}
+          style={{
+            ...styles.sendButton,
+            opacity: (isLoading || !isAccessibleUrl(currentPageUrl)) ? 0.6 : 1,
+            cursor: (isLoading || !isAccessibleUrl(currentPageUrl)) ? 'not-allowed' : 'pointer',
+          }}
           title={t('send')}
+          disabled={isLoading || !isAccessibleUrl(currentPageUrl)}
           onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = colors.primaryHover;
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = colors.primaryHover;
+            }
           }}
           onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = colors.primary;
+            if (!isLoading) {
+              e.currentTarget.style.backgroundColor = colors.primary;
+            }
           }}
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

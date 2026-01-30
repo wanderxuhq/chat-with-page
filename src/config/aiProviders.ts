@@ -9,7 +9,7 @@ export interface AIProvider {
   baseUrl: string;
 }
 
-export const aiProviders: AIProvider[] = [
+export const aiProviders = [
   { id: "openai", name: "OpenAI", baseUrl: "https://api.openai.com/v1" },
   { id: "anthropic", name: "Anthropic", baseUrl: "https://api.anthropic.com/v1" },
   { id: "google", name: "Google Gemini", baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai" },
@@ -23,14 +23,16 @@ export const aiProviders: AIProvider[] = [
   { id: "siliconflow", name: "Siliconflow", baseUrl: "https://api.siliconflow.cn/v1/" },
   { id: "ollama", name: "Ollama", baseUrl: "http://localhost:11434/v1/" },
   { id: "custom", name: "Custom", baseUrl: "" }
-];
+] as const satisfies readonly AIProvider[];
+
+export type AiProviderId = (typeof aiProviders)[number]['id'];
 
 /**
  * Get the default base URL for a provider
  * @param providerId - The provider ID
  * @returns The default base URL, or empty string if not found
  */
-export function getDefaultBaseUrl(providerId: string): string {
+export function getDefaultBaseUrl(providerId: AiProviderId): string {
   const provider = aiProviders.find(p => p.id === providerId);
   return provider?.baseUrl || '';
 }

@@ -1,21 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { browser } from '../utils/browserApi';
-import type { Message } from '../types/index';
+import { browser } from "wxt/browser";
+import { isAccessibleUrl, extractPageContent } from '../utils/pageContent';
 
-export const useTextHighlighting = (messages: Message[], currentPageUrl?: string) => {
-  const [highlightMap, setHighlightMap] = useState<Record<string, string>>({});
-  const previousUrlRef = useRef<string>('');
 
-  // Clear highlightMap when URL changes
-  useEffect(() => {
-    if (currentPageUrl && currentPageUrl !== previousUrlRef.current) {
-      if (previousUrlRef.current) {
-        // URL changed, clear the highlight map
-        setHighlightMap({});
-      }
-      previousUrlRef.current = currentPageUrl;
-    }
-  }, [currentPageUrl]);
+export const useTextHighlighting = (isActive: boolean = true) => {
+  const highlightingStatus = useRef<Record<string, number>>({});
 
   // Scroll to original text position
   const scrollToOriginalText = useCallback(async (refId: string) => {
@@ -26,24 +15,36 @@ export const useTextHighlighting = (messages: Message[], currentPageUrl?: string
       });
       const activeTab = tabs[0];
       if (activeTab && activeTab.id) {
+        const now = Date.now();
+        const endTime = highlightingStatus.current[refId] || 0;
+        // Check if highlighting is still active (add 50ms buffer to be safe)
+        const shouldHighlight = now > endTime + 50;
+        
+        if (shouldHighlight) {
+          highlightingStatus.current[refId] = now + 2000;
+        }
+
         await browser.scripting.executeScript({
           target: { tabId: activeTab.id },
-          func: (id: string) => {
+          func: (id: string, shouldHighlight: boolean) => {
             const element = document.querySelector(
               `[data-summary-ref-id="${id}"]`
             ) as HTMLElement;
             if (element) {
               element.scrollIntoView({ behavior: "smooth", block: "center" });
-              const originalColor = element.style.backgroundColor;
-              // Use a softer highlight color based on system theme
-              const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
-              element.style.backgroundColor = isDarkMode ? '#7c3aed' : '#fef08a';
-              setTimeout(() => {
-                element.style.backgroundColor = originalColor;
-              }, 2000);
+              
+              if (shouldHighlight) {
+                const originalColor = element.style.backgroundColor;
+                // Use a softer highlight color based on system theme
+                const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                element.style.backgroundColor = isDarkMode ? '#7c3aed' : '#fef08a';
+                setTimeout(() => {
+                  element.style.backgroundColor = originalColor;
+                }, 2000);
+              }
             }
           },
-          args: [refId]
+          args: [refId, shouldHighlight]
         });
       }
     } catch (error) {
@@ -52,57 +53,18 @@ export const useTextHighlighting = (messages: Message[], currentPageUrl?: string
   }, []);
 
   // Relabel page elements
-  const relinkPageElements = useCallback(async () => {
-    if (!Object.keys(highlightMap).length) return;
-
+  const relinkPageElements = useCallback(async (tabId: number) => {
     try {
-      const tabs = await browser.tabs.query({
-        active: true,
-        currentWindow: true
-      });
-      const activeTab = tabs[0];
-
-      if (activeTab && activeTab.id) {
-        await browser.scripting.executeScript({
-          target: { tabId: activeTab.id },
-          func: (map: Record<string, string>) => {
-            // Convert highlightMap to array for processing
-            const elementsToRelink = Object.entries(map)
-              .map(([index, text]) => ({ index, text }))
-              .filter(el => el.text && el.text.length > 10);
-
-            if (elementsToRelink.length > 0) {
-              for (const elInfo of elementsToRelink) {
-                // Find all possible tag types
-                const possibleTags = ["p", "h1", "h2", "h3", "h4", "h5", "h6", "li", "blockquote", "pre"];
-                for (const tag of possibleTags) {
-                  const candidates = document.querySelectorAll(tag);
-                  for (const candidate of Array.from(candidates)) {
-                    if ((candidate as HTMLElement).innerText?.trim() === elInfo.text) {
-                      // Only add when not already marked
-                      if (!candidate.hasAttribute("data-summary-ref-id")) {
-                        candidate.setAttribute(
-                          "data-summary-ref-id",
-                          elInfo.index
-                        );
-                      }
-                      break;
-                    }
-                  }
-                }
-              }
-            }
-          },
-          args: [highlightMap]
-        });
-      }
+      await extractPageContent(tabId, true);
     } catch (error) {
       console.error("Error relinking page elements:", error);
     }
-  }, [highlightMap]);
+  }, []);
 
   // Add click event listener for link clicks
   useEffect(() => {
+    if (!isActive) return;
+
     const handleClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
       let current: HTMLElement | null = target;
@@ -111,6 +73,16 @@ export const useTextHighlighting = (messages: Message[], currentPageUrl?: string
       }
 
       if (current && current.classList.contains("summary-link")) {
+        // Check if the click happened within the container of this hook instance
+        // But since we can't easily check React component boundaries from DOM event,
+        // we rely on the fact that only the visible ChatSession should be responding.
+        // However, with multiple hooks active, they all run this.
+        // We should probably rely on an isActive prop or similar.
+        // For now, let's just proceed. The scrollToOriginalText targets the active tab.
+        // If multiple hooks run this, they just do redundant work.
+        // To prevent redundancy, we can check if the event was already handled?
+        if (event.defaultPrevented) return;
+        
         event.preventDefault();
         const refId = current.dataset.refId;
         if (refId) {
@@ -122,31 +94,29 @@ export const useTextHighlighting = (messages: Message[], currentPageUrl?: string
     return () => document.removeEventListener("click", handleClick);
   }, [scrollToOriginalText]);
 
-  // Relabel page elements when chat history loads
-  useEffect(() => {
-    if (messages.length > 0) {
-      // Delay execution to ensure page is loaded
-      const timer = setTimeout(() => {
-        relinkPageElements();
-      }, 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [messages, highlightMap, relinkPageElements]);
-
   // Cleanup page element reference attributes
+  // In multi-session mode, we should NOT remove attributes when the hook unmounts
+  // because the page might still be open and we want to keep the references.
+  // Also, removing attributes from the "active" tab when a background session unmounts is dangerous.
+  /*
   useEffect(() => {
     const removeAttributes = async () => {
       try {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
-        if (tabs[0]?.id) {
+        if (tabs[0]?.id && isAccessibleUrl(tabs[0].url)) {
           await browser.scripting.executeScript({
             target: { tabId: tabs[0].id },
             func: () => {
-              document
-                .querySelectorAll("[data-summary-ref-id]")
-                .forEach((el) => {
-                  el.removeAttribute("data-summary-ref-id");
-                });
+              // Only remove attributes if there are no active references
+              // This prevents removing attributes that are still needed
+              const hasActiveReferences = document.querySelectorAll(".summary-link").length > 0;
+              if (!hasActiveReferences) {
+                document
+                  .querySelectorAll("[data-summary-ref-id]")
+                  .forEach((el) => {
+                    el.removeAttribute("data-summary-ref-id");
+                  });
+              }
             }
           });
         }
@@ -159,10 +129,9 @@ export const useTextHighlighting = (messages: Message[], currentPageUrl?: string
       removeAttributes();
     };
   }, []);
+  */
 
   return {
-    highlightMap,
-    setHighlightMap,
     scrollToOriginalText,
     relinkPageElements
   };
