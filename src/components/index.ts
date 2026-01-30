@@ -1,4 +1,4 @@
-export { default as Message } from './MessageItem';
+export { default as MessageItem } from './MessageItem';
 export { default as MessageList } from './MessageList';
 export { default as ModelSelector } from './ModelSelector';
 export { default as SettingsPanel } from './SettingsPanel';

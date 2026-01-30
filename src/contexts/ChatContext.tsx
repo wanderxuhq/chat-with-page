@@ -42,7 +42,7 @@ import { useModel } from './ModelContext';
 
 interface ChatProviderProps {
   children: ReactNode;
-  initialPageUrl?: string;
+  initialPageUrl: string;
   initialTabId?: number;
   updateSessionIndex?: (url: string, messages: Message[], pageTitle?: string) => void;
   currentPageTitle?: string;
@@ -50,18 +50,13 @@ interface ChatProviderProps {
 }
 
 export const ChatProvider: React.FC<ChatProviderProps> = ({children, currentPageTitle, initialPageUrl, initialTabId, isActive = true}) => {
-  const {currentUrl: detectedUrl, currentPageTitle: fetchedPageTitle, currentTabId: detectedTabId} = usePageInteraction();
+  // Use initialPageUrl
+  const currentUrl = initialPageUrl;
   
-  // Use initialPageUrl if provided (for multi-session mode), otherwise fallback to detected URL
-  const currentUrl = initialPageUrl || detectedUrl;
-  
-  // Use initialTabId if provided, otherwise fallback to detected Tab ID
-  const currentTabId = initialTabId || detectedTabId;
+  // Use initialTabId
+  const currentTabId = initialTabId;
 
-  // Prioritize passed prop over fetched title to avoid shadowing
-  // If we are in multi-session mode (initialPageUrl provided), we only use fetchedPageTitle if it matches our URL
-  const isUrlMatch = !initialPageUrl || initialPageUrl === detectedUrl;
-  const pageTitle = currentPageTitle || (isUrlMatch ? fetchedPageTitle : '');
+  const pageTitle = currentPageTitle || '';
 
   // Use chat history hook for message management
   const {

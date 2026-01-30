@@ -45,29 +45,22 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
         placeholder={t('labels.model')}
         value={modelSearchTerm}
         onChange={(e) => {
-          saveSelectedModel(e.target.value);
           setModelSearchTerm(e.target.value);
-          /*
-          if (doSend) {
-            doSend();
-            setDoSend(null);
-          }
-          */
         }}
-        onFocus={() => setShowModelList(true)}
-        onBlur={() => {
-          setTimeout(() => {
-            setShowModelList(false);
-            setShowModelSelector(false);
-            setPendingMessage(null)
-          }, 200);
+        onFocus={(e) => {
+          setShowModelList(true);
+          e.target.select();
+        }}
+        onBlur={(e) => {
+          setShowModelSelector(false);
+          setPendingMessage(null);
         }}
         autoFocus
         style={{
           width: '100%',
           height: '36px',
           padding: '0 10px',
-          border:  `1px solid ${colors.borderPrimary}`,
+          border: `1px solid ${colors.borderPrimary}`,
           borderRadius: '8px',
           fontSize: '13px',
           outline: 'none',
@@ -90,6 +83,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           backgroundColor: colors.bgModelList,
           zIndex: 1000,
           boxShadow: `0 -4px 12px ${colors.shadowLight}`,
+          scrollbarWidth: 'none' as const,
         }}>
           {fetchingModels ? (
             <div style={{
@@ -109,22 +103,29 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
           ) : (
             <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
               {(() => {
+                let commonPrefix = models.reduce((prefix, model) => {
+                  let i = 0;
+                  while (i < prefix.length && i < model.length && prefix[i] === model[i]) i++;
+                  return prefix.slice(0, i);
+                }, models[0] || '');
+                if (!commonPrefix.endsWith('/')) commonPrefix = '';
                 const filteredModels = models.filter(model => {
                   if (!modelSearchTerm.trim()) return true;
                   const searchTerm = modelSearchTerm.trim().toLowerCase();
-                  const modelName = model.toLowerCase();
-                  if (searchTerm.includes('*')) {
-                    const regexPattern = searchTerm.replace(/\*/g, '.*').replace(/\s+/g, '.*');
-                    const regex = new RegExp(regexPattern);
-                    return regex.test(modelName);
-                  }
-                  return modelName.includes(searchTerm);
+                  const fuzzyPattern = searchTerm
+                    .split('')
+                    .map(char => char.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+                    .join('.*');
+                  return new RegExp(fuzzyPattern, 'i').test(model);
                 });
                 return filteredModels.length > 0 ? (
                   filteredModels.map(model => (
                     <li
                       key={model}
-                      onClick={() => handleModelSelect(model)}
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        handleModelSelect(model);
+                      }}
                       style={{
                         padding: '10px 14px',
                         cursor: 'pointer',
@@ -132,9 +133,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                         color: colors.textPrimary,
                         backgroundColor: selectedModel === model ? colors.bgSelected : colors.bgModelList,
                         borderBottom: `1px solid ${colors.bgTertiary}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
                       }}
                       onMouseEnter={(e) => {
                         if (selectedModel !== model) {
@@ -145,12 +143,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                         e.currentTarget.style.backgroundColor = selectedModel === model ? colors.bgSelected : colors.bgModelList;
                       }}
                     >
-                      {selectedModel === model && (
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={colors.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                      )}
-                      {model}
+                      {model.replace(commonPrefix, '')}
                     </li>
                   ))
                 ) : (

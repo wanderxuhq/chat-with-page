@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useChat } from '../contexts/ChatContext';
 import MessageItem from './MessageItem';
 
@@ -13,11 +13,10 @@ const MessageList: React.FC<MessageListProps> = ({
   searchTerm = '',
   colors
 }) => {
-  const { messages, lastMessage, editMessage, regenerateMessage } = useChat();
+  const { messages, lastMessage, editMessage } = useChat();
   const [editingIndex, setEditingIndex] = useState<string | null>(null);
   const [editContent, setEditContent] = useState<string>('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
-  const [hoveredId, setHoveredId] = useState<string | null>(null);
 
   const styles = {
     container: {
@@ -55,18 +54,18 @@ const MessageList: React.FC<MessageListProps> = ({
     },
   };
 
-  const handleSaveEdit = (messageId: string) => {
+  const handleSaveEdit = useCallback((messageId: string) => {
     if (editContent.trim()) {
       editMessage(messageId, editContent.trim());
     }
     setEditingIndex(null);
     setEditContent('');
-  };
+  }, [editContent, editMessage]);
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingIndex(null);
     setEditContent('');
-  };
+  }, []);
 
   return (
     <div style={styles.container}>
@@ -89,6 +88,17 @@ const MessageList: React.FC<MessageListProps> = ({
           .user-message .message-content code { background: rgba(255,255,255,0.2); }
           .user-message a { color: rgba(255,255,255,0.9); text-decoration: underline; }
           .action-button:hover { background-color: ${colors.bgTertiary} !important; color: ${colors.textPrimary} !important; }
+          
+          /* CSS-based hover visibility for action bar */
+          .message-wrapper .action-bar {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out;
+          }
+          .message-wrapper:hover .action-bar {
+            opacity: 1;
+            pointer-events: auto;
+          }
         `}
       </style>
       {(messages || []).filter(msg => msg.role !== 'system').map((msg) => (
@@ -99,11 +109,9 @@ const MessageList: React.FC<MessageListProps> = ({
           editingId={editingIndex}
           editContent={editContent}
           copiedId={copiedId}
-          hoveredId={hoveredId}
           setEditingId={setEditingIndex}
           setEditContent={setEditContent}
           setCopiedId={setCopiedId}
-          setHoveredId={setHoveredId}
           handleSaveEdit={handleSaveEdit}
           handleCancelEdit={handleCancelEdit}
           colors={colors}
@@ -116,11 +124,9 @@ const MessageList: React.FC<MessageListProps> = ({
           editingId={editingIndex}
           editContent={editContent}
           copiedId={copiedId}
-          hoveredId={hoveredId}
           setEditingId={setEditingIndex}
           setEditContent={setEditContent}
           setCopiedId={setCopiedId}
-          setHoveredId={setHoveredId}
           handleSaveEdit={handleSaveEdit}
           handleCancelEdit={handleCancelEdit}
           colors={colors}
