@@ -3,6 +3,7 @@ export default defineConfig({
     srcDir: 'src',
     modules: ['@wxt-dev/module-react'],
     manifest: {
+        name: "Chat with Page",
         permissions: [
             "tabs",
             "activeTab",

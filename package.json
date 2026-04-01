@@ -1,7 +1,7 @@
 {
   "name": "chat-with-page",
   "displayName": "Chat with Page",
-  "version": "0.0.2",
+  "version": "0.0.2.1",
   "description": "Chat with Page",
   "author": "wanderxuhq",
   "scripts": {
@@ -13,13 +13,13 @@
     "zip:firefox": "wxt zip -b firefox"
   },
   "dependencies": {
-    "dexie": "^4.2.1",
-    "i18next": "^25.7.2",
-    "marked": "^17.0.1",
-    "openai": "^6.9.1",
+    "dexie": "^4.4.2",
+    "i18next": "^25.10.10",
+    "marked": "^17.0.5",
+    "openai": "^6.33.0",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-i18next": "^16.4.0",
+    "react-i18next": "^16.6.6",
     "use-trace-update": "^1.3.3"
   },
   "devDependencies": {
@@ -28,10 +28,10 @@
     "@types/node": "25.0.3",
     "@types/react": "19.2.7",
     "@types/react-dom": "19.2.3",
-    "@wxt-dev/module-react": "^1.1.5",
+    "@wxt-dev/module-react": "^1.2.2",
     "prettier": "3.7.4",
     "typescript": "5.9.3",
-    "wxt": "^0.20.13"
+    "wxt": "^0.20.20"
   },
   "packageManager": "pnpm@10.24.0+sha512.01ff8ae71b4419903b65c60fb2dc9d34cf8bb6e06d03bde112ef38f7a34d6904c424ba66bea5cdcf12890230bf39f9580473140ed9c946fef328b6e5238a345a"
 }
