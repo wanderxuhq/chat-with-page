@@ -13,12 +13,6 @@ export const isAccessibleUrl = (url: string | undefined): boolean => {
 
 // Extract page content with REF markers
 export const extractPageContent = async (tabId: number, annotate: boolean): Promise<{ text: string; index: number }[]> => {
-  /*
-  if (!activeTab || !activeTab.id || !isAccessibleUrl(activeTab.url)) {
-    return [];
-  }
-  */
-
   try {
     const pageContentResult = await browser.scripting.executeScript({
       target: { tabId: tabId },
@@ -90,6 +84,9 @@ export const extractPageContent = async (tabId: number, annotate: boolean): Prom
 
         const isElToContinue = (el: HTMLElement) => {
           if (!el || !el.tagName) return false;
+          if (['BODY'].includes(el.tagName)) {
+            return true;
+          }
           if (['SCRIPT', 'STYLE', 'NOSCRIPT', 'IFRAME', 'OBJECT', 'EMBED', 'SVG', 'CANVAS', 'VIDEO', 'AUDIO', 'MAP', 'PICTURE', 'SOURCE'].includes(el.tagName)) {
             return false;
           }
@@ -170,7 +167,7 @@ export const extractPageContent = async (tabId: number, annotate: boolean): Prom
           return { annotated: true, markedTexts };
         };
 
-        const annotations =  annotateSummaryRefs(document.body, true).markedTexts.map((markedText, index) => { return { ...markedText, index } });
+        const annotations = annotateSummaryRefs(document.body, true).markedTexts.map((markedText, index) => { return { ...markedText, index } });
 
         if (annotate) {
           const summaryRefIdAttr = "data-summary-ref-id";
@@ -212,7 +209,7 @@ export const extractAiInputText = (annotations: { text: string; index: number }[
 }
 
 // Build system prompt from page content
-export const buildSystemPrompt = async (tabId: number, url: string, language: string = 'zh'): Promise<string> => {
+export const buildSystemPrompt = async (tabId: number, url: string, language: string): Promise<string> => {
   if (!tabId || !isAccessibleUrl(url)) {
     return '';
   }
@@ -244,7 +241,7 @@ export const ensureSystemPrompt = async (
   tabId: number,
   url: string,
   setSystemPrompt?: (prompt: string) => void,
-  language: string = 'zh'
+  language: string = 'en-US'
 ): Promise<string> => {
   const newSystemPrompt = await buildSystemPrompt(tabId, url, language);
   setSystemPrompt?.(newSystemPrompt);
